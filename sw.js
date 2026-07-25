@@ -1,25 +1,18 @@
-// Typing Fighter - PWA Service Worker
+// Typing Fighter - PWA Service Worker v2 (Network-First for JS scripts)
 
-const CACHE_NAME = 'typing-fighter-v1';
+const CACHE_NAME = 'typing-fighter-v2';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
     './style.css',
     './favicon.svg',
-    './manifest.json',
-    './js/config.js',
-    './js/auth.js',
-    './js/audio.js',
-    './js/renderer.js',
-    './js/p2p.js',
-    './js/combat.js',
-    './js/main.js'
+    './manifest.json'
 ];
 
 self.addEventListener('install', (e) => {
+    self.skipWaiting();
     e.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            console.log('[Service Worker] Caching App Shell & Static Assets');
             return cache.addAll(ASSETS_TO_CACHE);
         })
     );
@@ -31,16 +24,24 @@ self.addEventListener('activate', (e) => {
             return Promise.all(
                 keys.map((key) => {
                     if (key !== CACHE_NAME) {
-                        console.log('[Service Worker] Removing old cache:', key);
+                        console.log('[Service Worker] Deleting old cache:', key);
                         return caches.delete(key);
                     }
                 })
             );
-        })
+        }).then(() => self.clients.claim())
     );
 });
 
+// Network-first strategy for JS scripts to ensure fresh bugfixes load
 self.addEventListener('fetch', (e) => {
+    if (e.request.url.includes('/js/')) {
+        e.respondWith(
+            fetch(e.request).catch(() => caches.match(e.request))
+        );
+        return;
+    }
+
     e.respondWith(
         caches.match(e.request).then((response) => {
             return response || fetch(e.request);

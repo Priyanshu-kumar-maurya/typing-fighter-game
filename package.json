@@ -3,10 +3,6 @@
   "version": "1.0.0",
   "description": "Real-Time 1v1 Type Clash Arena Game with 25-Stage Campaign, P2P WebRTC Live Voice Chat, and Mobile Responsiveness.",
   "main": "index.html",
-  "scripts": {
-    "start": "echo 'Static web application ready'",
-    "build": "echo 'Static build complete'"
-  },
   "keywords": [
     "typing-game",
     "wpm-test",

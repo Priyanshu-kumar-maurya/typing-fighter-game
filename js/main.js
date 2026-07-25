@@ -152,10 +152,9 @@ class GameApp {
         const toast = document.createElement('div');
         toast.className = `toast toast-${type}`;
 
-        let icon = '<i class="fa-solid fa-bell"></i>';
-        if (type === 'success') icon = '<i class="fa-solid fa-circle-check"></i>';
-        if (type === 'error') icon = '<i class="fa-solid fa-circle-exclamation"></i>';
-        if (type === 'info') icon = '<i class="fa-solid fa-bolt"></i>';
+        let icon = ICONS.lightning;
+        if (type === 'success') icon = ICONS.star;
+        if (type === 'error') icon = ICONS.cross;
 
         toast.innerHTML = `<span class="toast-icon">${icon}</span> <span>${this.escapeHtml(message)}</span>`;
         container.appendChild(toast);
@@ -169,7 +168,7 @@ class GameApp {
     toggleSound() {
         audio.muted = !audio.muted;
         const btn = document.getElementById('btnSoundToggle');
-        if (btn) btn.innerHTML = audio.muted ? '<i class="fa-solid fa-volume-xmark"></i> Sound: OFF' : '<i class="fa-solid fa-volume-high"></i> Sound: ON';
+        if (btn) btn.innerHTML = audio.muted ? `${ICONS.volumeOff} Sound: OFF` : `${ICONS.volumeOn} Sound: ON`;
         this.showToast(audio.muted ? "Audio Muted" : "Audio Enabled", "info", 1500);
     }
 
@@ -313,7 +312,7 @@ class GameApp {
         const isEnabled = p2p.toggleMic();
         const btn = document.getElementById('btnMicToggle');
         if (btn) {
-            btn.innerHTML = isEnabled ? '<i class="fa-solid fa-microphone"></i> Mic: ON' : '<i class="fa-solid fa-microphone-slash"></i> Mic: MUTED';
+            btn.innerHTML = isEnabled ? `${ICONS.micOn} Mic: ON` : `${ICONS.micOff} Mic: MUTED`;
             btn.style.color = isEnabled ? "var(--neon-cyan)" : "#ff0055";
         }
         this.showToast(isEnabled ? "Microphone Unmuted" : "Microphone Muted", isEnabled ? "success" : "info");
@@ -330,7 +329,7 @@ class GameApp {
             this.closeModals();
             combat.reset('arcade', levelNum);
             document.getElementById('stageBadge').innerText = `STAGE ${levelNum}/25`;
-            this.setupPlayerUI(1, auth.currentUser.name, '<i class="fa-solid fa-bolt"></i>', "#00f0ff");
+            this.setupPlayerUI(1, auth.currentUser.name, ICONS.lightning, "#00f0ff");
             this.setupPlayerUI(2, combat.bot.name, combat.bot.avatar, combat.bot.color);
             this.startMatch();
 
@@ -350,8 +349,8 @@ class GameApp {
             this.closeModals();
             combat.reset('local2p');
             document.getElementById('stageBadge').innerText = `1v1 LOCAL`;
-            this.setupPlayerUI(1, auth.currentUser ? auth.currentUser.name : "PLAYER 1", '<i class="fa-solid fa-bolt"></i>', "#00f0ff");
-            this.setupPlayerUI(2, "PLAYER 2", '<i class="fa-solid fa-fire"></i>', "#ff0055");
+            this.setupPlayerUI(1, auth.currentUser ? auth.currentUser.name : "PLAYER 1", ICONS.lightning, "#00f0ff");
+            this.setupPlayerUI(2, "PLAYER 2", ICONS.fire, "#ff0055");
             this.startMatch();
         };
 
@@ -711,8 +710,8 @@ class GameApp {
                 this.closeModals();
                 combat.reset('p2p');
                 document.getElementById('stageBadge').innerText = `P2P ONLINE`;
-                this.setupPlayerUI(1, auth.currentUser ? auth.currentUser.name : "HERO (YOU)", '<i class="fa-solid fa-bolt"></i>', "#00f0ff");
-                this.setupPlayerUI(2, "FRIEND (ONLINE)", '<i class="fa-solid fa-gamepad"></i>', "#ff0055");
+                this.setupPlayerUI(1, auth.currentUser ? auth.currentUser.name : "HERO (YOU)", ICONS.lightning, "#00f0ff");
+                this.setupPlayerUI(2, "FRIEND (ONLINE)", ICONS.globe, "#ff0055");
                 this.startMatch();
             };
             this.openContentChoiceModal();
@@ -783,10 +782,10 @@ class GameApp {
     }
 
     calculateStageRank(wpm, accuracy, targetWPM) {
-        if (wpm >= targetWPM + 15 && accuracy >= 95) return '<i class="fa-solid fa-bolt"></i> S-RANK';
-        if (wpm >= targetWPM + 8 && accuracy >= 90) return '<i class="fa-solid fa-fire"></i> A-RANK';
-        if (wpm >= targetWPM && accuracy >= 85) return '<i class="fa-solid fa-shield-halved"></i> B-RANK';
-        return '<i class="fa-solid fa-hand-fist"></i> C-RANK';
+        if (wpm >= targetWPM + 15 && accuracy >= 95) return `${ICONS.lightning} S-RANK`;
+        if (wpm >= targetWPM + 8 && accuracy >= 90) return `${ICONS.fire} A-RANK`;
+        if (wpm >= targetWPM && accuracy >= 85) return `${ICONS.shield} B-RANK`;
+        return `${ICONS.fist} C-RANK`;
     }
 
     handleGameOver(winner) {
@@ -839,7 +838,7 @@ class GameApp {
         document.getElementById('statWpm').innerHTML = `${combat.p1.wpm} <span class="unit">WPM</span>`;
         document.getElementById('statAcc').innerHTML = `${combat.p1.accuracy}<span class="unit">%</span>`;
         document.getElementById('statCombo').innerText = `${combat.p1.maxCombo}x`;
-        document.getElementById('statRank').innerHTML = winner === 1 ? stageRank : '<i class="fa-solid fa-xmark"></i> NO RANK';
+        document.getElementById('statRank').innerHTML = winner === 1 ? stageRank : `${ICONS.cross} NO RANK`;
 
         document.getElementById('modalGameOver').classList.remove('hidden');
     }
@@ -865,9 +864,9 @@ class GameApp {
             const card = document.createElement('div');
             card.className = `level-card ${isUnlocked ? '' : 'locked'}`;
 
-            let badgeHtml = `<span class="level-status-badge status-locked"><i class="fa-solid fa-lock"></i> LOCKED</span>`;
-            if (isCleared) badgeHtml = `<span class="level-status-badge status-cleared"><i class="fa-solid fa-star"></i> CLEARED</span>`;
-            else if (isUnlocked) badgeHtml = `<span class="level-status-badge status-unlocked"><i class="fa-solid fa-shield-halved"></i> UNLOCKED</span>`;
+            let badgeHtml = `<span class="level-status-badge status-locked">${ICONS.lock} LOCKED</span>`;
+            if (isCleared) badgeHtml = `<span class="level-status-badge status-cleared">${ICONS.star} CLEARED</span>`;
+            else if (isUnlocked) badgeHtml = `<span class="level-status-badge status-unlocked">${ICONS.unlocked} UNLOCKED</span>`;
 
             card.innerHTML = `
                 <div class="level-num">STAGE ${lvl.level}</div>

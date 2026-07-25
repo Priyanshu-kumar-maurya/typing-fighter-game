@@ -1,12 +1,20 @@
-// Typing Fighter - PWA Service Worker v5 (Font Awesome SVG Icons)
+// Typing Fighter - PWA Service Worker v7 (Inline SVG Vector Icons)
 
-const CACHE_NAME = 'typing-fighter-v5';
+const CACHE_NAME = 'typing-fighter-v7';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
     './style.css',
     './favicon.svg',
-    './manifest.json'
+    './manifest.json',
+    './js/icons.js',
+    './js/config.js',
+    './js/auth.js',
+    './js/audio.js',
+    './js/renderer.js',
+    './js/p2p.js',
+    './js/combat.js',
+    './js/main.js'
 ];
 
 self.addEventListener('install', (e) => {

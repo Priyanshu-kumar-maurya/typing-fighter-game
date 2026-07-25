@@ -30,6 +30,9 @@ class GameApp {
     }
 
     init() {
+        // Run Cyberpunk Loading Bar Animation on Launch
+        this.runLoadingScreen();
+
         // Initialize Renderer
         this.renderer = new ArenaRenderer('gameCanvas');
 
@@ -93,10 +96,7 @@ class GameApp {
         requestAnimationFrame(loop);
 
         // Sound Toggle Button
-        document.getElementById('btnSoundToggle').addEventListener('click', () => {
-            audio.muted = !audio.muted;
-            document.getElementById('btnSoundToggle').innerText = audio.muted ? "🔇 Sound: OFF" : "🔊 Sound: ON";
-        });
+        document.getElementById('btnSoundToggle').addEventListener('click', () => this.toggleSound());
 
         // P2P Tab Switchers
         document.getElementById('tabHost').addEventListener('click', () => {
@@ -124,6 +124,53 @@ class GameApp {
 
         // Combat Engine GameOver Hook
         combat.onGameOverCallback = (winner) => this.handleGameOver(winner);
+    }
+
+    runLoadingScreen() {
+        const bar = document.getElementById('loadingBar');
+        const screen = document.getElementById('loadingScreen');
+        if (!bar || !screen) return;
+
+        let pct = 0;
+        const interval = setInterval(() => {
+            pct += 25;
+            bar.style.width = `${pct}%`;
+            if (pct >= 100) {
+                clearInterval(interval);
+                setTimeout(() => {
+                    screen.classList.add('fade-out');
+                }, 300);
+            }
+        }, 80);
+    }
+
+    // TOAST NOTIFICATIONS SYSTEM (REPLACES NATIVE BROWSER ALERT)
+    showToast(message, type = 'info', duration = 3500) {
+        const container = document.getElementById('toastContainer');
+        if (!container) return;
+
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+
+        let icon = '🔔';
+        if (type === 'success') icon = '✅';
+        if (type === 'error') icon = '⚠️';
+        if (type === 'info') icon = '⚡';
+
+        toast.innerHTML = `<span class="toast-icon">${icon}</span> <span>${this.escapeHtml(message)}</span>`;
+        container.appendChild(toast);
+
+        setTimeout(() => {
+            toast.classList.add('fade-out');
+            setTimeout(() => toast.remove(), 300);
+        }, duration);
+    }
+
+    toggleSound() {
+        audio.muted = !audio.muted;
+        const btn = document.getElementById('btnSoundToggle');
+        if (btn) btn.innerText = audio.muted ? "🔇 Sound: OFF" : "🔊 Sound: ON";
+        this.showToast(audio.muted ? "Audio Muted" : "Audio Enabled", "info", 1500);
     }
 
     // AUTH & PLAYER PROFILE UI HANDLERS
@@ -176,6 +223,7 @@ class GameApp {
             this.updateUserHeaderUI();
             this.closeAuthModal();
             this.showMainMenu();
+            this.showToast(`Welcome Guest ${res.user.name}!`, "success");
         }
     }
 
@@ -184,40 +232,30 @@ class GameApp {
         const age = document.getElementById('regAgeInput').value;
         const mobile = document.getElementById('regMobileInput').value;
         const pass = document.getElementById('regPassInput').value;
-        const status = document.getElementById('authStatus');
 
         const res = auth.registerWithMobile(name, age, mobile, pass);
         if (res.success) {
-            status.style.color = "#00ff88";
-            status.innerText = "Account registered & logged in successfully! 🎉";
-            setTimeout(() => {
-                this.updateUserHeaderUI();
-                this.closeAuthModal();
-                this.showMainMenu();
-            }, 600);
+            this.showToast("Account registered successfully! 🎉", "success");
+            this.updateUserHeaderUI();
+            this.closeAuthModal();
+            this.showMainMenu();
         } else {
-            status.style.color = "#ff0055";
-            status.innerText = res.message;
+            this.showToast(res.message, "error");
         }
     }
 
     handleMobileLogin() {
         const mobile = document.getElementById('loginMobileInput').value;
         const pass = document.getElementById('loginPassInput').value;
-        const status = document.getElementById('authStatus');
 
         const res = auth.loginWithMobile(mobile, pass);
         if (res.success) {
-            status.style.color = "#00ff88";
-            status.innerText = "Welcome back, " + res.user.name + "! 🎉";
-            setTimeout(() => {
-                this.updateUserHeaderUI();
-                this.closeAuthModal();
-                this.showMainMenu();
-            }, 600);
+            this.showToast(`Welcome back ${res.user.name}! 🎉`, "success");
+            this.updateUserHeaderUI();
+            this.closeAuthModal();
+            this.showMainMenu();
         } else {
-            status.style.color = "#ff0055";
-            status.innerText = res.message;
+            this.showToast(res.message, "error");
         }
     }
 
@@ -232,7 +270,6 @@ class GameApp {
         if (nameElem) nameElem.innerText = auth.currentUser.name;
         if (metaElem) metaElem.innerText = `${typeTag} | Age: ${auth.currentUser.age || 18} | Stage ${lvl}`;
 
-        // Sync unlocked level to combat engine
         combat.unlockedLevel = lvl;
     }
 
@@ -250,6 +287,7 @@ class GameApp {
             btn.innerText = isEnabled ? "🎙️ Mic: ON" : "🎙️ Mic: MUTED";
             btn.style.color = isEnabled ? "var(--neon-cyan)" : "#ff0055";
         }
+        this.showToast(isEnabled ? "Microphone Unmuted 🎙️" : "Microphone Muted 🔇", isEnabled ? "success" : "info");
     }
 
     startArcadeLevel(levelNum = 1) {
@@ -394,6 +432,7 @@ class GameApp {
         }
     }
 
+    // KEYBOARD SHORTCUTS SYSTEM (P, M, R, ESC)
     handleGlobalKeyDown(e) {
         // ANTI-CHEAT SECURITY: Ensure event is trusted
         if (e.isTrusted === false) {
@@ -401,8 +440,15 @@ class GameApp {
             return;
         }
 
-        // Escape key pauses/resumes active game
-        if (e.key === 'Escape') {
+        // Global Shortcuts: M (Mute), P (Pause), R (Restart when game active/paused)
+        const keyUpper = e.key.toUpperCase();
+
+        if (keyUpper === 'M' && e.target !== this.scriptTextarea && e.target !== document.getElementById('guestNameInput') && e.target !== document.getElementById('regNameInput')) {
+            this.toggleSound();
+            return;
+        }
+
+        if ((e.key === 'Escape' || keyUpper === 'P') && e.target !== this.scriptTextarea) {
             if (this.isMatchActive) {
                 if (this.isMatchPaused) this.resumeMatch();
                 else this.pauseMatch();
@@ -410,6 +456,14 @@ class GameApp {
                 this.showMainMenu();
             }
             return;
+        }
+
+        if (keyUpper === 'R' && (this.isMatchActive || !document.getElementById('modalGameOver').classList.contains('hidden') || this.isMatchPaused)) {
+            if (e.target !== this.scriptTextarea) {
+                this.restartMatch();
+                this.showToast("Match Restarted!", "info", 1500);
+                return;
+            }
         }
 
         if (!this.isMatchActive || this.isMatchPaused) {
@@ -588,7 +642,7 @@ class GameApp {
     saveAndStartCustomScript() {
         const rawText = this.scriptTextarea ? this.scriptTextarea.value.trim() : "";
         if (!rawText) {
-            alert("Please paste or type your custom script text before starting.");
+            this.showToast("Please paste or type custom text script first.", "error");
             return;
         }
 
@@ -650,7 +704,7 @@ class GameApp {
         };
 
         p2p.onDisconnectCallback = () => {
-            alert("Online P2P friend disconnected.");
+            this.showToast("Online P2P friend disconnected.", "error");
             this.showMainMenu();
         };
     }
@@ -659,9 +713,10 @@ class GameApp {
         p2p.createRoom(
             (code) => {
                 document.getElementById('roomCodeText').innerText = code;
+                this.showToast(`Room ${code} created!`, "success");
             },
             (err) => {
-                alert("P2P Error: " + err);
+                this.showToast("P2P Error: " + err, "error");
             }
         );
     }
@@ -670,7 +725,7 @@ class GameApp {
         const code = document.getElementById('roomCodeText').innerText;
         if (code && code !== '------') {
             navigator.clipboard.writeText(code);
-            alert(`Room Code ${code} copied to clipboard! Share with your friend.`);
+            this.showToast(`Room Code ${code} copied to clipboard!`, "success");
         }
     }
 
@@ -678,7 +733,7 @@ class GameApp {
         const code = document.getElementById('inputRoomCode').value;
         const statusDiv = document.getElementById('p2pJoinStatus');
         if (!code) {
-            statusDiv.innerText = "Please enter a valid 5-digit code.";
+            this.showToast("Please enter a valid 5-digit Room Code.", "error");
             return;
         }
         statusDiv.innerHTML = `<span class="spinner"></span> Connecting to Room ${p2p.sanitizeInput(code)}...`;
@@ -686,11 +741,20 @@ class GameApp {
             code,
             () => {
                 statusDiv.innerText = "Connected! Starting battle...";
+                this.showToast("Connected to friend! Battle starting...", "success");
             },
             (err) => {
                 statusDiv.innerText = "Error: " + err;
+                this.showToast("Error connecting: " + err, "error");
             }
         );
+    }
+
+    calculateStageRank(wpm, accuracy, targetWPM) {
+        if (wpm >= targetWPM + 15 && accuracy >= 95) return "⚡ S-RANK";
+        if (wpm >= targetWPM + 8 && accuracy >= 90) return "🔥 A-RANK";
+        if (wpm >= targetWPM && accuracy >= 85) return "⚔️ B-RANK";
+        return "🥊 C-RANK";
     }
 
     handleGameOver(winner) {
@@ -708,6 +772,10 @@ class GameApp {
             auth.updateProgress(combat.unlockedLevel, combat.p1.wpm, winner === 1);
             this.updateUserHeaderUI();
         }
+
+        // Calculate Stage Rank
+        const targetWPM = combat.bot ? combat.bot.baseWPM : 15;
+        const stageRank = this.calculateStageRank(combat.p1.wpm, combat.p1.accuracy, targetWPM);
 
         // Populate Game Over Stats Modal
         if (combat.mode === 'arcade') {
@@ -739,14 +807,7 @@ class GameApp {
         document.getElementById('statWpm').innerHTML = `${combat.p1.wpm} <span class="unit">WPM</span>`;
         document.getElementById('statAcc').innerHTML = `${combat.p1.accuracy}<span class="unit">%</span>`;
         document.getElementById('statCombo').innerText = `${combat.p1.maxCombo}x`;
-
-        // Rank calculation based on WPM
-        let rank = "BEGINNER";
-        if (combat.p1.wpm >= 90) rank = "⚡ TYPING GOD";
-        else if (combat.p1.wpm >= 70) rank = "🔥 SPEED DEMON";
-        else if (combat.p1.wpm >= 50) rank = "⚔️ WARRIOR";
-        else if (combat.p1.wpm >= 30) rank = "🥊 STRIKER";
-        document.getElementById('statRank').innerText = rank;
+        document.getElementById('statRank').innerText = winner === 1 ? stageRank : "❌ NO RANK";
 
         document.getElementById('modalGameOver').classList.remove('hidden');
     }

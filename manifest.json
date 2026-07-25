@@ -1,0 +1,19 @@
+{
+  "name": "Typing Fighter - Real-Time 1v1 Type Clash Arena",
+  "short_name": "TypingFighter",
+  "description": "Speed Up Your Typing Skills in Real-Time 1v1 Fighting Battles!",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#070913",
+  "theme_color": "#00f0ff",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["games", "education", "action"]
+}

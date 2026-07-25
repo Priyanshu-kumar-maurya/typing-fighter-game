@@ -1,0 +1,29 @@
+{
+  "name": "typing-fighter-game",
+  "version": "1.0.0",
+  "description": "Real-Time 1v1 Type Clash Arena Game with 25-Stage Campaign, P2P WebRTC Live Voice Chat, and Mobile Responsiveness.",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve ./",
+    "dev": "npx serve ./",
+    "build": "echo 'Static web app ready for deployment'"
+  },
+  "keywords": [
+    "typing-game",
+    "wpm-test",
+    "fighting-game",
+    "webrtc",
+    "p2p-multiplayer",
+    "voice-chat",
+    "html5-canvas",
+    "cyberpunk"
+  ],
+  "author": "Priyanshu Kumar Maurya",
+  "license": "MIT",
+  "dependencies": {
+    "peerjs": "^1.5.4"
+  },
+  "devDependencies": {
+    "serve": "^14.2.4"
+  }
+}

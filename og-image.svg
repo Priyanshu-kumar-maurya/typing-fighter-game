@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <rect width="1200" height="630" fill="#070913"/>
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0a1a"/>
+      <stop offset="50%" stop-color="#12122b"/>
+      <stop offset="100%" stop-color="#050510"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bgGrad)"/>
+  <rect x="40" y="40" width="1120" height="550" rx="30" fill="rgba(15,20,42,0.85)" stroke="#00f0ff" stroke-width="4"/>
+  <text x="600" y="240" font-family="'Orbitron', sans-serif" font-size="72" font-weight="900" fill="#ffffff" text-anchor="middle">TYPING <tspan fill="#00f0ff">FIGHTER</tspan></text>
+  <text x="600" y="320" font-family="'Outfit', sans-serif" font-size="36" font-weight="600" fill="#ff0055" text-anchor="middle">Real-Time 1v1 Type Clash Arena</text>
+  <text x="600" y="420" font-family="'Outfit', sans-serif" font-size="28" fill="#a0aec0" text-anchor="middle">25-Stage Campaign • P2P WebRTC Voice Chat • Custom Scripts</text>
+  <text x="600" y="500" font-size="64" text-anchor="middle">🥊 ⚡ 🌐</text>
+</svg>

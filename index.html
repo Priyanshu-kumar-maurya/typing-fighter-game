@@ -2,8 +2,32 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- SEO & Primary Meta Tags -->
     <title>TYPING FIGHTER - Real-Time 1v1 Type Clash Arena</title>
+    <meta name="title" content="TYPING FIGHTER - Real-Time 1v1 Type Clash Arena">
+    <meta name="description" content="Speed Up Your Typing Skills in Real-Time 1v1 Fighting Battles! Features 25 Campaign Stages, WebRTC P2P Voice Chat, Custom Script Mode, and Anti-Cheat System.">
+    <meta name="keywords" content="typing game, WPM test, fighting game, WebRTC, P2P multiplayer, voice chat, HTML5 canvas, cyberpunk game, typing speed test">
+    <meta name="author" content="Priyanshu Kumar Maurya">
+    <meta name="theme-color" content="#00f0ff">
+
+    <!-- PWA Manifest & Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Open Graph / Facebook / WhatsApp Social Cards -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://github.com/Priyanshu-kumar-maurya/typing-fighter-game">
+    <meta property="og:title" content="TYPING FIGHTER - Real-Time 1v1 Type Clash Arena">
+    <meta property="og:description" content="Battle friends online with WebRTC P2P Voice Chat while sharpening your typing speed!">
+    <meta property="og:image" content="og-image.svg">
+
+    <!-- Twitter Social Cards -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:title" content="TYPING FIGHTER - Real-Time 1v1 Type Clash Arena">
+    <meta property="twitter:description" content="Real-Time 1v1 Typing Fighting Arena with 25 Stages, P2P Voice Chat, and Custom Notes.">
+    <meta property="twitter:image" content="og-image.svg">
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,6 +40,18 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- SPLASH LOADING SCREEN -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-logo">🥊 TYPING <span class="glow-cyan">FIGHTER</span></div>
+        <div class="loading-bar-outer">
+            <div id="loadingBar" class="loading-bar-inner"></div>
+        </div>
+        <div class="loading-text">INITIALIZING CLASH ARENA...</div>
+    </div>
+
     <div class="app-container">
         <!-- TOP HEADER NAVBAR -->
         <header class="header">
@@ -35,9 +71,9 @@
             </div>
 
             <div class="header-controls">
-                <button id="btnSoundToggle" class="icon-btn" title="Toggle Audio">🔊 Sound: ON</button>
+                <button id="btnSoundToggle" class="icon-btn" title="Toggle Audio (Shortcut: M)">🔊 Sound: ON</button>
                 <button id="btnMicToggle" class="icon-btn mic-btn" title="Toggle Voice Chat Mic" onclick="game.toggleMic()">🎙️ Mic: ON</button>
-                <button id="btnQuitMatch" class="btn btn-secondary" onclick="game.pauseMatch()">⏸️ PAUSE / QUIT</button>
+                <button id="btnQuitMatch" class="btn btn-secondary" title="Shortcut: P" onclick="game.pauseMatch()">⏸️ PAUSE / QUIT</button>
                 <button id="btnOpenP2P" class="btn btn-neon">🌐 Online P2P Mode</button>
                 <button id="btnOpenArcade" class="btn btn-secondary">🤖 vs AI Campaign (25 Levels)</button>
             </div>
@@ -184,12 +220,12 @@
         <!-- PAUSE MATCH MODAL -->
         <div id="modalPause" class="modal-overlay hidden">
             <div class="modal-card pause-card">
-                <h2>⏸️ GAME PAUSED</h2>
+                <h2>⏸️ GAME PAUSED (Press 'P' or 'ESC')</h2>
                 <p class="subtitle">Match is paused. Choose an option below:</p>
 
                 <div class="modal-actions vertical-actions">
-                    <button class="btn btn-neon btn-large" onclick="game.resumeMatch()">▶ RESUME FIGHT</button>
-                    <button class="btn btn-magenta btn-large" onclick="game.restartMatch()">🥊 RESTART LEVEL</button>
+                    <button class="btn btn-neon btn-large" onclick="game.resumeMatch()">▶ RESUME FIGHT (P)</button>
+                    <button class="btn btn-magenta btn-large" onclick="game.restartMatch()">🥊 RESTART LEVEL (R)</button>
                     <button class="btn btn-secondary btn-large" onclick="game.showMainMenu()">🏠 QUIT TO MAIN MENU</button>
                 </div>
             </div>
@@ -200,6 +236,10 @@
             <div class="modal-card main-menu-card">
                 <h1 class="game-title">TYPING <span class="glow-cyan">FIGHTER</span></h1>
                 <p class="subtitle">Speed Up Your Typing Skills in Real-Time 1v1 Fighting Battles!</p>
+
+                <div class="shortcut-hints">
+                    <span>Shortcuts: <strong>[P]</strong> Pause | <strong>[M]</strong> Mute Sound | <strong>[R]</strong> Restart</span>
+                </div>
                 
                 <div class="mode-grid">
                     <div class="mode-card" onclick="game.openCampaignModal()">
@@ -338,19 +378,32 @@
                         <div id="statCombo" class="stat-val">14x</div>
                     </div>
                     <div class="stat-box">
-                        <div class="stat-label">RANK BADGE</div>
-                        <div id="statRank" class="stat-val rank-badge">⚡ SPEED GOD</div>
+                        <div class="stat-label">STAGE RANK</div>
+                        <div id="statRank" class="stat-val rank-badge">⚡ S-RANK</div>
                     </div>
                 </div>
 
                 <div class="modal-actions">
                     <button id="btnNextLevel" class="btn btn-neon btn-large hidden" onclick="game.playNextLevel()">⏩ NEXT LEVEL ➔</button>
-                    <button class="btn btn-magenta btn-large" onclick="game.restartMatch()">🥊 RETRY LEVEL (SPACE)</button>
+                    <button class="btn btn-magenta btn-large" onclick="game.restartMatch()">🥊 RETRY LEVEL (R)</button>
                     <button class="btn btn-secondary btn-large" onclick="game.openCampaignModal()">🗺️ LEVEL MAP</button>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- PWA Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').then(reg => {
+                    console.log('[PWA] Service Worker registered successfully:', reg.scope);
+                }).catch(err => {
+                    console.warn('[PWA] Service Worker registration failed:', err);
+                });
+            });
+        }
+    </script>
 
     <!-- SCRIPTS -->
     <script src="js/config.js"></script>

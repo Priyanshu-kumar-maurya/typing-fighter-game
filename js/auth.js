@@ -105,7 +105,7 @@ class AuthManager {
 
         this.currentUser = newUser;
         this.saveSession();
-        return { success: true, user this.currentUser };
+        return { success: true, user: this.currentUser };
     }
 
     // Mobile Login

@@ -1,85 +1,61 @@
-// Typing Fighter - Game Configuration & Dictionaries
+// Typing Fighter - Configuration & Dictionary Data
 
 const CONFIG = {
-    // Word Dictionaries categorized by difficulty and theme
-    WORDS: {
-        EASY: [
-            "code", "fast", "punch", "kick", "hero", "fight", "dash", "combo", "power", "blast",
-            "speed", "strike", "block", "dodge", "flame", "light", "spark", "rush", "shock", "slash",
-            "storm", "force", "clash", "arena", "blade", "pulse", "cyber", "neon", "steel", "guard"
-        ],
-        MEDIUM: [
-            "hyperdrive", "lightning", "cyberpunk", "overdrive", "adrenaline", "counterstrike", "supercharged",
-            "headshot", "vanguard", "shadowblade", "blitzkrieg", "firestorm", "nanotech", "destruction",
-            "momentum", "precision", "armageddon", "domination", "knockout", "invincible", "thunderbolt"
-        ],
-        HARD: [
-            "quantum leap", "orbital strike", "synaptic pulse", "chronos trigger", "plasma beam",
-            "tactical overload", "supersonic velocity", "subzero fatality", "spectral execution",
-            "cybernetic enhancement", "transcendence mode", "hyperbolic chamber", "electromagnetic surge"
-        ],
-        POWER_WORDS: [
-            "SUPERNOVA", "METEOR STRIKE", "KAMEHAMEHA", "FINAL FLASH", "DRAGON ASCENT",
-            "OBLIVION BEAM", "HYPER COMBO", "QUANTUM CRUSH", "SOLAR FLARE", "THUNDER GOD"
-        ]
+    GAME: {
+        MAX_HP: 100,
+        BASE_DAMAGE: 10,
+        SUPER_DAMAGE: 35,
+        SUPER_METER_MAX: 100,
+        SUPER_METER_PER_WORD: 25,
+        DEFAULT_WPM_TARGET: 15
     },
 
-    // 25 Arcade Campaign Levels (Starts at 15 WPM up to 120 WPM)
+    // 25 PROGRESSIVE CAMPAIGN BOSS STAGES (15 WPM to 120 WPM)
     CAMPAIGN_LEVELS: [
-        { level: 1, name: "ROOKIE BOT", title: "Stage 1", avatar: "🤖", difficulty: "Novice", baseWPM: 15, attackInterval: 3800, color: "#00f0ff", maxHp: 90 },
-        { level: 2, name: "CYBER SPARK", title: "Stage 2", avatar: "⚡", difficulty: "Novice", baseWPM: 18, attackInterval: 3500, color: "#00f0ff", maxHp: 95 },
-        { level: 3, name: "NEON CADET", title: "Stage 3", avatar: "🎮", difficulty: "Easy", baseWPM: 22, attackInterval: 3200, color: "#00ff88", maxHp: 100 },
-        { level: 4, name: "SHADOW RECRUIT", title: "Stage 4", avatar: "🥷", difficulty: "Easy", baseWPM: 25, attackInterval: 3000, color: "#00ff88", maxHp: 105 },
-        { level: 5, name: "IRON STRIKER", title: "Stage 5", avatar: "🥊", difficulty: "Easy", baseWPM: 29, attackInterval: 2800, color: "#00ff88", maxHp: 110 },
-        { level: 6, name: "LASER SENTINEL", title: "Stage 6", avatar: "🤖", difficulty: "Medium", baseWPM: 33, attackInterval: 2600, color: "#ffaa00", maxHp: 115 },
-        { level: 7, name: "DISTRICT NINJA", title: "Stage 7", avatar: "🥷", difficulty: "Medium", baseWPM: 37, attackInterval: 2400, color: "#ffaa00", maxHp: 120 },
-        { level: 8, name: "NEON ASSASSIN", title: "Stage 8", avatar: "⚡", difficulty: "Medium", baseWPM: 41, attackInterval: 2200, color: "#ffaa00", maxHp: 125 },
-        { level: 9, name: "CYBER PHANTOM", title: "Stage 9", avatar: "👻", difficulty: "Medium", baseWPM: 45, attackInterval: 2000, color: "#ffaa00", maxHp: 130 },
-        { level: 10, name: "COMMANDER BLITZ", title: "Stage 10 Boss", avatar: "🛡️", difficulty: "BOSS", baseWPM: 49, attackInterval: 1850, color: "#ff0055", maxHp: 140 },
-        { level: 11, name: "HYPER VENOM", title: "Stage 11", avatar: "🐍", difficulty: "Hard", baseWPM: 53, attackInterval: 1750, color: "#ff0055", maxHp: 145 },
-        { level: 12, name: "PLASMA HUNTER", title: "Stage 12", avatar: "🎯", difficulty: "Hard", baseWPM: 57, attackInterval: 1650, color: "#ff0055", maxHp: 150 },
-        { level: 13, name: "VALKYRIE SPEED", title: "Stage 13", avatar: "🗡️", difficulty: "Hard", baseWPM: 61, attackInterval: 1550, color: "#ff0055", maxHp: 155 },
-        { level: 14, name: "SUPERSONIC CHRONO", title: "Stage 14", avatar: "⏳", difficulty: "Hard", baseWPM: 65, attackInterval: 1450, color: "#ff0055", maxHp: 160 },
-        { level: 15, name: "VOID OVERLORD", title: "Stage 15 Boss", avatar: "🐉", difficulty: "BOSS", baseWPM: 70, attackInterval: 1350, color: "#9d00ff", maxHp: 170 },
-        { level: 16, name: "MECHA KAISER", title: "Stage 16", avatar: "🦾", difficulty: "Expert", baseWPM: 75, attackInterval: 1250, color: "#9d00ff", maxHp: 175 },
-        { level: 17, name: "SPECTRAL SHADOW", title: "Stage 17", avatar: "👤", difficulty: "Expert", baseWPM: 80, attackInterval: 1150, color: "#9d00ff", maxHp: 180 },
-        { level: 18, name: "QUANTUM TITAN", title: "Stage 18", avatar: "🌌", difficulty: "Expert", baseWPM: 85, attackInterval: 1080, color: "#9d00ff", maxHp: 185 },
-        { level: 19, name: "SYNAPIC GOD", title: "Stage 19", avatar: "🧠", difficulty: "Expert", baseWPM: 90, attackInterval: 1000, color: "#9d00ff", maxHp: 190 },
-        { level: 20, name: "APEX OVERLORD", title: "Stage 20 Boss", avatar: "👑", difficulty: "SUPER BOSS", baseWPM: 95, attackInterval: 920, color: "#ffe600", maxHp: 200 },
-        { level: 21, name: "SPEED DEMON REX", title: "Stage 21", avatar: "🦖", difficulty: "NIGHTMARE", baseWPM: 100, attackInterval: 850, color: "#ffe600", maxHp: 210 },
-        { level: 22, name: "HYPERDRIVE OMEGA", title: "Stage 22", avatar: "💥", difficulty: "NIGHTMARE", baseWPM: 105, attackInterval: 800, color: "#ffe600", maxHp: 220 },
-        { level: 23, name: "CHRONOS PRIME", title: "Stage 23", avatar: "⏱️", difficulty: "NIGHTMARE", baseWPM: 110, attackInterval: 750, color: "#ffe600", maxHp: 230 },
-        { level: 24, name: "INFINITY WARRIOR", title: "Stage 24", avatar: "♾️", difficulty: "NIGHTMARE", baseWPM: 115, attackInterval: 700, color: "#ffe600", maxHp: 240 },
-        { level: 25, name: "ULTIMATE TYPING GOD", title: "Stage 25 FINAL BOSS", avatar: "⚡👑⚡", difficulty: "GOD MODE", baseWPM: 120, attackInterval: 650, color: "#ffe600", maxHp: 250 }
+        { level: 1, name: "Rookie Bot", baseWPM: 15, maxHp: 100, attackInterval: 4500, avatar: '<i class="fa-solid fa-robot"></i>', color: '#00f0ff', difficulty: 'Easy' },
+        { level: 2, name: "Iron Striker", baseWPM: 18, maxHp: 110, attackInterval: 4200, avatar: '<i class="fa-solid fa-dumbbell"></i>', color: '#00f0ff', difficulty: 'Easy' },
+        { level: 3, name: "Cypher Drone", baseWPM: 22, maxHp: 120, attackInterval: 4000, avatar: '<i class="fa-solid fa-gear"></i>', color: '#00f0ff', difficulty: 'Easy' },
+        { level: 4, name: "Vector Fighter", baseWPM: 25, maxHp: 130, attackInterval: 3800, avatar: '<i class="fa-solid fa-user-ninja"></i>', color: '#00f0ff', difficulty: 'Easy' },
+        { level: 5, name: "Neon Brawler", baseWPM: 28, maxHp: 140, attackInterval: 3600, avatar: '<i class="fa-solid fa-bolt"></i>', color: '#00ff88', difficulty: 'Medium' },
+        { level: 6, name: "Laser Lynx", baseWPM: 32, maxHp: 150, attackInterval: 3400, avatar: '<i class="fa-solid fa-cat"></i>', color: '#00ff88', difficulty: 'Medium' },
+        { level: 7, name: "Plasma Phantom", baseWPM: 35, maxHp: 160, attackInterval: 3200, avatar: '<i class="fa-solid fa-ghost"></i>', color: '#00ff88', difficulty: 'Medium' },
+        { level: 8, name: "Cyber Samurai", baseWPM: 40, maxHp: 170, attackInterval: 3000, avatar: '<i class="fa-solid fa-shield-halved"></i>', color: '#00ff88', difficulty: 'Medium' },
+        { level: 9, name: "Shadow Assassin", baseWPM: 45, maxHp: 180, attackInterval: 2800, avatar: '<i class="fa-solid fa-user-secret"></i>', color: '#00ff88', difficulty: 'Medium' },
+        { level: 10, name: "Titan Crusher", baseWPM: 50, maxHp: 200, attackInterval: 2600, avatar: '<i class="fa-solid fa-hand-fist"></i>', color: '#ffe600', difficulty: 'Hard' },
+        { level: 11, name: "Hyper Dynamo", baseWPM: 55, maxHp: 210, attackInterval: 2500, avatar: '<i class="fa-solid fa-atom"></i>', color: '#ffe600', difficulty: 'Hard' },
+        { level: 12, name: "Quantum Reaper", baseWPM: 60, maxHp: 220, attackInterval: 2400, avatar: '<i class="fa-solid fa-skull"></i>', color: '#ffe600', difficulty: 'Hard' },
+        { level: 13, name: "Vortex Warrior", baseWPM: 65, maxHp: 230, attackInterval: 2300, avatar: '<i class="fa-solid fa-tornado"></i>', color: '#ffe600', difficulty: 'Hard' },
+        { level: 14, name: "Nexus Commander", baseWPM: 70, maxHp: 240, attackInterval: 2200, avatar: '<i class="fa-solid fa-chess-king"></i>', color: '#ffe600', difficulty: 'Hard' },
+        { level: 15, name: "Apex Demon", baseWPM: 75, maxHp: 250, attackInterval: 2000, avatar: '<i class="fa-solid fa-fire"></i>', color: '#ff0055', difficulty: 'Expert' },
+        { level: 16, name: "Inferno Warlord", baseWPM: 80, maxHp: 260, attackInterval: 1900, avatar: '<i class="fa-solid fa-dragon"></i>', color: '#ff0055', difficulty: 'Expert' },
+        { level: 17, name: "Overclock Prime", baseWPM: 85, maxHp: 270, attackInterval: 1800, avatar: '<i class="fa-solid fa-microchip"></i>', color: '#ff0055', difficulty: 'Expert' },
+        { level: 18, name: "Zero Absolute", baseWPM: 90, maxHp: 280, attackInterval: 1700, avatar: '<i class="fa-solid fa-snowflake"></i>', color: '#ff0055', difficulty: 'Expert' },
+        { level: 19, name: "Cosmic Sentinel", baseWPM: 95, maxHp: 290, attackInterval: 1600, avatar: '<i class="fa-solid fa-meteor"></i>', color: '#ff0055', difficulty: 'Expert' },
+        { level: 20, name: "Sovereign God", baseWPM: 100, maxHp: 300, attackInterval: 1500, avatar: '<i class="fa-solid fa-crown"></i>', color: '#aa00ff', difficulty: 'NIGHTMARE' },
+        { level: 21, name: "Chronos Master", baseWPM: 105, maxHp: 310, attackInterval: 1400, avatar: '<i class="fa-solid fa-stopwatch"></i>', color: '#aa00ff', difficulty: 'NIGHTMARE' },
+        { level: 22, name: "Omega Destroyer", baseWPM: 110, maxHp: 320, attackInterval: 1300, avatar: '<i class="fa-solid fa-radiation"></i>', color: '#aa00ff', difficulty: 'BOSS' },
+        { level: 23, name: "Infinity Knight", baseWPM: 115, maxHp: 330, attackInterval: 1200, avatar: '<i class="fa-solid fa-infinity"></i>', color: '#aa00ff', difficulty: 'SUPER BOSS' },
+        { level: 24, name: "Oblivion King", baseWPM: 118, maxHp: 340, attackInterval: 1100, avatar: '<i class="fa-solid fa-eye"></i>', color: '#aa00ff', difficulty: 'SUPER BOSS' },
+        { level: 25, name: "Ultimate Typing God", baseWPM: 120, maxHp: 350, attackInterval: 1000, avatar: '<i class="fa-solid fa-trophy"></i>', color: '#ffe600', difficulty: 'GOD MODE' }
     ],
 
-    // Player Fighter Profiles
-    FIGHTERS: {
-        P1: {
-            name: "CYBER WARRIOR",
-            color: "#00f0ff",
-            glowColor: "rgba(0, 240, 255, 0.6)",
-            accentColor: "#7000ff"
-        },
-        P2: {
-            name: "NEON DEMON",
-            color: "#ff0055",
-            glowColor: "rgba(255, 0, 85, 0.6)",
-            accentColor: "#ff9900"
-        }
-    },
-
-    // Gameplay Physics Parameters
-    GAME: {
-        BASE_DAMAGE: 8,
-        SUPER_METER_MAX: 100,
-        SUPER_METER_PER_WORD: 15,
-        SUPER_DAMAGE: 35,
-        COMBO_TIMEDOWN: 4000,
-        P2P_PEER_PREFIX: "tf-arena-"
+    // TYPING PROMPT DICTIONARIES
+    WORDS: {
+        EASY: [
+            "jab", "kick", "dash", "punch", "block", "combo", "strike", "clash",
+            "fight", "speed", "power", "cyber", "arena", "blade", "spark", "boost"
+        ],
+        MEDIUM: [
+            "counter", "plasma", "hyper", "critical", "overdrive", "warrior",
+            "assassin", "lightning", "velocity", "victory", "impact", "stamina"
+        ],
+        HARD: [
+            "devastation", "obliteration", "invincible", "retaliation",
+            "annihilation", "cybernetics", "overclocked", "mastermind", "supernova"
+        ],
+        POWER_WORDS: [
+            "HYPER PUNCH", "PLASMA BEAM", "MEGA COMBO", "ULTIMATE KO",
+            "TURBO STRIKE", "CYBER DESTROYER", "GOD SLAM"
+        ]
     }
 };
-
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = CONFIG;
-}

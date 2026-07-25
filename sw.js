@@ -1,6 +1,6 @@
-// Typing Fighter - PWA Service Worker v2 (Network-First for JS scripts)
+// Typing Fighter - PWA Service Worker v5 (Font Awesome SVG Icons)
 
-const CACHE_NAME = 'typing-fighter-v2';
+const CACHE_NAME = 'typing-fighter-v5';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',

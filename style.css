@@ -58,17 +58,21 @@ body {
     box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
 }
 
-.user-avatar {
-    width: 30px;
-    height: 30px;
-    background: var(--neon-cyan);
-    color: #000;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 1rem;
-    font-weight: 900;
+.icon-glow {
+    color: var(--neon-cyan);
+    text-shadow: 0 0 10px var(--neon-cyan);
+    margin-right: 6px;
+}
+
+.level-avatar i {
+    font-size: 2.2rem;
+    color: var(--neon-cyan);
+    filter: drop-shadow(0 0 8px var(--neon-cyan));
+}
+
+.avatar i {
+    font-size: 1.5rem;
+    color: var(--neon-cyan);
 }
 
 .user-details {

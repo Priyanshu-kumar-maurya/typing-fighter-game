@@ -152,10 +152,10 @@ class GameApp {
         const toast = document.createElement('div');
         toast.className = `toast toast-${type}`;
 
-        let icon = '🔔';
-        if (type === 'success') icon = '✅';
-        if (type === 'error') icon = '⚠️';
-        if (type === 'info') icon = '⚡';
+        let icon = '<i class="fa-solid fa-bell"></i>';
+        if (type === 'success') icon = '<i class="fa-solid fa-circle-check"></i>';
+        if (type === 'error') icon = '<i class="fa-solid fa-circle-exclamation"></i>';
+        if (type === 'info') icon = '<i class="fa-solid fa-bolt"></i>';
 
         toast.innerHTML = `<span class="toast-icon">${icon}</span> <span>${this.escapeHtml(message)}</span>`;
         container.appendChild(toast);
@@ -169,7 +169,7 @@ class GameApp {
     toggleSound() {
         audio.muted = !audio.muted;
         const btn = document.getElementById('btnSoundToggle');
-        if (btn) btn.innerText = audio.muted ? "🔇 Sound: OFF" : "🔊 Sound: ON";
+        if (btn) btn.innerHTML = audio.muted ? '<i class="fa-solid fa-volume-xmark"></i> Sound: OFF' : '<i class="fa-solid fa-volume-high"></i> Sound: ON';
         this.showToast(audio.muted ? "Audio Muted" : "Audio Enabled", "info", 1500);
     }
 
@@ -259,7 +259,7 @@ class GameApp {
 
         const res = auth.registerWithMobile(name, age, mobile, pass);
         if (res.success) {
-            this.showToast("Account registered successfully! 🎉", "success");
+            this.showToast("Account registered successfully!", "success");
             this.updateUserHeaderUI();
             this.closeAuthModal();
             this.showMainMenu();
@@ -279,7 +279,7 @@ class GameApp {
 
         const res = auth.loginWithMobile(mobile, pass);
         if (res.success) {
-            this.showToast(`Welcome back ${res.user.name}! 🎉`, "success");
+            this.showToast(`Welcome back ${res.user.name}!`, "success");
             this.updateUserHeaderUI();
             this.closeAuthModal();
             this.showMainMenu();
@@ -294,7 +294,7 @@ class GameApp {
         const metaElem = document.getElementById('headerUserMeta');
 
         const lvl = auth.currentUser.unlockedLevel || combat.unlockedLevel || 1;
-        const typeTag = auth.currentUser.type === 'registered' ? '📱 Registered' : '🎮 Guest';
+        const typeTag = auth.currentUser.type === 'registered' ? 'Registered' : 'Guest';
 
         if (nameElem) nameElem.innerText = auth.currentUser.name;
         if (metaElem) metaElem.innerText = `${typeTag} | Age: ${auth.currentUser.age || 18} | Stage ${lvl}`;
@@ -313,10 +313,10 @@ class GameApp {
         const isEnabled = p2p.toggleMic();
         const btn = document.getElementById('btnMicToggle');
         if (btn) {
-            btn.innerText = isEnabled ? "🎙️ Mic: ON" : "🎙️ Mic: MUTED";
+            btn.innerHTML = isEnabled ? '<i class="fa-solid fa-microphone"></i> Mic: ON' : '<i class="fa-solid fa-microphone-slash"></i> Mic: MUTED';
             btn.style.color = isEnabled ? "var(--neon-cyan)" : "#ff0055";
         }
-        this.showToast(isEnabled ? "Microphone Unmuted 🎙️" : "Microphone Muted 🔇", isEnabled ? "success" : "info");
+        this.showToast(isEnabled ? "Microphone Unmuted" : "Microphone Muted", isEnabled ? "success" : "info");
     }
 
     startArcadeLevel(levelNum = 1) {
@@ -330,7 +330,7 @@ class GameApp {
             this.closeModals();
             combat.reset('arcade', levelNum);
             document.getElementById('stageBadge').innerText = `STAGE ${levelNum}/25`;
-            this.setupPlayerUI(1, auth.currentUser.name, "⚡", "#00f0ff");
+            this.setupPlayerUI(1, auth.currentUser.name, '<i class="fa-solid fa-bolt"></i>', "#00f0ff");
             this.setupPlayerUI(2, combat.bot.name, combat.bot.avatar, combat.bot.color);
             this.startMatch();
 
@@ -350,8 +350,8 @@ class GameApp {
             this.closeModals();
             combat.reset('local2p');
             document.getElementById('stageBadge').innerText = `1v1 LOCAL`;
-            this.setupPlayerUI(1, auth.currentUser ? auth.currentUser.name : "PLAYER 1", "⚡", "#00f0ff");
-            this.setupPlayerUI(2, "PLAYER 2", "🔥", "#ff0055");
+            this.setupPlayerUI(1, auth.currentUser ? auth.currentUser.name : "PLAYER 1", '<i class="fa-solid fa-bolt"></i>', "#00f0ff");
+            this.setupPlayerUI(2, "PLAYER 2", '<i class="fa-solid fa-fire"></i>', "#ff0055");
             this.startMatch();
         };
 
@@ -532,7 +532,7 @@ class GameApp {
             combat.registerKey(1, true);
             audio.playKeyPress();
 
-            // TRIGGER IMMEDIATE PUNCH / STRIKE ON EVERY SINGLE CORRECT KEYSTROKE! 🥊
+            // TRIGGER IMMEDIATE PUNCH / STRIKE ON EVERY SINGLE CORRECT KEYSTROKE!
             this.renderer.triggerAttack(1, 'light');
             this.renderer.spawnHitSparks(this.renderer.f2.x, this.renderer.f2.y - 50, '#00f0ff', 'light');
 
@@ -636,7 +636,7 @@ class GameApp {
             this.renderer.f1.color = color;
         } else {
             document.getElementById('p2Name').innerText = this.escapeHtml(name);
-            document.getElementById('p2Avatar').innerText = avatar;
+            document.getElementById('p2Avatar').innerHTML = avatar;
             this.renderer.f2.color = color;
         }
     }
@@ -711,8 +711,8 @@ class GameApp {
                 this.closeModals();
                 combat.reset('p2p');
                 document.getElementById('stageBadge').innerText = `P2P ONLINE`;
-                this.setupPlayerUI(1, auth.currentUser ? auth.currentUser.name : "HERO (YOU)", "⚡", "#00f0ff");
-                this.setupPlayerUI(2, "FRIEND (ONLINE)", "🎮", "#ff0055");
+                this.setupPlayerUI(1, auth.currentUser ? auth.currentUser.name : "HERO (YOU)", '<i class="fa-solid fa-bolt"></i>', "#00f0ff");
+                this.setupPlayerUI(2, "FRIEND (ONLINE)", '<i class="fa-solid fa-gamepad"></i>', "#ff0055");
                 this.startMatch();
             };
             this.openContentChoiceModal();
@@ -783,10 +783,10 @@ class GameApp {
     }
 
     calculateStageRank(wpm, accuracy, targetWPM) {
-        if (wpm >= targetWPM + 15 && accuracy >= 95) return "⚡ S-RANK";
-        if (wpm >= targetWPM + 8 && accuracy >= 90) return "🔥 A-RANK";
-        if (wpm >= targetWPM && accuracy >= 85) return "⚔️ B-RANK";
-        return "🥊 C-RANK";
+        if (wpm >= targetWPM + 15 && accuracy >= 95) return '<i class="fa-solid fa-bolt"></i> S-RANK';
+        if (wpm >= targetWPM + 8 && accuracy >= 90) return '<i class="fa-solid fa-fire"></i> A-RANK';
+        if (wpm >= targetWPM && accuracy >= 85) return '<i class="fa-solid fa-shield-halved"></i> B-RANK';
+        return '<i class="fa-solid fa-hand-fist"></i> C-RANK';
     }
 
     handleGameOver(winner) {
@@ -812,16 +812,16 @@ class GameApp {
         // Populate Game Over Stats Modal
         if (combat.mode === 'arcade') {
             if (winner === 1) {
-                document.getElementById('winnerTitle').innerText = `STAGE ${combat.currentLevel} CLEARED! 🎉`;
+                document.getElementById('winnerTitle').innerText = `STAGE ${combat.currentLevel} CLEARED!`;
                 document.getElementById('winnerSubtitle').innerText = combat.currentLevel < CONFIG.CAMPAIGN_LEVELS.length 
                     ? `Target ${combat.bot.baseWPM} WPM Passed! Stage ${combat.currentLevel + 1} Unlocked!` 
-                    : "🏆 CONGRATULATIONS! YOU DEFEATED ALL 25 CAMPAIGN BOSSES!";
+                    : "CONGRATULATIONS! YOU DEFEATED ALL 25 CAMPAIGN BOSSES!";
                 if (btnNextLevel) btnNextLevel.classList.remove('hidden');
             } else {
                 if (combat.lastDefeatReason && combat.lastDefeatReason.startsWith('WPM_TOO_LOW')) {
                     const reqWPM = combat.lastDefeatReason.split(':')[1];
-                    document.getElementById('winnerTitle').innerText = `❌ STAGE ${combat.currentLevel} FAILED!`;
-                    document.getElementById('winnerSubtitle').innerText = `⚠️ Speed was ${combat.p1.wpm} WPM. Required speed is ${reqWPM} WPM to pass this Stage!`;
+                    document.getElementById('winnerTitle').innerText = `STAGE ${combat.currentLevel} FAILED!`;
+                    document.getElementById('winnerSubtitle').innerText = `Speed was ${combat.p1.wpm} WPM. Required speed is ${reqWPM} WPM to pass this Stage!`;
                 } else {
                     document.getElementById('winnerTitle').innerText = `DEFEAT! HEALTH DEPLETED!`;
                     document.getElementById('winnerSubtitle').innerText = `Keep practicing your typing speed!`;
@@ -839,7 +839,7 @@ class GameApp {
         document.getElementById('statWpm').innerHTML = `${combat.p1.wpm} <span class="unit">WPM</span>`;
         document.getElementById('statAcc').innerHTML = `${combat.p1.accuracy}<span class="unit">%</span>`;
         document.getElementById('statCombo').innerText = `${combat.p1.maxCombo}x`;
-        document.getElementById('statRank').innerText = winner === 1 ? stageRank : "❌ NO RANK";
+        document.getElementById('statRank').innerHTML = winner === 1 ? stageRank : '<i class="fa-solid fa-xmark"></i> NO RANK';
 
         document.getElementById('modalGameOver').classList.remove('hidden');
     }
@@ -865,9 +865,9 @@ class GameApp {
             const card = document.createElement('div');
             card.className = `level-card ${isUnlocked ? '' : 'locked'}`;
 
-            let badgeHtml = `<span class="level-status-badge status-locked">🔒 LOCKED</span>`;
-            if (isCleared) badgeHtml = `<span class="level-status-badge status-cleared">⭐ CLEARED</span>`;
-            else if (isUnlocked) badgeHtml = `<span class="level-status-badge status-unlocked">⚔️ UNLOCKED</span>`;
+            let badgeHtml = `<span class="level-status-badge status-locked"><i class="fa-solid fa-lock"></i> LOCKED</span>`;
+            if (isCleared) badgeHtml = `<span class="level-status-badge status-cleared"><i class="fa-solid fa-star"></i> CLEARED</span>`;
+            else if (isUnlocked) badgeHtml = `<span class="level-status-badge status-unlocked"><i class="fa-solid fa-shield-halved"></i> UNLOCKED</span>`;
 
             card.innerHTML = `
                 <div class="level-num">STAGE ${lvl.level}</div>

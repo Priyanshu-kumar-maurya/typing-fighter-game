@@ -16,6 +16,9 @@
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="manifest" href="manifest.json">
 
+    <!-- Font Awesome 6 Professional SVG Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
     <!-- Open Graph / Facebook / WhatsApp Social Cards -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://github.com/Priyanshu-kumar-maurya/typing-fighter-game">
@@ -45,7 +48,7 @@
 
     <!-- SPLASH LOADING SCREEN -->
     <div id="loadingScreen" class="loading-screen">
-        <div class="loading-logo">🥊 TYPING <span class="glow-cyan">FIGHTER</span></div>
+        <div class="loading-logo"><i class="fa-solid fa-hand-fist icon-glow"></i> TYPING <span class="glow-cyan">FIGHTER</span></div>
         <div class="loading-bar-outer">
             <div id="loadingBar" class="loading-bar-inner"></div>
         </div>
@@ -56,14 +59,14 @@
         <!-- TOP HEADER NAVBAR -->
         <header class="header">
             <div class="logo">
-                <span class="logo-icon">🥊</span>
+                <span class="logo-icon"><i class="fa-solid fa-hand-fist"></i></span>
                 <span class="logo-text">TYPING <span class="highlight">FIGHTER</span></span>
                 <span class="badge">CLASH ARENA</span>
             </div>
 
             <!-- PLAYER PROFILE BADGE -->
             <div id="playerProfileHeader" class="player-header-badge" onclick="game.openAuthModal()">
-                <div class="user-avatar">👤</div>
+                <div class="user-avatar"><i class="fa-solid fa-user"></i></div>
                 <div class="user-details">
                     <span id="headerUserName" class="user-name">Guest Warrior</span>
                     <span id="headerUserMeta" class="user-meta">Age: 18 | Level 1</span>
@@ -71,11 +74,11 @@
             </div>
 
             <div class="header-controls">
-                <button id="btnSoundToggle" class="icon-btn" title="Toggle Audio (Shortcut: M)">🔊 Sound: ON</button>
-                <button id="btnMicToggle" class="icon-btn mic-btn" title="Toggle Voice Chat Mic" onclick="game.toggleMic()">🎙️ Mic: ON</button>
-                <button id="btnQuitMatch" class="btn btn-secondary" title="Shortcut: P" onclick="game.pauseMatch()">⏸️ PAUSE / QUIT</button>
-                <button id="btnOpenP2P" class="btn btn-neon">🌐 Online P2P Mode</button>
-                <button id="btnOpenArcade" class="btn btn-secondary">🤖 vs AI Campaign (25 Levels)</button>
+                <button id="btnSoundToggle" class="icon-btn" title="Toggle Audio (Shortcut: M)"><i class="fa-solid fa-volume-high"></i> Sound: ON</button>
+                <button id="btnMicToggle" class="icon-btn mic-btn" title="Toggle Voice Chat Mic" onclick="game.toggleMic()"><i class="fa-solid fa-microphone"></i> Mic: ON</button>
+                <button id="btnQuitMatch" class="btn btn-secondary" title="Shortcut: P" onclick="game.pauseMatch()"><i class="fa-solid fa-pause"></i> PAUSE / QUIT</button>
+                <button id="btnOpenP2P" class="btn btn-neon"><i class="fa-solid fa-earth-americas"></i> Online P2P Mode</button>
+                <button id="btnOpenArcade" class="btn btn-secondary"><i class="fa-solid fa-robot"></i> vs AI Campaign (25 Levels)</button>
             </div>
         </header>
 
@@ -86,7 +89,7 @@
                 <!-- PLAYER 1 (HERO) -->
                 <div class="player-hud p1-hud">
                     <div class="player-info">
-                        <div class="avatar">⚡</div>
+                        <div class="avatar"><i class="fa-solid fa-bolt"></i></div>
                         <div class="details">
                             <h3 id="p1Name">CYBER WARRIOR</h3>
                             <div class="stats-mini">WPM: <span id="p1Wpm">0</span> | ACC: <span id="p1Acc">100</span>%</div>
@@ -117,7 +120,7 @@
                             <h3 id="p2Name">ROOKIE BOT</h3>
                             <div class="stats-mini">WPM: <span id="p2Wpm">0</span> | ACC: <span id="p2Acc">100</span>%</div>
                         </div>
-                        <div id="p2Avatar" class="avatar">🤖</div>
+                        <div id="p2Avatar" class="avatar"><i class="fa-solid fa-robot"></i></div>
                     </div>
                     <div class="hp-bar-outer">
                         <div id="p2HpBar" class="hp-bar-inner p2-hp" style="width: 100%;"></div>
@@ -136,7 +139,7 @@
 
                 <!-- TARGET TYPING PROMPT OVERLAY -->
                 <div class="typing-box-container">
-                    <div id="superReadyBanner" class="super-ready-banner hidden">⚡ SUPER READY! TYPE POWER WORD FOR HYPER DAMAGE! ⚡</div>
+                    <div id="superReadyBanner" class="super-ready-banner hidden"><i class="fa-solid fa-bolt"></i> SUPER READY! TYPE POWER WORD FOR HYPER DAMAGE! <i class="fa-solid fa-bolt"></i></div>
                     <div class="typing-word-card">
                         <div class="prompt-label">TYPE TO ATTACK:</div>
                         <div id="wordDisplay" class="word-display">
@@ -152,13 +155,13 @@
         <!-- AUTH / LOGIN MODAL -->
         <div id="modalAuth" class="modal-overlay hidden">
             <div class="modal-card auth-card">
-                <h2>🔐 PLAYER LOGIN & REGISTRATION</h2>
+                <h2><i class="fa-solid fa-shield-halved icon-glow"></i> PLAYER LOGIN & REGISTRATION</h2>
                 <p class="subtitle">Save your 25 Campaign Levels progress and typing stats!</p>
 
                 <div class="auth-tabs">
-                    <button id="tabGuest" class="tab-btn active">🎮 Guest Play</button>
-                    <button id="tabRegister" class="tab-btn">📱 Register Account</button>
-                    <button id="tabLogin" class="tab-btn">🔑 Login</button>
+                    <button id="tabGuest" class="tab-btn active"><i class="fa-solid fa-user-ninja"></i> Guest Play</button>
+                    <button id="tabRegister" class="tab-btn"><i class="fa-solid fa-mobile-screen-button"></i> Register Account</button>
+                    <button id="tabLogin" class="tab-btn"><i class="fa-solid fa-key"></i> Login</button>
                 </div>
 
                 <!-- GUEST SECTION -->
@@ -172,7 +175,7 @@
                         <label>Age:</label>
                         <input type="number" id="guestAgeInput" class="auth-input" placeholder="e.g. 18" min="5" max="99">
                     </div>
-                    <button class="btn btn-neon full-width mt-3" onclick="game.handleGuestLogin()">START AS GUEST 🎮</button>
+                    <button class="btn btn-neon full-width mt-3" onclick="game.handleGuestLogin()">START AS GUEST <i class="fa-solid fa-play"></i></button>
                 </div>
 
                 <!-- REGISTER SECTION -->
@@ -194,7 +197,7 @@
                         <label>Password:</label>
                         <input type="password" id="regPassInput" class="auth-input" placeholder="Enter password (min 4 chars)">
                     </div>
-                    <button class="btn btn-magenta full-width mt-3" onclick="game.handleMobileRegister()">CREATE PERMANENT ACCOUNT 📱</button>
+                    <button class="btn btn-magenta full-width mt-3" onclick="game.handleMobileRegister()">CREATE PERMANENT ACCOUNT <i class="fa-solid fa-check-double"></i></button>
                 </div>
 
                 <!-- LOGIN SECTION -->
@@ -208,25 +211,25 @@
                         <label>Password:</label>
                         <input type="password" id="loginPassInput" class="auth-input" placeholder="Enter password">
                     </div>
-                    <button class="btn btn-neon full-width mt-3" onclick="game.handleMobileLogin()">LOGIN TO MY ACCOUNT 🔑</button>
+                    <button class="btn btn-neon full-width mt-3" onclick="game.handleMobileLogin()">LOGIN TO MY ACCOUNT <i class="fa-solid fa-right-to-bracket"></i></button>
                 </div>
 
                 <div id="authStatus" class="auth-status-msg"></div>
 
-                <button class="btn btn-close-modal" onclick="game.closeAuthModal()">✖ Close</button>
+                <button class="btn btn-close-modal" onclick="game.closeAuthModal()"><i class="fa-solid fa-xmark"></i> Close</button>
             </div>
         </div>
 
         <!-- PAUSE MATCH MODAL -->
         <div id="modalPause" class="modal-overlay hidden">
             <div class="modal-card pause-card">
-                <h2>⏸️ GAME PAUSED (Press 'P' or 'ESC')</h2>
+                <h2><i class="fa-solid fa-circle-pause icon-glow"></i> GAME PAUSED (Press 'P' or 'ESC')</h2>
                 <p class="subtitle">Match is paused. Choose an option below:</p>
 
                 <div class="modal-actions vertical-actions">
-                    <button class="btn btn-neon btn-large" onclick="game.resumeMatch()">▶ RESUME FIGHT (P)</button>
-                    <button class="btn btn-magenta btn-large" onclick="game.restartMatch()">🥊 RESTART LEVEL (R)</button>
-                    <button class="btn btn-secondary btn-large" onclick="game.showMainMenu()">🏠 QUIT TO MAIN MENU</button>
+                    <button class="btn btn-neon btn-large" onclick="game.resumeMatch()"><i class="fa-solid fa-play"></i> RESUME FIGHT (P)</button>
+                    <button class="btn btn-magenta btn-large" onclick="game.restartMatch()"><i class="fa-solid fa-rotate-right"></i> RESTART LEVEL (R)</button>
+                    <button class="btn btn-secondary btn-large" onclick="game.showMainMenu()"><i class="fa-solid fa-house"></i> QUIT TO MAIN MENU</button>
                 </div>
             </div>
         </div>
@@ -243,21 +246,21 @@
                 
                 <div class="mode-grid">
                     <div class="mode-card" onclick="game.openCampaignModal()">
-                        <div class="mode-icon">🤖</div>
+                        <div class="mode-icon"><i class="fa-solid fa-robot"></i></div>
                         <h3>vs AI CAMPAIGN</h3>
                         <p>Pass 25 progressive Boss Levels (Starts at 15 WPM up to 120 WPM)!</p>
                         <button class="btn btn-neon mt-2">PLAY 25 LEVELS</button>
                     </div>
 
                     <div class="mode-card" onclick="game.openP2PModal()">
-                        <div class="mode-icon">🌐</div>
+                        <div class="mode-icon"><i class="fa-solid fa-earth-americas"></i></div>
                         <h3>ONLINE P2P MULTIPLAYER</h3>
                         <p>Play with a friend from home with Live P2P Voice Chat!</p>
                         <button class="btn btn-magenta mt-2">P2P ROOM & VOICE</button>
                     </div>
 
                     <div class="mode-card" onclick="game.startLocal2PMode()">
-                        <div class="mode-icon">⌨️</div>
+                        <div class="mode-icon"><i class="fa-solid fa-keyboard"></i></div>
                         <h3>LOCAL 2-PLAYER</h3>
                         <p>Battle a friend sitting next to you on the same keyboard!</p>
                         <button class="btn btn-secondary mt-2">LOCAL 1v1</button>
@@ -269,50 +272,50 @@
         <!-- WORD MODE VS CUSTOM SCRIPT CHOICE MODAL -->
         <div id="modalContentChoice" class="modal-overlay hidden">
             <div class="modal-card choice-card">
-                <h2>📝 CHOOSE TYPING CONTENT MODE</h2>
+                <h2><i class="fa-solid fa-pen-to-square icon-glow"></i> CHOOSE TYPING CONTENT MODE</h2>
                 <p class="subtitle">Select what you want to type during the fight:</p>
 
                 <div class="choice-grid">
                     <div class="choice-box" onclick="game.confirmContentMode('words')">
-                        <div class="choice-icon">🔤</div>
+                        <div class="choice-icon"><i class="fa-solid fa-font"></i></div>
                         <h3>RANDOM WORDS MODE</h3>
                         <p>Fight using arcade action words & fast vocabulary.</p>
                         <button class="btn btn-neon mt-2">PLAY RANDOM WORDS</button>
                     </div>
 
                     <div class="choice-box" onclick="game.openCustomScriptModal()">
-                        <div class="choice-icon">📑</div>
+                        <div class="choice-icon"><i class="fa-solid fa-file-pen"></i></div>
                         <h3>CUSTOM SCRIPT / TEXT MODE</h3>
                         <p>Paste or type your own study notes, speech, or script to practice while fighting!</p>
                         <button class="btn btn-magenta mt-2">WRITE / PASTE SCRIPT</button>
                     </div>
                 </div>
 
-                <button class="btn btn-close-modal" onclick="game.closeContentChoiceModal()">✖ Close</button>
+                <button class="btn btn-close-modal" onclick="game.closeContentChoiceModal()"><i class="fa-solid fa-xmark"></i> Close</button>
             </div>
         </div>
 
         <!-- CUSTOM SCRIPT INPUT MODAL -->
         <div id="modalCustomScript" class="modal-overlay hidden">
             <div class="modal-card script-card">
-                <h2>📑 ENTER YOUR CUSTOM SCRIPT / STUDY NOTES</h2>
+                <h2><i class="fa-solid fa-file-pen icon-glow"></i> ENTER YOUR CUSTOM SCRIPT / STUDY NOTES</h2>
                 <p class="subtitle">Paste or write your speech, poem, or study notes below to practice while fighting!</p>
 
                 <textarea id="customScriptTextarea" class="script-textarea" placeholder="Paste or type your custom text here... (e.g. My name is Alex. I am practicing typing speed while fighting in the arena!)"></textarea>
 
                 <div class="script-actions">
-                    <button class="btn btn-neon btn-large" onclick="game.saveAndStartCustomScript()">⚔️ FIGHT WITH THIS SCRIPT</button>
+                    <button class="btn btn-neon btn-large" onclick="game.saveAndStartCustomScript()"><i class="fa-solid fa-hand-fist"></i> FIGHT WITH THIS SCRIPT</button>
                     <button class="btn btn-secondary" onclick="game.closeCustomScriptModal()">CANCEL</button>
                 </div>
 
-                <button class="btn btn-close-modal" onclick="game.closeCustomScriptModal()">✖ Close</button>
+                <button class="btn btn-close-modal" onclick="game.closeCustomScriptModal()"><i class="fa-solid fa-xmark"></i> Close</button>
             </div>
         </div>
 
         <!-- P2P ONLINE ROOM MODAL -->
         <div id="modalP2P" class="modal-overlay hidden">
             <div class="modal-card">
-                <h2>🌐 ONLINE P2P MULTIPLAYER & VOICE CHAT</h2>
+                <h2><i class="fa-solid fa-earth-americas icon-glow"></i> ONLINE P2P MULTIPLAYER & VOICE CHAT</h2>
                 <p class="desc">Connect with a friend from another house with live real-time voice chat.</p>
 
                 <div class="p2p-tabs">
@@ -325,9 +328,9 @@
                     <p>Share this Room Code with your friend:</p>
                     <div class="room-code-display">
                         <span id="roomCodeText">------</span>
-                        <button id="btnCopyCode" class="btn btn-small">📋 Copy Code</button>
+                        <button id="btnCopyCode" class="btn btn-small"><i class="fa-regular fa-copy"></i> Copy Code</button>
                     </div>
-                    <div class="p2p-status"><span class="spinner"></span> Waiting for friend to join room... (🎙️ Mic Enabled)</div>
+                    <div class="p2p-status"><span class="spinner"></span> Waiting for friend to join room... (<i class="fa-solid fa-microphone"></i> Mic Enabled)</div>
                     <button id="btnCreateRoom" class="btn btn-neon full-width mt-3">GENERATE NEW ROOM CODE</button>
                 </div>
 
@@ -339,28 +342,28 @@
                     <div id="p2pJoinStatus" class="p2p-status"></div>
                 </div>
 
-                <button class="btn btn-close-modal" onclick="game.closeP2PModal()">✖ Close</button>
+                <button class="btn btn-close-modal" onclick="game.closeP2PModal()"><i class="fa-solid fa-xmark"></i> Close</button>
             </div>
         </div>
 
         <!-- CAMPAIGN LEVEL PROGRESSION SELECT MODAL -->
         <div id="modalCampaign" class="modal-overlay hidden">
             <div class="modal-card campaign-card">
-                <h2>🤖 VS AI CAMPAIGN MODE (25 STAGES)</h2>
+                <h2><i class="fa-solid fa-robot icon-glow"></i> VS AI CAMPAIGN MODE (25 STAGES)</h2>
                 <p class="subtitle">Starts at 15 WPM! Defeat each AI Boss level by level to unlock Stage 25 Ultimate God!</p>
 
                 <div id="campaignGrid" class="campaign-grid">
                     <!-- Dynamic Level Cards generated in main.js -->
                 </div>
 
-                <button class="btn btn-close-modal" onclick="game.closeCampaignModal()">✖ Close</button>
+                <button class="btn btn-close-modal" onclick="game.closeCampaignModal()"><i class="fa-solid fa-xmark"></i> Close</button>
             </div>
         </div>
 
         <!-- MATCH OVER STATS MODAL -->
         <div id="modalGameOver" class="modal-overlay hidden">
             <div class="modal-card gameOver-card">
-                <div id="winnerBannerIcon" class="trophy-icon">🏆</div>
+                <div id="winnerBannerIcon" class="trophy-icon"><i class="fa-solid fa-trophy"></i></div>
                 <h1 id="winnerTitle" class="winner-title">LEVEL 1 CLEARED!</h1>
                 <p id="winnerSubtitle" class="winner-subtitle">Speed Demon Performance!</p>
 
@@ -379,14 +382,14 @@
                     </div>
                     <div class="stat-box">
                         <div class="stat-label">STAGE RANK</div>
-                        <div id="statRank" class="stat-val rank-badge">⚡ S-RANK</div>
+                        <div id="statRank" class="stat-val rank-badge"><i class="fa-solid fa-bolt"></i> S-RANK</div>
                     </div>
                 </div>
 
                 <div class="modal-actions">
-                    <button id="btnNextLevel" class="btn btn-neon btn-large hidden" onclick="game.playNextLevel()">⏩ NEXT LEVEL ➔</button>
-                    <button class="btn btn-magenta btn-large" onclick="game.restartMatch()">🥊 RETRY LEVEL (R)</button>
-                    <button class="btn btn-secondary btn-large" onclick="game.openCampaignModal()">🗺️ LEVEL MAP</button>
+                    <button id="btnNextLevel" class="btn btn-neon btn-large hidden" onclick="game.playNextLevel()">NEXT LEVEL <i class="fa-solid fa-forward"></i></button>
+                    <button class="btn btn-magenta btn-large" onclick="game.restartMatch()"><i class="fa-solid fa-rotate-right"></i> RETRY LEVEL (R)</button>
+                    <button class="btn btn-secondary btn-large" onclick="game.openCampaignModal()"><i class="fa-solid fa-map-location-dot"></i> LEVEL MAP</button>
                 </div>
             </div>
         </div>
@@ -406,12 +409,12 @@
     </script>
 
     <!-- SCRIPTS -->
-    <script src="js/config.js?v=3"></script>
-    <script src="js/auth.js?v=3"></script>
-    <script src="js/audio.js?v=3"></script>
-    <script src="js/renderer.js?v=3"></script>
-    <script src="js/p2p.js?v=3"></script>
-    <script src="js/combat.js?v=3"></script>
-    <script src="js/main.js?v=3"></script>
+    <script src="js/config.js?v=4"></script>
+    <script src="js/auth.js?v=4"></script>
+    <script src="js/audio.js?v=4"></script>
+    <script src="js/renderer.js?v=4"></script>
+    <script src="js/p2p.js?v=4"></script>
+    <script src="js/combat.js?v=4"></script>
+    <script src="js/main.js?v=4"></script>
 </body>
 </html>

@@ -215,8 +215,23 @@ class GameApp {
     }
 
     handleGuestLogin() {
-        const name = document.getElementById('guestNameInput').value;
-        const age = document.getElementById('guestAgeInput').value;
+        const nameInput = document.getElementById('guestNameInput');
+        const ageInput = document.getElementById('guestAgeInput');
+
+        const name = nameInput ? nameInput.value.trim() : "";
+        const age = ageInput ? ageInput.value.trim() : "";
+
+        if (!name) {
+            this.showToast("Please enter your Player Name!", "error");
+            if (nameInput) nameInput.focus();
+            return;
+        }
+
+        if (!age) {
+            this.showToast("Please enter your Age!", "error");
+            if (ageInput) ageInput.focus();
+            return;
+        }
 
         const res = auth.loginAsGuest(name, age);
         if (res.success) {
@@ -233,6 +248,15 @@ class GameApp {
         const mobile = document.getElementById('regMobileInput').value;
         const pass = document.getElementById('regPassInput').value;
 
+        if (!name.trim()) {
+            this.showToast("Please enter your Player Name!", "error");
+            return;
+        }
+        if (!age.trim()) {
+            this.showToast("Please enter your Age!", "error");
+            return;
+        }
+
         const res = auth.registerWithMobile(name, age, mobile, pass);
         if (res.success) {
             this.showToast("Account registered successfully! 🎉", "success");
@@ -247,6 +271,11 @@ class GameApp {
     handleMobileLogin() {
         const mobile = document.getElementById('loginMobileInput').value;
         const pass = document.getElementById('loginPassInput').value;
+
+        if (!mobile.trim() || !pass.trim()) {
+            this.showToast("Please enter Mobile Number and Password!", "error");
+            return;
+        }
 
         const res = auth.loginWithMobile(mobile, pass);
         if (res.success) {
@@ -434,6 +463,11 @@ class GameApp {
 
     // KEYBOARD SHORTCUTS SYSTEM (P, M, R, ESC)
     handleGlobalKeyDown(e) {
+        // DO NOT INTERFERE when user is typing inside ANY input box or textarea!
+        if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
+            return;
+        }
+
         // ANTI-CHEAT SECURITY: Ensure event is trusted
         if (e.isTrusted === false) {
             console.warn("[ANTI-CHEAT] Fake untrusted keypress blocked!");
@@ -443,12 +477,12 @@ class GameApp {
         // Global Shortcuts: M (Mute), P (Pause), R (Restart when game active/paused)
         const keyUpper = e.key.toUpperCase();
 
-        if (keyUpper === 'M' && e.target !== this.scriptTextarea && e.target !== document.getElementById('guestNameInput') && e.target !== document.getElementById('regNameInput')) {
+        if (keyUpper === 'M') {
             this.toggleSound();
             return;
         }
 
-        if ((e.key === 'Escape' || keyUpper === 'P') && e.target !== this.scriptTextarea) {
+        if (e.key === 'Escape' || keyUpper === 'P') {
             if (this.isMatchActive) {
                 if (this.isMatchPaused) this.resumeMatch();
                 else this.pauseMatch();
@@ -459,11 +493,9 @@ class GameApp {
         }
 
         if (keyUpper === 'R' && (this.isMatchActive || !document.getElementById('modalGameOver').classList.contains('hidden') || this.isMatchPaused)) {
-            if (e.target !== this.scriptTextarea) {
-                this.restartMatch();
-                this.showToast("Match Restarted!", "info", 1500);
-                return;
-            }
+            this.restartMatch();
+            this.showToast("Match Restarted!", "info", 1500);
+            return;
         }
 
         if (!this.isMatchActive || this.isMatchPaused) {

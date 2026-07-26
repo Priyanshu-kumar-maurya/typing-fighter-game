@@ -1,6 +1,6 @@
-// Typing Fighter - PWA Service Worker v12 (Custom Room Codes & 2-Player Capacity Cap)
+// Typing Fighter - PWA Service Worker v15 (Instant P2P Network Sync)
 
-const CACHE_NAME = 'typing-fighter-v12';
+const CACHE_NAME = 'typing-fighter-v15';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -32,7 +32,7 @@ self.addEventListener('activate', (e) => {
             return Promise.all(
                 keys.map((key) => {
                     if (key !== CACHE_NAME) {
-                        console.log('[Service Worker] Deleting old cache:', key);
+                        console.log('[Service Worker] Clearing old cache:', key);
                         return caches.delete(key);
                     }
                 })
@@ -41,7 +41,7 @@ self.addEventListener('activate', (e) => {
     );
 });
 
-// Network-first strategy for JS scripts to ensure fresh bugfixes load
+// Network-first strategy for ALL JS files to guarantee immediate bugfix delivery!
 self.addEventListener('fetch', (e) => {
     if (e.request.url.includes('/js/')) {
         e.respondWith(

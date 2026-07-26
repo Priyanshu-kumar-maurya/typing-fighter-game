@@ -17,14 +17,18 @@ class P2PNetwork {
         this.onDisconnectCallback = null;
         this.onVoiceStateCallback = null;
 
-        // Standard Google Free STUN Servers for NAT / Mobile 4G/5G Traversal
+        // Standard Google & Twilio Free STUN Servers for NAT / Mobile 4G/5G Traversal
         this.iceServers = [
             { urls: 'stun:stun.l.google.com:19302' },
             { urls: 'stun:stun1.l.google.com:19302' },
             { urls: 'stun:stun2.l.google.com:19302' },
             { urls: 'stun:stun3.l.google.com:19302' },
-            { urls: 'stun:stun4.l.google.com:19302' }
+            { urls: 'stun:stun4.l.google.com:19302' },
+            { urls: 'stun:global.stun.twilio.com:3478' }
         ];
+
+        // Clean up peer on page unload/close
+        window.addEventListener('beforeunload', () => this.disconnect());
     }
 
     generateRoomCode() {
@@ -133,7 +137,10 @@ class P2PNetwork {
             this.peer.on('error', (err) => {
                 console.warn('[P2P Error Handled]', err.type || err.message);
                 if (err.type === 'unavailable-id') {
-                    if (onError) onError(`Room Code "${this.roomCode}" is already in use by another active host! Choose a different custom code.`);
+                    // Append random digit to avoid collision with stale room code
+                    const fallbackCode = this.roomCode + Math.floor(Math.random() * 9 + 1);
+                    console.log(`[P2P] Code ${this.roomCode} busy, trying ${fallbackCode}`);
+                    this.createRoom(fallbackCode, onSuccess, onError);
                 } else if (err.type === 'disconnected' || err.message?.includes('Lost connection')) {
                     if (this.peer && !this.peer.destroyed) this.peer.reconnect();
                 } else if (!this.isConnected && onError) {
@@ -190,7 +197,7 @@ class P2PNetwork {
 
                 const timeout = setTimeout(() => {
                     if (!this.isConnected && onError) {
-                        onError(`Room Code "${cleanCode}" not found or host timed out.`);
+                        onError(`Room Code "${cleanCode}" not found. Ensure Host clicked "CREATE ROOM" first.`);
                     }
                 }, 10000);
 
@@ -214,10 +221,12 @@ class P2PNetwork {
 
             this.peer.on('error', (err) => {
                 console.warn('[P2P Error Handled]', err.type || err.message);
-                if (err.type === 'disconnected' || err.message?.includes('Lost connection')) {
+                if (err.type === 'peer-unavailable') {
+                    if (onError) onError(`Room "${cleanCode}" is not active! Make sure Host clicked "CREATE ROOM (HOST)" first.`);
+                } else if (err.type === 'disconnected' || err.message?.includes('Lost connection')) {
                     if (this.peer && !this.peer.destroyed) this.peer.reconnect();
                 } else if (!this.isConnected && onError) {
-                    onError(`Unable to connect to Room "${cleanCode}". Ensure host is waiting.`);
+                    onError(`Unable to connect to Room "${cleanCode}". Ensure Host is waiting.`);
                 }
             });
         } catch (e) {

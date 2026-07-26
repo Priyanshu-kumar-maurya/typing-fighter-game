@@ -1,6 +1,6 @@
-// Typing Fighter - PWA Service Worker v10 (P2P STUN & Reconnect Stability)
+// Typing Fighter - PWA Service Worker v12 (Custom Room Codes & 2-Player Capacity Cap)
 
-const CACHE_NAME = 'typing-fighter-v10';
+const CACHE_NAME = 'typing-fighter-v12';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',

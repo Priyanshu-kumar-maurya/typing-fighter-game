@@ -116,6 +116,16 @@ class GameApp {
         });
 
         // P2P Action Buttons
+        const btnGen = document.getElementById('btnGenerateCode');
+        if (btnGen) {
+            btnGen.addEventListener('click', () => {
+                const code = p2p.generateRoomCode();
+                const input = document.getElementById('hostCustomCodeInput');
+                if (input) input.value = code;
+                this.handleCreateP2PRoom(code);
+            });
+        }
+
         document.getElementById('btnCreateRoom').addEventListener('click', () => this.handleCreateP2PRoom());
         document.getElementById('btnCopyCode').addEventListener('click', () => this.copyRoomCode());
         document.getElementById('btnJoinRoom').addEventListener('click', () => this.handleJoinP2PRoom());
@@ -747,40 +757,55 @@ class GameApp {
             }
         };
 
-        p2p.onDisconnectCallback = () => {
-            this.showToast("Online P2P friend disconnected.", "error");
+        p2p.onDisconnectCallback = (msg) => {
+            this.showToast(msg || "Online P2P friend disconnected.", "error");
             this.showMainMenu();
         };
     }
 
-    handleCreateP2PRoom() {
+    handleCreateP2PRoom(customCode = "") {
+        const inputElem = document.getElementById('hostCustomCodeInput');
+        const codeToUse = customCode || (inputElem ? inputElem.value.trim() : "");
+        const statusDiv = document.getElementById('p2pHostStatus');
+
+        if (statusDiv) statusDiv.innerHTML = `<span class="spinner"></span> Creating Room Code...`;
+
         p2p.createRoom(
+            codeToUse,
             (code) => {
-                document.getElementById('roomCodeText').innerText = code;
-                this.showToast(`Room ${code} created!`, "success");
+                if (inputElem) inputElem.value = code;
+                if (statusDiv) statusDiv.innerHTML = `Room Code <strong>${code}</strong> is active! Waiting for friend... (🎙️ Mic Enabled)`;
+                this.showToast(`Room "${code}" active! Share with friend.`, "success");
             },
             (err) => {
-                this.showToast("P2P Error: " + err, "error");
+                if (statusDiv) statusDiv.innerText = "Error: " + err;
+                this.showToast(err, "error");
             }
         );
     }
 
     copyRoomCode() {
-        const code = document.getElementById('roomCodeText').innerText;
+        const inputElem = document.getElementById('hostCustomCodeInput');
+        const code = inputElem ? inputElem.value.trim() : "";
         if (code && code !== '------') {
             navigator.clipboard.writeText(code);
-            this.showToast(`Room Code ${code} copied to clipboard!`, "success");
+            this.showToast(`Room Code "${code}" copied to clipboard!`, "success");
+        } else {
+            this.showToast("No active Room Code to copy.", "error");
         }
     }
 
     handleJoinP2PRoom() {
-        const code = document.getElementById('inputRoomCode').value;
+        const codeInput = document.getElementById('inputRoomCode');
+        const code = codeInput ? codeInput.value.trim() : "";
         const statusDiv = document.getElementById('p2pJoinStatus');
-        if (!code) {
-            this.showToast("Please enter a valid 5-digit Room Code.", "error");
+
+        if (!code || code.length < 3) {
+            this.showToast("Please enter a valid Room Code (min 3 chars).", "error");
             return;
         }
-        statusDiv.innerHTML = `<span class="spinner"></span> Connecting to Room ${p2p.sanitizeInput(code)}...`;
+
+        statusDiv.innerHTML = `<span class="spinner"></span> Connecting to Room "${p2p.sanitizeInput(code)}"...`;
         p2p.joinRoom(
             code,
             () => {
@@ -789,7 +814,7 @@ class GameApp {
             },
             (err) => {
                 statusDiv.innerText = "Error: " + err;
-                this.showToast("Error connecting: " + err, "error");
+                this.showToast(err, "error");
             }
         );
     }

@@ -87,9 +87,9 @@ class P2PNetwork {
         await this.startMicrophone();
 
         try {
-            // Attempt to connect as Guest to room hostPeerId
+            // debug: 0 silences internal PeerJS console logs during room probing
             const tempPeer = new Peer({
-                debug: 1,
+                debug: 0,
                 config: { iceServers: this.iceServers }
             });
 
@@ -103,11 +103,11 @@ class P2PNetwork {
 
                 const joinTimeout = setTimeout(() => {
                     if (!joinSucceeded) {
-                        console.log(`[Auto-Match] Room "${cleanCode}" not active yet. Creating Room as Host...`);
+                        console.log(`[Auto-Match] Room "${cleanCode}" is not active yet. Creating Room as Host...`);
                         tempPeer.destroy();
                         this.becomeHost(cleanCode, onSuccess, onError, onWaitingHost);
                     }
-                }, 1500);
+                }, 1200);
 
                 conn.on('open', () => {
                     joinSucceeded = true;
@@ -153,12 +153,12 @@ class P2PNetwork {
 
         try {
             this.peer = new Peer(peerId, {
-                debug: 1,
+                debug: 0,
                 config: { iceServers: this.iceServers }
             });
 
             this.peer.on('open', (id) => {
-                console.log(`[Auto-Match] Created Room "${cleanCode}" as Host. Waiting for friend to type "${cleanCode}"...`);
+                console.log(`[Auto-Match] Room "${cleanCode}" created. Waiting for friend to type "${cleanCode}"...`);
                 if (onWaitingHost) onWaitingHost(cleanCode);
             });
 
@@ -190,7 +190,7 @@ class P2PNetwork {
             this.peer.on('error', (err) => {
                 console.warn('[P2P Error Handled]', err.type || err.message);
                 if (err.type === 'unavailable-id') {
-                    if (onError) onError(`Room "${cleanCode}" is currently occupied by 2 other players. Type a different room code!`);
+                    if (onError) onError(`Room "${cleanCode}" is currently full. Pick a different room code!`);
                 } else if (err.type === 'disconnected' || err.message?.includes('Lost connection')) {
                     if (this.peer && !this.peer.destroyed) this.peer.reconnect();
                 } else if (!this.isConnected && onError) {

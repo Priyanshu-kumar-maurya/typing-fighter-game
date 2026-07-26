@@ -1,6 +1,6 @@
-// Typing Fighter - PWA Service Worker v9 (Circular Modal Close Buttons)
+// Typing Fighter - PWA Service Worker v10 (P2P STUN & Reconnect Stability)
 
-const CACHE_NAME = 'typing-fighter-v9';
+const CACHE_NAME = 'typing-fighter-v10';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',

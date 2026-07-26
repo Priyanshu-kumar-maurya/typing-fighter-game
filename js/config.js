@@ -7,7 +7,8 @@ const CONFIG = {
         SUPER_DAMAGE: 35,
         SUPER_METER_MAX: 100,
         SUPER_METER_PER_WORD: 25,
-        DEFAULT_WPM_TARGET: 15
+        DEFAULT_WPM_TARGET: 15,
+        P2P_PEER_PREFIX: 'tf_room_'
     },
 
     // 25 PROGRESSIVE CAMPAIGN BOSS STAGES (15 WPM to 120 WPM)

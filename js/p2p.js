@@ -16,6 +16,15 @@ class P2PNetwork {
         this.onConnectCallback = null;
         this.onDisconnectCallback = null;
         this.onVoiceStateCallback = null;
+
+        // Standard Google Free STUN Servers for NAT / Mobile 4G/5G Traversal
+        this.iceServers = [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' },
+            { urls: 'stun:stun3.l.google.com:19302' },
+            { urls: 'stun:stun4.l.google.com:19302' }
+        ];
     }
 
     generateRoomCode() {
@@ -68,15 +77,21 @@ class P2PNetwork {
             return;
         }
 
+        // Clean up any previous session before creating new room
+        this.disconnect();
+
         this.roomCode = this.generateRoomCode();
-        const peerId = CONFIG.GAME.P2P_PEER_PREFIX + this.roomCode;
+        const peerId = (CONFIG.GAME.P2P_PEER_PREFIX || 'tf_room_') + this.roomCode;
         this.isHost = true;
 
         // Try getting mic stream
         await this.startMicrophone();
 
         try {
-            this.peer = new Peer(peerId, { debug: 1 });
+            this.peer = new Peer(peerId, {
+                debug: 1,
+                config: { iceServers: this.iceServers }
+            });
 
             this.peer.on('open', (id) => {
                 console.log(`[P2P] Room created with Code: ${this.roomCode}`);
@@ -96,11 +111,21 @@ class P2PNetwork {
                 this.setupVoiceCall(call);
             });
 
+            this.peer.on('disconnected', () => {
+                console.warn('[P2P] Signaling broker disconnected. Attempting reconnect...');
+                if (this.peer && !this.peer.destroyed) {
+                    this.peer.reconnect();
+                }
+            });
+
             this.peer.on('error', (err) => {
-                console.error('[P2P Error]', err);
+                console.warn('[P2P Error Handled]', err.type || err.message);
                 if (err.type === 'unavailable-id') {
                     this.createRoom(onSuccess, onError);
-                } else if (onError) {
+                } else if (err.type === 'disconnected' || err.message?.includes('Lost connection')) {
+                    // Ignore signaling disconnect if P2P DataConnection is active!
+                    if (this.peer && !this.peer.destroyed) this.peer.reconnect();
+                } else if (!this.isConnected && onError) {
                     onError(err.message || "Failed to create room");
                 }
             });
@@ -116,20 +141,29 @@ class P2PNetwork {
             return;
         }
 
+        // Clean up any previous session before joining new room
+        this.disconnect();
+
         const cleanCode = this.sanitizeInput(code).toUpperCase();
         this.roomCode = cleanCode;
-        const hostPeerId = CONFIG.GAME.P2P_PEER_PREFIX + cleanCode;
+        const hostPeerId = (CONFIG.GAME.P2P_PEER_PREFIX || 'tf_room_') + cleanCode;
         this.isHost = false;
 
         // Try getting mic stream
         await this.startMicrophone();
 
         try {
-            this.peer = new Peer({ debug: 1 });
+            this.peer = new Peer({
+                debug: 1,
+                config: { iceServers: this.iceServers }
+            });
 
             this.peer.on('open', () => {
                 console.log(`[P2P] Connecting to Host Room: ${cleanCode}`);
-                this.conn = this.peer.connect(hostPeerId, { reliable: true });
+                this.conn = this.peer.connect(hostPeerId, {
+                    reliable: true,
+                    serialization: 'json'
+                });
                 this.setupConnectionListeners();
 
                 // Call Host Voice Stream
@@ -142,7 +176,7 @@ class P2PNetwork {
                     if (!this.isConnected && onError) {
                         onError("Room Code not found or host timed out.");
                     }
-                }, 8000);
+                }, 10000);
 
                 this.conn.on('open', () => {
                     clearTimeout(timeout);
@@ -155,9 +189,20 @@ class P2PNetwork {
                 this.setupVoiceCall(call);
             });
 
+            this.peer.on('disconnected', () => {
+                console.warn('[P2P] Signaling broker disconnected. Attempting reconnect...');
+                if (this.peer && !this.peer.destroyed) {
+                    this.peer.reconnect();
+                }
+            });
+
             this.peer.on('error', (err) => {
-                console.error('[P2P Error]', err);
-                if (onError) onError("Unable to connect to room code. Ensure host is waiting.");
+                console.warn('[P2P Error Handled]', err.type || err.message);
+                if (err.type === 'disconnected' || err.message?.includes('Lost connection')) {
+                    if (this.peer && !this.peer.destroyed) this.peer.reconnect();
+                } else if (!this.isConnected && onError) {
+                    onError("Unable to connect to room code. Ensure host is waiting.");
+                }
             });
         } catch (e) {
             if (onError) onError(e.message);
@@ -165,6 +210,7 @@ class P2PNetwork {
     }
 
     setupVoiceCall(call) {
+        if (!call) return;
         this.mediaCall = call;
         call.on('stream', (remoteStream) => {
             console.log('[Voice Chat] Remote Voice Stream received!');
@@ -221,26 +267,38 @@ class P2PNetwork {
 
     send(type, payload = {}) {
         if (this.conn && this.isConnected) {
-            this.conn.send({
-                type: type,
-                senderIsHost: this.isHost,
-                payload: payload,
-                timestamp: Date.now()
-            });
+            try {
+                this.conn.send({
+                    type: type,
+                    senderIsHost: this.isHost,
+                    payload: payload,
+                    timestamp: Date.now()
+                });
+            } catch (e) {
+                console.warn("[P2P Send Error]", e.message);
+            }
         }
     }
 
     disconnect() {
-        if (this.mediaCall) this.mediaCall.close();
-        if (this.localAudioStream) {
-            this.localAudioStream.getTracks().forEach(track => track.stop());
+        if (this.mediaCall) {
+            try { this.mediaCall.close(); } catch (e) {}
+            this.mediaCall = null;
         }
-        if (this.conn) this.conn.close();
-        if (this.peer) this.peer.destroy();
+        if (this.localAudioStream) {
+            try { this.localAudioStream.getTracks().forEach(track => track.stop()); } catch (e) {}
+            this.localAudioStream = null;
+        }
+        if (this.conn) {
+            try { this.conn.close(); } catch (e) {}
+            this.conn = null;
+        }
+        if (this.peer) {
+            try { this.peer.destroy(); } catch (e) {}
+            this.peer = null;
+        }
         this.isConnected = false;
         this.isVoiceConnected = false;
-        this.conn = null;
-        this.peer = null;
     }
 }
 

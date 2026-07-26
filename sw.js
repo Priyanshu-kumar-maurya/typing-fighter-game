@@ -1,6 +1,6 @@
-// Typing Fighter - PWA Service Worker v8 (Mobile Phone Responsiveness & Touch Keyboard)
+// Typing Fighter - PWA Service Worker v9 (Circular Modal Close Buttons)
 
-const CACHE_NAME = 'typing-fighter-v8';
+const CACHE_NAME = 'typing-fighter-v9';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',

@@ -100,35 +100,11 @@ class GameApp {
         // Sound Toggle Button
         document.getElementById('btnSoundToggle').addEventListener('click', () => this.toggleSound());
 
-        // P2P Tab Switchers
-        document.getElementById('tabHost').addEventListener('click', () => {
-            document.getElementById('tabHost').classList.add('active');
-            document.getElementById('tabJoin').classList.remove('active');
-            document.getElementById('p2pHostSection').classList.remove('hidden');
-            document.getElementById('p2pJoinSection').classList.add('hidden');
-        });
-
-        document.getElementById('tabJoin').addEventListener('click', () => {
-            document.getElementById('tabJoin').classList.add('active');
-            document.getElementById('tabHost').classList.remove('active');
-            document.getElementById('p2pJoinSection').classList.remove('hidden');
-            document.getElementById('p2pHostSection').classList.add('hidden');
-        });
-
-        // P2P Action Buttons
-        const btnGen = document.getElementById('btnGenerateCode');
-        if (btnGen) {
-            btnGen.addEventListener('click', () => {
-                const code = p2p.generateRoomCode();
-                const input = document.getElementById('hostCustomCodeInput');
-                if (input) input.value = code;
-                this.handleCreateP2PRoom(code);
-            });
+        // UNIFIED AUTO-MATCH P2P BUTTON
+        const btnConnectP2P = document.getElementById('btnConnectP2P');
+        if (btnConnectP2P) {
+            btnConnectP2P.addEventListener('click', () => this.handleUnifiedP2PConnect());
         }
-
-        document.getElementById('btnCreateRoom').addEventListener('click', () => this.handleCreateP2PRoom());
-        document.getElementById('btnCopyCode').addEventListener('click', () => this.copyRoomCode());
-        document.getElementById('btnJoinRoom').addEventListener('click', () => this.handleJoinP2PRoom());
 
         // Header buttons
         document.getElementById('btnOpenP2P').addEventListener('click', () => this.openP2PModal());
@@ -763,58 +739,33 @@ class GameApp {
         };
     }
 
-    handleCreateP2PRoom(customCode = "") {
-        const inputElem = document.getElementById('hostCustomCodeInput');
-        const codeToUse = customCode || (inputElem ? inputElem.value.trim() : "");
-        const statusDiv = document.getElementById('p2pHostStatus');
+    handleUnifiedP2PConnect() {
+        const inputElem = document.getElementById('inputUnifiedRoomCode');
+        const code = inputElem ? inputElem.value.trim() : "";
+        const statusDiv = document.getElementById('p2pUnifiedStatus');
 
-        if (statusDiv) statusDiv.innerHTML = `<span class="spinner"></span> Creating Room Code...`;
+        if (!code || code.length < 2) {
+            this.showToast("Please type a Room Code (min 2 characters).", "error");
+            if (inputElem) inputElem.focus();
+            return;
+        }
 
-        p2p.createRoom(
-            codeToUse,
-            (code) => {
-                if (inputElem) inputElem.value = code;
-                if (statusDiv) statusDiv.innerHTML = `Room Code <strong>${code}</strong> is active! Waiting for friend... (🎙️ Mic Enabled)`;
-                this.showToast(`Room "${code}" active! Share with friend.`, "success");
+        const clean = p2p.sanitizeInput(code).toUpperCase();
+        if (statusDiv) statusDiv.innerHTML = `<span class="spinner"></span> Connecting to Room "${clean}"...`;
+
+        p2p.connectToRoom(
+            clean,
+            () => {
+                if (statusDiv) statusDiv.innerHTML = `<span style="color:#00ff88; font-weight: bold;">CONNECTED! Starting battle...</span>`;
+                this.showToast(`Connected to Room "${clean}"! Battle starting...`, "success");
             },
             (err) => {
                 if (statusDiv) statusDiv.innerText = "Error: " + err;
                 this.showToast(err, "error");
-            }
-        );
-    }
-
-    copyRoomCode() {
-        const inputElem = document.getElementById('hostCustomCodeInput');
-        const code = inputElem ? inputElem.value.trim() : "";
-        if (code && code !== '------') {
-            navigator.clipboard.writeText(code);
-            this.showToast(`Room Code "${code}" copied to clipboard!`, "success");
-        } else {
-            this.showToast("No active Room Code to copy.", "error");
-        }
-    }
-
-    handleJoinP2PRoom() {
-        const codeInput = document.getElementById('inputRoomCode');
-        const code = codeInput ? codeInput.value.trim() : "";
-        const statusDiv = document.getElementById('p2pJoinStatus');
-
-        if (!code || code.length < 3) {
-            this.showToast("Please enter a valid Room Code (min 3 chars).", "error");
-            return;
-        }
-
-        statusDiv.innerHTML = `<span class="spinner"></span> Connecting to Room "${p2p.sanitizeInput(code)}"...`;
-        p2p.joinRoom(
-            code,
-            () => {
-                statusDiv.innerText = "Connected! Starting battle...";
-                this.showToast("Connected to friend! Battle starting...", "success");
             },
-            (err) => {
-                statusDiv.innerText = "Error: " + err;
-                this.showToast(err, "error");
+            (waitingCode) => {
+                if (statusDiv) statusDiv.innerHTML = `🟢 Room <strong>"${waitingCode}"</strong> is Live! Tell your friend to type <strong>"${waitingCode}"</strong> and click Connect! (🎙️ Mic Active)`;
+                this.showToast(`Room "${waitingCode}" Live! Tell friend to type "${waitingCode}".`, "info", 5000);
             }
         );
     }

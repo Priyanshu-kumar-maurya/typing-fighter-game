@@ -1,6 +1,6 @@
-// Typing Fighter - PWA Service Worker v15 (Instant P2P Network Sync)
+// Typing Fighter - PWA Service Worker v16 (Unified Auto-Match P2P Engine)
 
-const CACHE_NAME = 'typing-fighter-v15';
+const CACHE_NAME = 'typing-fighter-v16';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',

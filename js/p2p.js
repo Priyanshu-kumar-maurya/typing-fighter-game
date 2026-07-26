@@ -1,4 +1,4 @@
-// Typing Fighter - WebRTC P2P Multiplayer & Live Voice Chat Manager
+// Typing Fighter - WebRTC P2P Multiplayer & Live Voice Chat Manager (Auto-Match Engine)
 
 class P2PNetwork {
     constructor() {
@@ -31,18 +31,9 @@ class P2PNetwork {
         window.addEventListener('beforeunload', () => this.disconnect());
     }
 
-    generateRoomCode() {
-        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-        let code = '';
-        for (let i = 0; i < 5; i++) {
-            code += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        return code;
-    }
-
     sanitizeInput(str) {
         if (typeof str !== 'string') return '';
-        return str.replace(/[^\w\s-]/gi, '').substring(0, 10);
+        return str.replace(/[^\w\s-]/gi, '').substring(0, 12);
     }
 
     // Capture Microphone Stream
@@ -74,23 +65,91 @@ class P2PNetwork {
         return false;
     }
 
-    // Host creates an online game room (supports Custom Room Code or Auto Generated)
-    async createRoom(customCode, onSuccess, onError) {
+    // UNIFIED AUTO-MATCH: Both friends type ANY SAME code and click CONNECT!
+    async connectToRoom(code, onSuccess, onError, onWaitingHost) {
         if (typeof Peer === 'undefined') {
-            if (onError) onError("PeerJS network library not loaded. Check internet connection.");
+            if (onError) onError("PeerJS library not loaded. Check internet connection.");
             return;
         }
 
-        // Clean up any previous session
         this.disconnect();
 
-        const cleanCustom = this.sanitizeInput(customCode).toUpperCase();
-        this.roomCode = cleanCustom.length >= 3 ? cleanCustom : this.generateRoomCode();
-        const peerId = (CONFIG.GAME.P2P_PEER_PREFIX || 'tf_room_') + this.roomCode;
-        this.isHost = true;
+        const cleanCode = this.sanitizeInput(code).toUpperCase();
+        if (cleanCode.length < 2) {
+            if (onError) onError("Please type a Room Code (min 2 characters).");
+            return;
+        }
 
-        // Try getting mic stream
+        this.roomCode = cleanCode;
+        const hostPeerId = (CONFIG.GAME.P2P_PEER_PREFIX || 'tf_room_') + cleanCode;
+
+        // Capture Mic stream
         await this.startMicrophone();
+
+        try {
+            // Attempt to connect as Guest to room hostPeerId
+            const tempPeer = new Peer({
+                debug: 1,
+                config: { iceServers: this.iceServers }
+            });
+
+            let joinSucceeded = false;
+            let joinAttempted = false;
+
+            tempPeer.on('open', () => {
+                console.log(`[Auto-Match] Checking if Room "${cleanCode}" exists...`);
+                joinAttempted = true;
+                const conn = tempPeer.connect(hostPeerId, { reliable: true, serialization: 'json' });
+
+                const joinTimeout = setTimeout(() => {
+                    if (!joinSucceeded) {
+                        console.log(`[Auto-Match] Room "${cleanCode}" not active yet. Creating Room as Host...`);
+                        tempPeer.destroy();
+                        this.becomeHost(cleanCode, onSuccess, onError, onWaitingHost);
+                    }
+                }, 1500);
+
+                conn.on('open', () => {
+                    joinSucceeded = true;
+                    clearTimeout(joinTimeout);
+                    console.log(`[Auto-Match] Joined existing Room "${cleanCode}" as Guest!`);
+                    this.peer = tempPeer;
+                    this.conn = conn;
+                    this.isHost = false;
+                    this.setupConnectionListeners(onError);
+
+                    if (this.localAudioStream) {
+                        const voiceCall = this.peer.call(hostPeerId, this.localAudioStream);
+                        this.setupVoiceCall(voiceCall);
+                    }
+
+                    if (onSuccess) onSuccess();
+                });
+
+                tempPeer.on('error', (err) => {
+                    if (!joinSucceeded) {
+                        clearTimeout(joinTimeout);
+                        tempPeer.destroy();
+                        this.becomeHost(cleanCode, onSuccess, onError, onWaitingHost);
+                    }
+                });
+            });
+
+            tempPeer.on('error', (err) => {
+                if (!joinAttempted && !joinSucceeded) {
+                    tempPeer.destroy();
+                    this.becomeHost(cleanCode, onSuccess, onError, onWaitingHost);
+                }
+            });
+        } catch (e) {
+            this.becomeHost(cleanCode, onSuccess, onError, onWaitingHost);
+        }
+    }
+
+    async becomeHost(cleanCode, onSuccess, onError, onWaitingHost) {
+        this.roomCode = cleanCode;
+        const peerId = (CONFIG.GAME.P2P_PEER_PREFIX || 'tf_room_') + cleanCode;
+        this.isHost = true;
 
         try {
             this.peer = new Peer(peerId, {
@@ -99,28 +158,25 @@ class P2PNetwork {
             });
 
             this.peer.on('open', (id) => {
-                console.log(`[P2P] Room created with Code: ${this.roomCode}`);
-                if (onSuccess) onSuccess(this.roomCode);
+                console.log(`[Auto-Match] Created Room "${cleanCode}" as Host. Waiting for friend to type "${cleanCode}"...`);
+                if (onWaitingHost) onWaitingHost(cleanCode);
             });
 
             this.peer.on('connection', (connection) => {
-                // CAPACITY CAP: Max 2 Players allowed in room! Reject 3rd connection if already connected.
                 if (this.isConnected && this.conn && this.conn.open) {
-                    console.warn('[P2P] 3rd connection rejected: Room Full.');
                     connection.send({
                         type: 'ROOM_FULL',
-                        payload: { message: "Room is Full! Maximum 2 players allowed." }
+                        payload: { message: `Room "${cleanCode}" is Full (2/2 players fighting).` }
                     });
                     setTimeout(() => connection.close(), 500);
                     return;
                 }
 
-                console.log('[P2P] Guest connected to room');
+                console.log('[Auto-Match] Friend connected to your room!');
                 this.conn = connection;
                 this.setupConnectionListeners();
             });
 
-            // Listen for incoming Voice Calls
             this.peer.on('call', (call) => {
                 console.log('[Voice Chat] Incoming call received');
                 call.answer(this.localAudioStream);
@@ -128,105 +184,17 @@ class P2PNetwork {
             });
 
             this.peer.on('disconnected', () => {
-                console.warn('[P2P] Signaling broker disconnected. Attempting reconnect...');
-                if (this.peer && !this.peer.destroyed) {
-                    this.peer.reconnect();
-                }
+                if (this.peer && !this.peer.destroyed) this.peer.reconnect();
             });
 
             this.peer.on('error', (err) => {
                 console.warn('[P2P Error Handled]', err.type || err.message);
                 if (err.type === 'unavailable-id') {
-                    // Append random digit to avoid collision with stale room code
-                    const fallbackCode = this.roomCode + Math.floor(Math.random() * 9 + 1);
-                    console.log(`[P2P] Code ${this.roomCode} busy, trying ${fallbackCode}`);
-                    this.createRoom(fallbackCode, onSuccess, onError);
+                    if (onError) onError(`Room "${cleanCode}" is currently occupied by 2 other players. Type a different room code!`);
                 } else if (err.type === 'disconnected' || err.message?.includes('Lost connection')) {
                     if (this.peer && !this.peer.destroyed) this.peer.reconnect();
                 } else if (!this.isConnected && onError) {
-                    onError(err.message || "Failed to create room code.");
-                }
-            });
-        } catch (e) {
-            if (onError) onError(e.message);
-        }
-    }
-
-    // Guest joins an existing online room code
-    async joinRoom(code, onSuccess, onError) {
-        if (typeof Peer === 'undefined') {
-            if (onError) onError("PeerJS library not loaded.");
-            return;
-        }
-
-        // Clean up any previous session
-        this.disconnect();
-
-        const cleanCode = this.sanitizeInput(code).toUpperCase();
-        if (cleanCode.length < 3) {
-            if (onError) onError("Please enter a valid Room Code (min 3 chars).");
-            return;
-        }
-
-        this.roomCode = cleanCode;
-        const hostPeerId = (CONFIG.GAME.P2P_PEER_PREFIX || 'tf_room_') + cleanCode;
-        this.isHost = false;
-
-        // Try getting mic stream
-        await this.startMicrophone();
-
-        try {
-            this.peer = new Peer({
-                debug: 1,
-                config: { iceServers: this.iceServers }
-            });
-
-            this.peer.on('open', () => {
-                console.log(`[P2P] Connecting to Host Room: ${cleanCode}`);
-                this.conn = this.peer.connect(hostPeerId, {
-                    reliable: true,
-                    serialization: 'json'
-                });
-                this.setupConnectionListeners(onError);
-
-                // Call Host Voice Stream
-                if (this.localAudioStream) {
-                    const voiceCall = this.peer.call(hostPeerId, this.localAudioStream);
-                    this.setupVoiceCall(voiceCall);
-                }
-
-                const timeout = setTimeout(() => {
-                    if (!this.isConnected && onError) {
-                        onError(`Room Code "${cleanCode}" not found. Ensure Host clicked "CREATE ROOM" first.`);
-                    }
-                }, 10000);
-
-                this.conn.on('open', () => {
-                    clearTimeout(timeout);
-                    if (onSuccess) onSuccess();
-                });
-            });
-
-            this.peer.on('call', (call) => {
-                call.answer(this.localAudioStream);
-                this.setupVoiceCall(call);
-            });
-
-            this.peer.on('disconnected', () => {
-                console.warn('[P2P] Signaling broker disconnected. Attempting reconnect...');
-                if (this.peer && !this.peer.destroyed) {
-                    this.peer.reconnect();
-                }
-            });
-
-            this.peer.on('error', (err) => {
-                console.warn('[P2P Error Handled]', err.type || err.message);
-                if (err.type === 'peer-unavailable') {
-                    if (onError) onError(`Room "${cleanCode}" is not active! Make sure Host clicked "CREATE ROOM (HOST)" first.`);
-                } else if (err.type === 'disconnected' || err.message?.includes('Lost connection')) {
-                    if (this.peer && !this.peer.destroyed) this.peer.reconnect();
-                } else if (!this.isConnected && onError) {
-                    onError(`Unable to connect to Room "${cleanCode}". Ensure Host is waiting.`);
+                    onError(err.message || "Failed to create room.");
                 }
             });
         } catch (e) {
@@ -268,7 +236,7 @@ class P2PNetwork {
             if (rawMsg.type === 'ROOM_FULL') {
                 this.isConnected = false;
                 if (onCustomError) {
-                    onCustomError("Room is Full! Maximum 2 players allowed in this room.");
+                    onCustomError(rawMsg.payload?.message || "Room is Full! Maximum 2 players allowed.");
                 } else if (this.onDisconnectCallback) {
                     this.onDisconnectCallback("Room is Full! Maximum 2 players allowed.");
                 }

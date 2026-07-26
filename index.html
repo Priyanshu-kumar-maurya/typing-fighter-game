@@ -313,38 +313,24 @@
             </div>
         </div>
 
-        <!-- P2P ONLINE ROOM MODAL -->
+        <!-- P2P ONLINE ROOM MODAL (AUTO-MATCH ZERO-FRICTION) -->
         <div id="modalP2P" class="modal-overlay hidden">
             <div class="modal-card">
                 <button class="btn-close-modal" title="Close" onclick="game.closeP2PModal()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
                 <h2>ONLINE P2P MULTIPLAYER & VOICE CHAT</h2>
-                <p class="desc">Connect with a friend from another house with live real-time voice chat (Max 2 Players per room).</p>
+                <p class="subtitle">Type ANY Room Code & tell your friend to type the same code on their phone!</p>
 
-                <div class="p2p-tabs">
-                    <button id="tabHost" class="tab-btn active">Create Room (Host)</button>
-                    <button id="tabJoin" class="tab-btn">Join Room (Guest)</button>
-                </div>
-
-                <!-- HOST VIEW -->
-                <div id="p2pHostSection" class="p2p-section">
-                    <p>Enter your Custom Room Code or Generate one:</p>
-                    <div class="room-code-display">
-                        <input type="text" id="hostCustomCodeInput" class="code-input" placeholder="e.g. MYROOM (or leave blank)" maxlength="10">
-                        <button id="btnCopyCode" class="btn btn-small">Copy Code</button>
+                <div class="p2p-unified-box" style="margin-top: 15px;">
+                    <div class="form-group">
+                        <label>ENTER ANY ROOM CODE (e.g. 1234, BHARAT, GAME1):</label>
+                        <input type="text" id="inputUnifiedRoomCode" class="code-input" placeholder="Type ANY Code (e.g. 12345)" maxlength="12">
                     </div>
-                    <div id="p2pHostStatus" class="p2p-status"></div>
-                    <div class="modal-actions" style="margin-top: 12px; gap: 8px; flex-wrap: wrap;">
-                        <button id="btnGenerateCode" class="btn btn-secondary">⚡ Random Code</button>
-                        <button id="btnCreateRoom" class="btn btn-neon">⚔️ CREATE ROOM (HOST)</button>
-                    </div>
-                </div>
 
-                <!-- JOIN VIEW -->
-                <div id="p2pJoinSection" class="p2p-section hidden">
-                    <p>Enter the Room Code given by your friend:</p>
-                    <input type="text" id="inputRoomCode" class="code-input" placeholder="e.g. MYROOM or X9K2L" maxlength="10">
-                    <button id="btnJoinRoom" class="btn btn-magenta full-width mt-3">JOIN FRIEND'S ARENA</button>
-                    <div id="p2pJoinStatus" class="p2p-status"></div>
+                    <button id="btnConnectP2P" class="btn btn-neon full-width mt-3 btn-large" style="padding: 14px 20px; font-size: 1rem;">
+                        ⚡ CONNECT & START BATTLE
+                    </button>
+
+                    <div id="p2pUnifiedStatus" class="p2p-status" style="margin-top: 12px; font-size: 0.9rem;"></div>
                 </div>
             </div>
         </div>
@@ -412,13 +398,13 @@
     </script>
 
     <!-- SCRIPTS -->
-    <script src="js/icons.js?v=15"></script>
-    <script src="js/config.js?v=15"></script>
-    <script src="js/auth.js?v=15"></script>
-    <script src="js/audio.js?v=15"></script>
-    <script src="js/renderer.js?v=15"></script>
-    <script src="js/p2p.js?v=15"></script>
-    <script src="js/combat.js?v=15"></script>
-    <script src="js/main.js?v=15"></script>
+    <script src="js/icons.js?v=16"></script>
+    <script src="js/config.js?v=16"></script>
+    <script src="js/auth.js?v=16"></script>
+    <script src="js/audio.js?v=16"></script>
+    <script src="js/renderer.js?v=16"></script>
+    <script src="js/p2p.js?v=16"></script>
+    <script src="js/combat.js?v=16"></script>
+    <script src="js/main.js?v=16"></script>
 </body>
 </html>

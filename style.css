@@ -393,6 +393,276 @@ body {
     box-shadow: 0 0 15px var(--neon-yellow);
 }
 
+/* MOBILE KEYBOARD BUTTON (Hidden by default on Desktop) */
+.mobile-keyboard-btn {
+    display: none;
+    width: 100%;
+    margin-top: 8px;
+    padding: 12px 16px;
+    font-size: 0.9rem;
+    font-weight: 800;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+    animation: pulseGlow 2s infinite alternate;
+}
+
+@keyframes pulseGlow {
+    from { box-shadow: 0 0 10px rgba(0, 240, 255, 0.3); }
+    to { box-shadow: 0 0 20px rgba(0, 240, 255, 0.8); }
+}
+
+/* RESPONSIVE MEDIA QUERIES (TABLETS & MOBILE PHONES) */
+@media (max-width: 1024px) {
+    .app-container {
+        padding: 8px;
+        gap: 8px;
+    }
+
+    .header {
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 8px 14px;
+    }
+
+    .header-controls {
+        flex-wrap: wrap;
+        gap: 6px;
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .campaign-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    html, body {
+        height: 100dvh;
+        overflow-x: hidden;
+        touch-action: manipulation;
+    }
+
+    .app-container {
+        min-height: 100dvh;
+        height: 100dvh;
+        padding: 6px;
+        gap: 6px;
+    }
+
+    /* HEADER ON MOBILE */
+    .header {
+        padding: 6px 10px;
+        border-radius: 8px;
+    }
+
+    .logo-text {
+        font-size: 1rem;
+    }
+
+    .badge {
+        display: none;
+    }
+
+    .player-header-badge {
+        padding: 4px 10px;
+    }
+
+    .user-name {
+        font-size: 0.75rem;
+    }
+
+    .user-meta {
+        font-size: 0.65rem;
+    }
+
+    .header-controls {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4px;
+    }
+
+    .header-controls .btn,
+    .header-controls .icon-btn {
+        padding: 6px 8px;
+        font-size: 0.75rem;
+        justify-content: center;
+        text-align: center;
+    }
+
+    /* HUD ON MOBILE */
+    .hud {
+        display: grid;
+        grid-template-columns: 1fr 80px 1fr;
+        gap: 6px;
+        padding: 6px 10px;
+    }
+
+    .player-info {
+        gap: 6px;
+    }
+
+    .avatar {
+        width: 28px;
+        height: 28px;
+    }
+
+    .details h3 {
+        font-size: 0.75rem;
+    }
+
+    .stats-mini {
+        font-size: 0.65rem;
+    }
+
+    .vs-circle {
+        width: 28px;
+        height: 28px;
+        font-size: 0.7rem;
+    }
+
+    .stage-badge {
+        font-size: 0.65rem;
+        padding: 2px 6px;
+    }
+
+    .match-time {
+        font-size: 0.75rem;
+    }
+
+    .combo-badge {
+        font-size: 0.65rem;
+        padding: 2px 6px;
+    }
+
+    /* CANVAS & TYPING AREA ON MOBILE */
+    .arena-wrapper {
+        gap: 6px;
+        height: auto;
+        flex: 1;
+    }
+
+    .canvas-container {
+        flex: 1;
+        min-height: 200px;
+        max-height: 38dvh;
+    }
+
+    .typing-box-container {
+        padding: 8px;
+    }
+
+    .prompt-label {
+        font-size: 0.65rem;
+    }
+
+    .word-display {
+        font-size: clamp(1.1rem, 4vw, 1.8rem);
+        letter-spacing: 2px;
+        padding: 6px 10px;
+    }
+
+    .char-space {
+        padding: 0 4px;
+        font-size: 0.7rem;
+    }
+
+    /* SHOW VIRTUAL KEYBOARD TOGGLE BUTTON ON MOBILE */
+    .mobile-keyboard-btn {
+        display: flex;
+    }
+
+    /* CAMPAIGN GRID ON MOBILE */
+    .campaign-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        max-height: 55dvh;
+    }
+
+    .level-card {
+        padding: 10px 8px;
+    }
+
+    .level-num {
+        font-size: 0.7rem;
+    }
+
+    .level-avatar svg {
+        width: 28px;
+        height: 28px;
+    }
+
+    .level-card h4 {
+        font-size: 0.8rem;
+    }
+
+    .level-wpm {
+        font-size: 0.7rem;
+    }
+
+    .level-status-badge {
+        font-size: 0.65rem;
+        padding: 2px 6px;
+    }
+
+    /* MODAL CARDS ON MOBILE */
+    .modal-card {
+        padding: 16px;
+        max-width: 95vw;
+        max-height: 88dvh;
+        overflow-y: auto;
+        border-radius: 12px;
+    }
+
+    .modal-card h1, .modal-card h2 {
+        font-size: 1.2rem;
+    }
+
+    .subtitle {
+        font-size: 0.8rem;
+    }
+
+    .mode-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .choice-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .stat-box {
+        padding: 8px;
+    }
+
+    .stat-val {
+        font-size: 1.2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-controls {
+        grid-template-columns: 1fr;
+    }
+
+    .campaign-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 .match-time {
     font-family: var(--font-heading);
     font-size: 0.9rem;

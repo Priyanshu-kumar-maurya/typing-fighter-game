@@ -41,7 +41,9 @@ class GameApp {
         
         // Keep hidden input focused on click/tap anywhere on canvas or typing area
         const focusInput = () => {
-            if (this.typeInput) this.typeInput.focus();
+            if (this.typeInput && this.isMatchActive && !this.isMatchPaused) {
+                this.typeInput.focus();
+            }
         };
         document.querySelector('.canvas-container').addEventListener('click', focusInput);
         document.querySelector('.canvas-container').addEventListener('touchstart', focusInput);
@@ -142,6 +144,17 @@ class GameApp {
                 }, 300);
             }
         }, 80);
+    }
+
+    focusMobileKeyboard() {
+        if (this.typeInput) {
+            this.typeInput.focus();
+            this.typeInput.click();
+            const card = document.querySelector('.typing-word-card');
+            if (card && card.scrollIntoView) {
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
     }
 
     // TOAST NOTIFICATIONS SYSTEM (REPLACES NATIVE BROWSER ALERT)

@@ -1,6 +1,6 @@
-// Typing Fighter - PWA Service Worker v7 (Inline SVG Vector Icons)
+// Typing Fighter - PWA Service Worker v8 (Mobile Phone Responsiveness & Touch Keyboard)
 
-const CACHE_NAME = 'typing-fighter-v7';
+const CACHE_NAME = 'typing-fighter-v8';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',

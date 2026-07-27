@@ -742,6 +742,7 @@ class GameApp {
         const inputElem = document.getElementById('inputUnifiedRoomCode');
         const code = inputElem ? inputElem.value.trim() : "";
         const statusDiv = document.getElementById('p2pUnifiedStatus');
+        const connectBtn = document.getElementById('btnConnectP2P');
 
         if (!code || code.length < 2) {
             this.showToast("Please type a Room Code (min 2 characters).", "error");
@@ -750,21 +751,51 @@ class GameApp {
         }
 
         const clean = p2p.sanitizeInput(code).toUpperCase();
-        if (statusDiv) statusDiv.innerHTML = `<span class="spinner"></span> Connecting to Room "${clean}"...`;
+        if (!clean || clean.length < 2) {
+            this.showToast("Invalid Room Code. Use letters and numbers only.", "error");
+            return;
+        }
+
+        // Disable button to prevent double-click
+        if (connectBtn) {
+            connectBtn.disabled = true;
+            connectBtn.innerText = '⏳ Connecting...';
+        }
+
+        const resetBtn = () => {
+            if (connectBtn) {
+                connectBtn.disabled = false;
+                connectBtn.innerHTML = '⚡ CONNECT & START BATTLE';
+            }
+        };
+
+        if (statusDiv) statusDiv.innerHTML = `<span class="spinner"></span> Registering Room <strong>"${clean}"</strong>...`;
 
         p2p.connectToRoom(
             clean,
             () => {
-                if (statusDiv) statusDiv.innerHTML = `<span style="color:#00ff88; font-weight: bold;">CONNECTED! Starting battle...</span>`;
-                this.showToast(`Connected to Room "${clean}"! Battle starting...`, "success");
+                // Guest joined successfully
+                if (statusDiv) statusDiv.innerHTML = `<span style="color:#00ff88; font-weight:bold;">✅ CONNECTED! Starting battle...</span>`;
+                this.showToast(`Joined Room "${clean}"! Battle starting...`, "success");
+                resetBtn();
             },
             (err) => {
-                if (statusDiv) statusDiv.innerText = "Error: " + err;
+                if (statusDiv) statusDiv.innerHTML = `<span style="color:#ff0055;">❌ ${this.escapeHtml(err)}</span>`;
                 this.showToast(err, "error");
+                resetBtn();
             },
             (waitingCode) => {
-                if (statusDiv) statusDiv.innerHTML = `🟢 Room <strong>"${waitingCode}"</strong> is Live! Tell your friend to type <strong>"${waitingCode}"</strong> and click Connect! (🎙️ Mic Active)`;
-                this.showToast(`Room "${waitingCode}" Live! Tell friend to type "${waitingCode}".`, "info", 5000);
+                // We are HOST — waiting for friend
+                if (statusDiv) statusDiv.innerHTML =
+                    `🟢 Room <strong style="color:#00f0ff;">${waitingCode}</strong> is LIVE!<br>` +
+                    `Tell your friend to enter code <strong style="color:#ffe600;">${waitingCode}</strong> and click Connect!<br>` +
+                    `<small style="opacity:0.7;">(Waiting for friend to join...)</small>`;
+                this.showToast(`Room "${waitingCode}" ready! Waiting for friend...`, "info", 6000);
+                // Reset button so host can cancel if needed
+                if (connectBtn) {
+                    connectBtn.disabled = false;
+                    connectBtn.innerHTML = '❌ Cancel / Change Code';
+                }
             }
         );
     }

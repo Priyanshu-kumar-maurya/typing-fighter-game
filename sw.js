@@ -1,6 +1,6 @@
-// Typing Fighter - PWA Service Worker v18 (Instant P2P Modal Close & Battle Launch)
+// Typing Fighter - PWA Service Worker v19 (Reliable P2P Host-First Room Engine)
 
-const CACHE_NAME = 'typing-fighter-v18';
+const CACHE_NAME = 'typing-fighter-v19';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',

@@ -705,15 +705,14 @@ class GameApp {
     // P2P Multiplayer Networking Integration
     setupP2PListeners() {
         p2p.onConnectCallback = () => {
-            this.pendingGameStart = () => {
-                this.closeModals();
-                combat.reset('p2p');
-                document.getElementById('stageBadge').innerText = `P2P ONLINE`;
-                this.setupPlayerUI(1, auth.currentUser ? auth.currentUser.name : "HERO (YOU)", ICONS.lightning, "#00f0ff");
-                this.setupPlayerUI(2, "FRIEND (ONLINE)", ICONS.globe, "#ff0055");
-                this.startMatch();
-            };
-            this.openContentChoiceModal();
+            // INSTANT BATTLE LAUNCH: Close all modals and start fight immediately on both devices!
+            this.closeModals();
+            combat.reset('p2p');
+            document.getElementById('stageBadge').innerText = `P2P ONLINE`;
+            this.setupPlayerUI(1, auth.currentUser ? auth.currentUser.name : "HERO (YOU)", ICONS.lightning, "#00f0ff");
+            this.setupPlayerUI(2, "FRIEND (ONLINE)", ICONS.globe, "#ff0055");
+            this.startMatch();
+            this.showToast("P2P Online Battle Started! Type to Attack!", "success");
         };
 
         p2p.onMessageCallback = (data) => {

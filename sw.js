@@ -1,6 +1,6 @@
-// Typing Fighter - PWA Service Worker v17 (Clean Silent P2P Probe)
+// Typing Fighter - PWA Service Worker v18 (Instant P2P Modal Close & Battle Launch)
 
-const CACHE_NAME = 'typing-fighter-v17';
+const CACHE_NAME = 'typing-fighter-v18';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',

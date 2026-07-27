@@ -141,23 +141,25 @@ class P2PNetwork {
 
         // FRIEND CONNECTED TO OUR HOST ROOM
         this.peer.on('connection', (connection) => {
-            // Block 3rd player (only 2 allowed per room)
-            if (this.isConnected && this.conn && this.conn.open) {
+            // Block 3rd player (only 2 per room, check if fully established)
+            if (this.isConnected && this.conn) {
                 console.warn("[P2P] Room full — rejecting 3rd connection attempt.");
                 try {
-                    connection.send({
-                        type: 'ROOM_FULL',
-                        payload: { message: `Room "${cleanCode}" is Full (2/2 players). Choose a different code!` }
+                    connection.on('open', () => {
+                        connection.send({
+                            type: 'ROOM_FULL',
+                            payload: { message: `Room "${cleanCode}" is Full (2/2 players). Choose a different code!` }
+                        });
+                        setTimeout(() => connection.close(), 600);
                     });
-                    setTimeout(() => connection.close(), 600);
                 } catch (e) {}
                 return;
             }
 
-            console.log('[P2P] ✅ Friend connected to our HOST room!');
+            console.log('[P2P] ✅ Friend connected to our HOST room! Waiting for channel open...');
             this.conn = connection;
-            this.isConnected = true;
-            this.setupConnectionListeners(onError);
+            // isConnected will be set to true inside setupConnectionListeners on 'open' event
+            this.setupConnectionListeners(onError, false);
             // onConnectCallback is fired inside setupConnectionListeners on 'open'
         });
 
@@ -246,8 +248,8 @@ class P2PNetwork {
                 this._connectingLock = false;
                 console.log(`[P2P] ✅ GUEST connected to Room "${cleanCode}"!`);
 
-                // Setup data channel listeners
-                this.setupConnectionListeners(onError);
+                // Setup data/close/error listeners (alreadyOpen=true — skips open handler)
+                this.setupConnectionListeners(onError, true);
 
                 // Initiate voice call to host
                 if (this.localAudioStream) {
@@ -255,7 +257,12 @@ class P2PNetwork {
                     this.setupVoiceCall(voiceCall);
                 }
 
+                // Show status update in modal
                 if (onSuccess) onSuccess();
+
+                // 🔥 CRITICAL FIX: Fire battle start immediately for GUEST
+                // (setupConnectionListeners' conn.on('open') never fires since conn is already open)
+                if (this.onConnectCallback) this.onConnectCallback();
             });
 
             conn.on('error', (err) => {
@@ -303,14 +310,19 @@ class P2PNetwork {
         });
     }
 
-    setupConnectionListeners(onCustomError) {
+    // alreadyOpen: true when called from guest after conn is already open
+    // HOST calls this with alreadyOpen=false (open event fires naturally)
+    setupConnectionListeners(onCustomError, alreadyOpen = false) {
         if (!this.conn) return;
 
-        this.conn.on('open', () => {
-            this.isConnected = true;
-            console.log('[P2P] ✅ Data channel fully open!');
-            if (this.onConnectCallback) this.onConnectCallback();
-        });
+        // Only register open listener for HOST — guest fires onConnectCallback directly
+        if (!alreadyOpen) {
+            this.conn.on('open', () => {
+                this.isConnected = true;
+                console.log('[P2P] ✅ Data channel fully open (HOST)!');
+                if (this.onConnectCallback) this.onConnectCallback();
+            });
+        }
 
         this.conn.on('data', (rawMsg) => {
             if (!rawMsg || typeof rawMsg !== 'object') return;

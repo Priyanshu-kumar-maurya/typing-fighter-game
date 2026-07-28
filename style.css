@@ -1498,3 +1498,291 @@ canvas {
 }
 
 @keyframes spin { 100% { transform: rotate(360deg); } }
+
+/* ================================================================
+   P2P REMATCH LOBBY — Free Fire Style Ready-Up System
+   ================================================================ */
+
+.p2p-lobby-card {
+    max-width: 420px;
+    width: 94vw;
+    max-height: 92dvh;
+    overflow-y: auto;
+    padding: 20px 18px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--neon-cyan) transparent;
+}
+
+/* Result Banner */
+.p2p-lobby-banner {
+    text-align: center;
+    padding: 14px 10px 10px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(0,240,255,0.07), rgba(255,230,0,0.05));
+    border: 1px solid rgba(0,240,255,0.2);
+    margin-bottom: 14px;
+}
+
+.p2p-result-icon {
+    font-size: 2.2rem;
+    line-height: 1;
+    margin-bottom: 4px;
+    animation: bounceIn 0.5s ease;
+}
+
+.p2p-lobby-title {
+    font-family: var(--font-heading);
+    font-size: 1.4rem;
+    letter-spacing: 2px;
+    margin: 2px 0;
+}
+
+.p2p-lobby-subtitle {
+    font-size: 0.8rem;
+    opacity: 0.7;
+    margin: 0;
+}
+
+/* Stats Pills */
+.p2p-stats-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 14px;
+}
+
+.p2p-stat-pill {
+    background: rgba(0,240,255,0.08);
+    border: 1px solid rgba(0,240,255,0.2);
+    border-radius: 50px;
+    padding: 6px 16px;
+    text-align: center;
+    min-width: 80px;
+}
+
+.p2p-stat-label {
+    display: block;
+    font-size: 0.6rem;
+    letter-spacing: 1px;
+    opacity: 0.6;
+    text-transform: uppercase;
+}
+
+.p2p-stat-val {
+    display: block;
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    color: var(--neon-cyan);
+    font-weight: 700;
+}
+
+/* Lobby divider */
+.lobby-divider {
+    border: none;
+    border-top: 1px solid rgba(0,240,255,0.12);
+    margin: 12px 0;
+}
+
+/* Section */
+.lobby-section {
+    margin-bottom: 8px;
+}
+
+.lobby-section-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.7rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    opacity: 0.6;
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+/* Custom text textarea */
+.p2p-lobby-textarea {
+    width: 100%;
+    min-height: 80px;
+    max-height: 130px;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid rgba(0,240,255,0.25);
+    border-radius: 10px;
+    color: #fff;
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    padding: 10px 12px;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+    margin-bottom: 8px;
+    user-select: text;
+    -webkit-user-select: text;
+}
+
+.p2p-lobby-textarea:focus {
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 10px rgba(0,240,255,0.15);
+}
+
+.p2p-lobby-textarea::placeholder {
+    opacity: 0.35;
+    font-size: 0.78rem;
+}
+
+.btn-sm {
+    padding: 8px 16px;
+    font-size: 0.78rem;
+}
+
+.p2p-share-status {
+    font-size: 0.75rem;
+    margin-top: 6px;
+    min-height: 18px;
+    color: var(--neon-cyan);
+}
+
+/* Ready Players Row */
+.ready-players-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.ready-player-card {
+    flex: 1;
+    background: rgba(0,0,0,0.35);
+    border: 2px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    padding: 14px 10px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.ready-player-card.not-ready {
+    border-color: rgba(255,0,85,0.35);
+    background: rgba(255,0,85,0.04);
+}
+
+.ready-player-card.is-ready {
+    border-color: var(--neon-cyan);
+    background: rgba(0,240,255,0.08);
+    box-shadow: 0 0 18px rgba(0,240,255,0.2);
+    animation: readyPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes readyPulse {
+    0%, 100% { box-shadow: 0 0 12px rgba(0,240,255,0.2); }
+    50%       { box-shadow: 0 0 28px rgba(0,240,255,0.5); }
+}
+
+.ready-player-icon {
+    font-size: 1.6rem;
+    line-height: 1;
+    margin-bottom: 4px;
+}
+
+.ready-player-name {
+    font-family: var(--font-heading);
+    font-size: 0.65rem;
+    letter-spacing: 1px;
+    opacity: 0.7;
+    margin-bottom: 6px;
+}
+
+.ready-player-status {
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: #ff0055;
+    transition: color 0.3s;
+}
+
+.ready-player-card.is-ready .ready-player-status {
+    color: var(--neon-cyan);
+}
+
+.ready-vs-badge {
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    font-weight: 900;
+    color: var(--neon-yellow);
+    flex-shrink: 0;
+    text-shadow: 0 0 12px rgba(255,230,0,0.6);
+}
+
+/* Countdown */
+.p2p-countdown {
+    text-align: center;
+    margin: 8px 0;
+}
+
+#p2pCountdownNum {
+    display: inline-block;
+    font-family: var(--font-heading);
+    font-size: 3rem;
+    font-weight: 900;
+    color: var(--neon-yellow);
+    text-shadow: 0 0 30px rgba(255,230,0,0.8);
+    animation: countPulse 1s ease-in-out infinite;
+}
+
+@keyframes countPulse {
+    0%, 100% { transform: scale(1); }
+    50%       { transform: scale(1.15); }
+}
+
+/* Big Ready Button */
+.p2p-ready-btn {
+    width: 100%;
+    padding: 16px 20px;
+    font-size: 1rem;
+    font-weight: 900;
+    letter-spacing: 2px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(0,240,255,0.15), rgba(0,240,255,0.05));
+    border: 2px solid var(--neon-cyan);
+    color: var(--neon-cyan);
+    text-shadow: 0 0 10px rgba(0,240,255,0.5);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    font-family: var(--font-heading);
+    animation: readyBtnPulse 2s ease-in-out infinite;
+}
+
+@keyframes readyBtnPulse {
+    0%, 100% { box-shadow: 0 0 10px rgba(0,240,255,0.3); }
+    50%       { box-shadow: 0 0 25px rgba(0,240,255,0.6), 0 0 50px rgba(0,240,255,0.2); }
+}
+
+.p2p-ready-btn:hover {
+    background: linear-gradient(135deg, rgba(0,240,255,0.3), rgba(0,240,255,0.1));
+    transform: translateY(-2px);
+}
+
+.p2p-ready-btn.is-ready-state {
+    background: linear-gradient(135deg, rgba(0,255,136,0.2), rgba(0,240,255,0.08));
+    border-color: #00ff88;
+    color: #00ff88;
+    text-shadow: 0 0 10px rgba(0,255,136,0.5);
+    animation: none;
+    box-shadow: 0 0 20px rgba(0,255,136,0.3);
+}
+
+@keyframes bounceIn {
+    0%   { transform: scale(0.5); opacity: 0; }
+    70%  { transform: scale(1.1); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Mobile optimization for lobby */
+@media (max-width: 480px) {
+    .p2p-lobby-card { padding: 14px 12px; }
+    .p2p-lobby-title { font-size: 1.1rem; }
+    .ready-player-card { padding: 10px 6px; }
+    .p2p-ready-btn { padding: 14px 12px; font-size: 0.85rem; }
+    .p2p-stats-row { gap: 5px; }
+    .p2p-stat-pill { min-width: 64px; padding: 5px 10px; }
+}

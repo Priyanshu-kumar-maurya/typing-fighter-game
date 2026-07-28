@@ -1,6 +1,6 @@
-// Typing Fighter - PWA Service Worker v20 (Critical P2P Guest Battle-Start Fix)
+// Typing Fighter - PWA Service Worker v21 (P2P Rematch Lobby & Free Fire Ready-Up System)
 
-const CACHE_NAME = 'typing-fighter-v20';
+const CACHE_NAME = 'typing-fighter-v21';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',

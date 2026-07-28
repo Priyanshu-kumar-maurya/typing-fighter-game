@@ -340,9 +340,33 @@ class P2PNetwork {
                 return;
             }
 
-            // Sanitize incoming message payload for security
+            const msgType = String(rawMsg.type || '');
+
+            // ── LOBBY / REMATCH messages (safe passthrough) ──────────────────────
+            if (msgType === 'P2P_READY' || msgType === 'P2P_UNREADY') {
+                if (this.onMessageCallback) {
+                    this.onMessageCallback({ type: msgType, senderIsHost: Boolean(rawMsg.senderIsHost), payload: {} });
+                }
+                return;
+            }
+            if (msgType === 'P2P_CUSTOM_TEXT') {
+                // Sanitize: max 2000 chars, strip html tags
+                const safeText = String(rawMsg.payload?.text || '').replace(/<[^>]*>/g, '').substring(0, 2000);
+                if (this.onMessageCallback) {
+                    this.onMessageCallback({ type: msgType, senderIsHost: Boolean(rawMsg.senderIsHost), payload: { text: safeText } });
+                }
+                return;
+            }
+            if (msgType === 'P2P_GAME_OVER') {
+                if (this.onMessageCallback) {
+                    this.onMessageCallback({ type: msgType, senderIsHost: Boolean(rawMsg.senderIsHost), payload: {} });
+                }
+                return;
+            }
+
+            // ── GAME messages (strict sanitization) ─────────────────────────────
             const sanitizedMsg = {
-                type: String(rawMsg.type || ''),
+                type: msgType,
                 senderIsHost: Boolean(rawMsg.senderIsHost),
                 payload: {
                     damage: Math.max(0, Math.min(parseInt(rawMsg.payload?.damage || 0), 50)),

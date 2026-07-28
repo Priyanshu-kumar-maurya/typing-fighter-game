@@ -382,6 +382,99 @@
                 </div>
             </div>
         </div>
+
+        <!-- ====================================================== -->
+        <!-- P2P REMATCH LOBBY (Free Fire Style Ready-Up System)     -->
+        <!-- ====================================================== -->
+        <div id="modalP2PLobby" class="modal-overlay hidden">
+            <div class="modal-card p2p-lobby-card">
+
+                <!-- Result Banner -->
+                <div id="p2pLobbyBanner" class="p2p-lobby-banner">
+                    <div id="p2pLobbyResultIcon" class="p2p-result-icon">🏆</div>
+                    <h2 id="p2pLobbyTitle" class="p2p-lobby-title">VICTORY!</h2>
+                    <p id="p2pLobbySubtitle" class="p2p-lobby-subtitle">Excellent typing speed!</p>
+                </div>
+
+                <!-- Quick Stats Row -->
+                <div class="p2p-stats-row">
+                    <div class="p2p-stat-pill">
+                        <span class="p2p-stat-label">WPM</span>
+                        <span id="p2pStatWpm" class="p2p-stat-val">0</span>
+                    </div>
+                    <div class="p2p-stat-pill">
+                        <span class="p2p-stat-label">ACC</span>
+                        <span id="p2pStatAcc" class="p2p-stat-val">100%</span>
+                    </div>
+                    <div class="p2p-stat-pill">
+                        <span class="p2p-stat-label">COMBO</span>
+                        <span id="p2pStatCombo" class="p2p-stat-val">0x</span>
+                    </div>
+                </div>
+
+                <hr class="lobby-divider">
+
+                <!-- Custom Text Section -->
+                <div class="lobby-section">
+                    <div class="lobby-section-title">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00f0ff" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                        CUSTOM TYPING TEXT (Optional)
+                    </div>
+                    <textarea id="p2pLobbyCustomText" class="p2p-lobby-textarea" placeholder="Type your own words/sentences for the next round... Leave empty for random words. Click 'SHARE' to send to your friend too!" maxlength="1000"></textarea>
+                    <button class="btn btn-secondary btn-sm" onclick="game.p2pShareCustomText()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                        SHARE TEXT WITH FRIEND
+                    </button>
+                    <div id="p2pTextShareStatus" class="p2p-share-status"></div>
+                </div>
+
+                <hr class="lobby-divider">
+
+                <!-- Ready-Up Section (Free Fire Style) -->
+                <div class="lobby-section">
+                    <div class="lobby-section-title">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffe600" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                        PLAYER READY STATUS
+                    </div>
+
+                    <div class="ready-players-row">
+                        <!-- My Ready Status -->
+                        <div id="p2pMyReadyCard" class="ready-player-card not-ready">
+                            <div class="ready-player-icon">⚔️</div>
+                            <div class="ready-player-name" id="p2pMyName">YOU</div>
+                            <div class="ready-player-status" id="p2pMyStatus">NOT READY</div>
+                        </div>
+
+                        <div class="ready-vs-badge">VS</div>
+
+                        <!-- Opponent Ready Status -->
+                        <div id="p2pOpponentReadyCard" class="ready-player-card not-ready">
+                            <div class="ready-player-icon">🤖</div>
+                            <div class="ready-player-name">FRIEND</div>
+                            <div class="ready-player-status" id="p2pOpponentStatus">WAITING...</div>
+                        </div>
+                    </div>
+
+                    <!-- Countdown Display -->
+                    <div id="p2pCountdown" class="p2p-countdown hidden">
+                        <span id="p2pCountdownNum">3</span>
+                    </div>
+
+                    <!-- READY BUTTON (main CTA) -->
+                    <button id="btnP2PReady" class="btn p2p-ready-btn" onclick="game.toggleP2PReady()">
+                        ⚡ CLICK TO READY UP
+                    </button>
+                </div>
+
+                <hr class="lobby-divider">
+
+                <!-- Leave Room -->
+                <button class="btn btn-secondary btn-sm full-width" onclick="game.leaveP2PRoom()">
+                    🚪 Leave Room & Go to Main Menu
+                </button>
+            </div>
+        </div>
+
     </div>
 
     <!-- PWA Service Worker Registration -->
@@ -398,13 +491,13 @@
     </script>
 
     <!-- SCRIPTS -->
-    <script src="js/icons.js?v=20"></script>
-    <script src="js/config.js?v=20"></script>
-    <script src="js/auth.js?v=20"></script>
-    <script src="js/audio.js?v=20"></script>
-    <script src="js/renderer.js?v=20"></script>
-    <script src="js/p2p.js?v=20"></script>
-    <script src="js/combat.js?v=20"></script>
-    <script src="js/main.js?v=20"></script>
+    <script src="js/icons.js?v=21"></script>
+    <script src="js/config.js?v=21"></script>
+    <script src="js/auth.js?v=21"></script>
+    <script src="js/audio.js?v=21"></script>
+    <script src="js/renderer.js?v=21"></script>
+    <script src="js/p2p.js?v=21"></script>
+    <script src="js/combat.js?v=21"></script>
+    <script src="js/main.js?v=21"></script>
 </body>
 </html>

@@ -20,6 +20,12 @@ class GameApp {
         this.customScriptIndex = 0;
         this.pendingGameStart = null;
 
+        // P2P Lobby Ready-Up State
+        this.p2pMyReady = false;
+        this.p2pOpponentReady = false;
+        this.p2pCountdownTimer = null;
+        this.p2pLobbyWinner = 1;
+
         // Dom Elements
         this.typeInput = document.getElementById('typeInput');
         this.wordDisplay = document.getElementById('wordDisplay');
@@ -717,11 +723,11 @@ class GameApp {
 
         p2p.onMessageCallback = (data) => {
             const { type, payload } = data;
+
+            // ── GAME messages ────────────────────────────────────────────────
             if (type === 'KEYSTROKE') {
-                // Opponent typed a key! Micro hit animation
                 this.renderer.triggerAttack(2, 'light');
             } else if (type === 'ATTACK_COMPLETED') {
-                // Friend completed a word attack! Validate damage payload
                 const validDamage = Math.min(payload.damage || 0, 50);
                 combat.p1.hp = Math.max(0, combat.p1.hp - validDamage);
                 this.renderer.triggerAttack(2, payload.isSuper ? 'super' : 'heavy');
@@ -729,10 +735,38 @@ class GameApp {
                 this.renderer.addFloatingText(this.renderer.f1.x, this.renderer.f1.y - 70, `-${validDamage} HP`, '#ff0055', 28);
                 this.updateHUD();
                 combat.checkGameOver();
+
+            // ── LOBBY / READY-UP messages ────────────────────────────────────
+            } else if (type === 'P2P_READY') {
+                this.setOpponentReady(true);
+                this.showToast('Friend is READY! Click Ready Up to start!', 'success', 3000);
+            } else if (type === 'P2P_UNREADY') {
+                this.setOpponentReady(false);
+                if (this.p2pCountdownTimer) {
+                    clearInterval(this.p2pCountdownTimer);
+                    this.p2pCountdownTimer = null;
+                    const cd = document.getElementById('p2pCountdown');
+                    if (cd) cd.classList.add('hidden');
+                    this.showToast('Friend cancelled ready. Waiting...', 'info', 2500);
+                }
+            } else if (type === 'P2P_CUSTOM_TEXT') {
+                // Friend shared custom text — load it
+                const textarea = document.getElementById('p2pLobbyCustomText');
+                if (textarea && payload.text) textarea.value = payload.text;
+                const shareStatus = document.getElementById('p2pTextShareStatus');
+                if (shareStatus) shareStatus.innerHTML = `<span style="color:#00f0ff;">✅ Friend shared custom text! Using it for next round.</span>`;
+                this.showToast('Friend sent you custom typing text!', 'info', 3500);
             }
         };
 
         p2p.onDisconnectCallback = (msg) => {
+            // Close lobby if open
+            const lobby = document.getElementById('modalP2PLobby');
+            if (lobby) lobby.classList.add('hidden');
+            if (this.p2pCountdownTimer) {
+                clearInterval(this.p2pCountdownTimer);
+                this.p2pCountdownTimer = null;
+            }
             this.showToast(msg || "Online P2P friend disconnected.", "error");
             this.showMainMenu();
         };
@@ -827,7 +861,13 @@ class GameApp {
         const targetWPM = combat.bot ? combat.bot.baseWPM : 15;
         const stageRank = this.calculateStageRank(combat.p1.wpm, combat.p1.accuracy, targetWPM);
 
-        // Populate Game Over Stats Modal
+        // ── P2P MODE: Show P2P Rematch Lobby instead of normal game over ──
+        if (combat.mode === 'p2p' && p2p.isConnected) {
+            this.openP2PLobby(winner);
+            return;
+        }
+
+        // Populate Game Over Stats Modal (Arcade & Local)
         if (combat.mode === 'arcade') {
             if (winner === 1) {
                 document.getElementById('winnerTitle').innerText = `STAGE ${combat.currentLevel} CLEARED!`;
@@ -860,6 +900,199 @@ class GameApp {
         document.getElementById('statRank').innerHTML = winner === 1 ? stageRank : `${ICONS.cross} NO RANK`;
 
         document.getElementById('modalGameOver').classList.remove('hidden');
+    }
+
+    // ── P2P REMATCH LOBBY ─────────────────────────────────────────────────────
+
+    openP2PLobby(winner) {
+        this.p2pLobbyWinner = winner;
+        this.p2pMyReady = false;
+        this.p2pOpponentReady = false;
+        if (this.p2pCountdownTimer) {
+            clearInterval(this.p2pCountdownTimer);
+            this.p2pCountdownTimer = null;
+        }
+
+        // Populate result
+        const isWin = winner === 1;
+        document.getElementById('p2pLobbyResultIcon').innerText = isWin ? '🏆' : '💀';
+        document.getElementById('p2pLobbyTitle').innerText = isWin ? 'VICTORY!' : 'DEFEAT!';
+        document.getElementById('p2pLobbyTitle').style.color = isWin ? 'var(--neon-cyan)' : '#ff0055';
+        document.getElementById('p2pLobbySubtitle').innerText = isWin
+            ? `You outtyped your friend! WPM: ${combat.p1.wpm}`
+            : `Friend was faster this time! WPM: ${combat.p1.wpm}`;
+
+        // Stats
+        document.getElementById('p2pStatWpm').innerText = combat.p1.wpm;
+        document.getElementById('p2pStatAcc').innerText = `${combat.p1.accuracy}%`;
+        document.getElementById('p2pStatCombo').innerText = `${combat.p1.maxCombo}x`;
+
+        // Player name
+        const myName = auth.currentUser ? auth.currentUser.name.toUpperCase() : 'YOU';
+        document.getElementById('p2pMyName').innerText = myName;
+
+        // Reset ready states
+        this._updateReadyUI('my', false);
+        this._updateReadyUI('opp', false);
+
+        // Reset ready button
+        const readyBtn = document.getElementById('btnP2PReady');
+        if (readyBtn) {
+            readyBtn.classList.remove('is-ready-state');
+            readyBtn.innerHTML = '⚡ CLICK TO READY UP';
+        }
+
+        // Hide countdown
+        const cd = document.getElementById('p2pCountdown');
+        if (cd) cd.classList.add('hidden');
+
+        // Clear custom text area
+        const textarea = document.getElementById('p2pLobbyCustomText');
+        if (textarea) textarea.value = '';
+        const shareStatus = document.getElementById('p2pTextShareStatus');
+        if (shareStatus) shareStatus.innerHTML = '';
+
+        // Show lobby
+        this.closeModals();
+        document.getElementById('modalP2PLobby').classList.remove('hidden');
+
+        if (isWin) audio.playVictory();
+        else audio.playDefeat();
+    }
+
+    _updateReadyUI(who, isReady) {
+        const card = document.getElementById(who === 'my' ? 'p2pMyReadyCard' : 'p2pOpponentReadyCard');
+        const status = document.getElementById(who === 'my' ? 'p2pMyStatus' : 'p2pOpponentStatus');
+        if (!card || !status) return;
+        if (isReady) {
+            card.className = 'ready-player-card is-ready';
+            status.innerText = '✅ READY!';
+        } else {
+            card.className = 'ready-player-card not-ready';
+            status.innerText = who === 'my' ? 'NOT READY' : 'WAITING...';
+        }
+    }
+
+    toggleP2PReady() {
+        this.p2pMyReady = !this.p2pMyReady;
+        this._updateReadyUI('my', this.p2pMyReady);
+
+        const readyBtn = document.getElementById('btnP2PReady');
+        if (this.p2pMyReady) {
+            readyBtn.classList.add('is-ready-state');
+            readyBtn.innerHTML = '✅ READY! (Click to Cancel)';
+            p2p.send('P2P_READY', {});
+            this.showToast('You are READY! Waiting for friend...', 'success', 2500);
+        } else {
+            readyBtn.classList.remove('is-ready-state');
+            readyBtn.innerHTML = '⚡ CLICK TO READY UP';
+            p2p.send('P2P_UNREADY', {});
+            // Cancel countdown if running
+            if (this.p2pCountdownTimer) {
+                clearInterval(this.p2pCountdownTimer);
+                this.p2pCountdownTimer = null;
+                const cd = document.getElementById('p2pCountdown');
+                if (cd) cd.classList.add('hidden');
+            }
+        }
+
+        this.checkBothReady();
+    }
+
+    setOpponentReady(isReady) {
+        this.p2pOpponentReady = isReady;
+        this._updateReadyUI('opp', isReady);
+        this.checkBothReady();
+    }
+
+    checkBothReady() {
+        if (this.p2pMyReady && this.p2pOpponentReady) {
+            // Both ready! Start countdown
+            if (this.p2pCountdownTimer) return; // Already counting
+
+            let count = 3;
+            const cd = document.getElementById('p2pCountdown');
+            const num = document.getElementById('p2pCountdownNum');
+            if (cd) cd.classList.remove('hidden');
+            if (num) num.innerText = count;
+
+            this.showToast('Both READY! Starting in 3...', 'success', 3500);
+
+            this.p2pCountdownTimer = setInterval(() => {
+                count--;
+                if (num) num.innerText = count;
+                if (count <= 0) {
+                    clearInterval(this.p2pCountdownTimer);
+                    this.p2pCountdownTimer = null;
+                    if (cd) cd.classList.add('hidden');
+                    this.startP2PRematch();
+                }
+            }, 1000);
+        } else if (this.p2pCountdownTimer) {
+            // Someone unreadied — cancel countdown
+            clearInterval(this.p2pCountdownTimer);
+            this.p2pCountdownTimer = null;
+            const cd = document.getElementById('p2pCountdown');
+            if (cd) cd.classList.add('hidden');
+        }
+    }
+
+    startP2PRematch() {
+        // Read custom text from lobby textarea
+        const textarea = document.getElementById('p2pLobbyCustomText');
+        const customText = textarea ? textarea.value.trim() : '';
+
+        if (customText.length > 0) {
+            this.customScriptWords = customText.split(/\s+/).filter(w => w.length > 0);
+            this.contentMode = 'custom';
+            this.customScriptIndex = 0;
+        } else {
+            this.contentMode = 'words';
+            this.customScriptWords = [];
+        }
+
+        // Reset ready state
+        this.p2pMyReady = false;
+        this.p2pOpponentReady = false;
+
+        // Close lobby and restart match
+        document.getElementById('modalP2PLobby').classList.add('hidden');
+        combat.reset('p2p');
+        document.getElementById('stageBadge').innerText = `P2P ONLINE`;
+        this.setupPlayerUI(1, auth.currentUser ? auth.currentUser.name : "HERO (YOU)", ICONS.lightning, "#00f0ff");
+        this.setupPlayerUI(2, "FRIEND (ONLINE)", ICONS.globe, "#ff0055");
+        this.startMatch();
+        this.showToast('P2P Rematch Started! Type to Attack!', 'success');
+    }
+
+    p2pShareCustomText() {
+        const textarea = document.getElementById('p2pLobbyCustomText');
+        const text = textarea ? textarea.value.trim() : '';
+        const shareStatus = document.getElementById('p2pTextShareStatus');
+
+        if (!text) {
+            this.showToast('Please type some custom text first!', 'error', 2000);
+            return;
+        }
+        if (!p2p.isConnected) {
+            this.showToast('Not connected to friend!', 'error');
+            return;
+        }
+
+        p2p.send('P2P_CUSTOM_TEXT', { text: text });
+        if (shareStatus) shareStatus.innerHTML = `<span style="color:#00ff88;">✅ Custom text sent to friend!</span>`;
+        this.showToast('Custom text shared with friend!', 'success', 2500);
+    }
+
+    leaveP2PRoom() {
+        if (this.p2pCountdownTimer) {
+            clearInterval(this.p2pCountdownTimer);
+            this.p2pCountdownTimer = null;
+        }
+        p2p.disconnect();
+        document.getElementById('modalP2PLobby').classList.add('hidden');
+        this.showMainMenu();
+        this.showToast('Left P2P room. See you next time!', 'info');
     }
 
     playNextLevel() {
@@ -950,6 +1183,7 @@ class GameApp {
         this.pendingGameStart = null;
         document.getElementById('modalStart').classList.add('hidden');
         document.getElementById('modalP2P').classList.add('hidden');
+        document.getElementById('modalP2PLobby').classList.add('hidden');
         document.getElementById('modalCampaign').classList.add('hidden');
         document.getElementById('modalContentChoice').classList.add('hidden');
         document.getElementById('modalCustomScript').classList.add('hidden');

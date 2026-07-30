@@ -73,6 +73,41 @@ class GameApp {
         // Audio initialization on first user interaction
         window.addEventListener('pointerdown', () => audio.init(), { once: true });
 
+        // ── MOBILE KEYBOARD DETECTION ─────────────────────────────────────────
+        // When the virtual keyboard opens, viewport height shrinks.
+        // We add body.keyboard-open so CSS can adapt the layout.
+        if (window.visualViewport) {
+            let baseHeight = window.visualViewport.height;
+            let keyboardTimer = null;
+
+            window.visualViewport.addEventListener('resize', () => {
+                clearTimeout(keyboardTimer);
+                const currentH = window.visualViewport.height;
+                const diff = baseHeight - currentH;
+
+                // Keyboard opened (height shrank by more than 120px)
+                if (diff > 120) {
+                    document.body.classList.add('keyboard-open');
+                    // Scroll typing box into view smoothly
+                    keyboardTimer = setTimeout(() => {
+                        const typingBox = document.querySelector('.typing-box-container');
+                        if (typingBox) typingBox.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                    }, 100);
+                } else {
+                    document.body.classList.remove('keyboard-open');
+                    baseHeight = currentH;
+                }
+            });
+
+            // Update baseHeight when orientation changes
+            window.addEventListener('orientationchange', () => {
+                setTimeout(() => {
+                    baseHeight = window.visualViewport.height;
+                    document.body.classList.remove('keyboard-open');
+                }, 500);
+            });
+        }
+
         // Load saved custom script if available
         const savedScript = localStorage.getItem('tf_custom_script');
         if (savedScript && this.scriptTextarea) {

@@ -1,6 +1,6 @@
-// Typing Fighter - PWA Service Worker v21 (P2P Rematch Lobby & Free Fire Ready-Up System)
+// Typing Fighter - PWA Service Worker v22 (Mobile Virtual Keyboard Adaptive Layout & Typing UI Fix)
 
-const CACHE_NAME = 'typing-fighter-v21';
+const CACHE_NAME = 'typing-fighter-v22';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',

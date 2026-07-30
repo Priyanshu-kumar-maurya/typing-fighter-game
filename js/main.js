@@ -358,6 +358,33 @@ class GameApp {
         this.showToast(isEnabled ? "Microphone Unmuted" : "Microphone Muted", isEnabled ? "success" : "info");
     }
 
+    toggleFighterSkin(skin = null) {
+        if (!this.renderer) return;
+        const currentSkin = skin || (this.renderer.fighterSkin === 'cyber' ? 'stickman' : 'cyber');
+        this.renderer.setSkinMode(currentSkin);
+        const btn = document.getElementById('btnSkinToggle');
+        if (btn) {
+            btn.innerHTML = currentSkin === 'stickman' ? `${ICONS.stickman} Fighter: STICKMAN` : `Fighter: CYBER`;
+            btn.style.color = currentSkin === 'stickman' ? "var(--neon-yellow)" : "var(--neon-cyan)";
+        }
+        this.showToast(currentSkin === 'stickman' ? "⚡ STICKMAN Fighter Skin Activated!" : "CYBER Fighter Skin Activated!", "success");
+    }
+
+    startStickmanMode() {
+        this.toggleFighterSkin('stickman');
+        this.pendingGameStart = () => {
+            this.closeModals();
+            combat.reset('local2p');
+            document.getElementById('stageBadge').innerText = `⚡ STICKMAN CLASH`;
+            this.setupPlayerUI(1, auth.currentUser ? auth.currentUser.name : "STICKMAN 1", ICONS.stickman, "#00f0ff");
+            this.setupPlayerUI(2, "STICKMAN 2", ICONS.stickman, "#ff0055");
+            this.startMatch();
+            this.showToast("⚡ Stickman Clash Started! Type fast to punch & kick faster!", "success", 4000);
+        };
+
+        this.openContentChoiceModal();
+    }
+
     startArcadeLevel(levelNum = 1) {
         if (!auth.currentUser) {
             this.openAuthModal();

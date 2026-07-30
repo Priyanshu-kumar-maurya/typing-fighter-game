@@ -1,6 +1,6 @@
-// Typing Fighter - PWA Service Worker v22 (Mobile Virtual Keyboard Adaptive Layout & Typing UI Fix)
+// Typing Fighter - PWA Service Worker v23 (New 1v1 Stickman Fighter Mode & Martial Arts Engine)
 
-const CACHE_NAME = 'typing-fighter-v22';
+const CACHE_NAME = 'typing-fighter-v23';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',

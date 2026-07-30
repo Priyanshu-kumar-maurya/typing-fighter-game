@@ -73,9 +73,10 @@
             <div class="header-controls">
                 <button id="btnSoundToggle" class="icon-btn" title="Toggle Audio (Shortcut: M)">Sound: ON</button>
                 <button id="btnMicToggle" class="icon-btn mic-btn" title="Toggle Voice Chat Mic" onclick="game.toggleMic()">Mic: ON</button>
-                <button id="btnQuitMatch" class="btn btn-secondary" title="Shortcut: P" onclick="game.pauseMatch()">PAUSE / QUIT</button>
-                <button id="btnOpenP2P" class="btn btn-neon">Online P2P Mode</button>
-                <button id="btnOpenArcade" class="btn btn-secondary">vs AI Campaign (25 Levels)</button>
+                <button id="btnSkinToggle" class="icon-btn skin-btn" title="Switch Fighter Skin Mode" onclick="game.toggleFighterSkin()">Fighter: CYBER</button>
+                <button id="btnOpenP2P" class="btn btn-magenta btn-small">ONLINE P2P</button>
+                <button id="btnOpenArcade" class="btn btn-neon btn-small">25 STAGES</button>
+                <button class="icon-btn" title="Pause / Menu" onclick="game.pauseMatch()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg></button>
             </div>
         </header>
 
@@ -253,6 +254,13 @@
                         <h3>vs AI CAMPAIGN</h3>
                         <p>Pass 25 progressive Boss Levels (Starts at 15 WPM up to 120 WPM)!</p>
                         <button class="btn btn-neon mt-2">PLAY 25 LEVELS</button>
+                    </div>
+
+                    <div class="mode-card mode-stickman-card" onclick="game.startStickmanMode()">
+                        <div class="mode-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ffe600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="3"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="12" y1="11" x2="7" y2="9"/><line x1="12" y1="11" x2="17" y2="9"/><line x1="12" y1="16" x2="8" y2="21"/><line x1="12" y1="16" x2="16" y2="21"/></svg></div>
+                        <h3>⚡ STICKMAN CLASH 1v1</h3>
+                        <p>Real-Time Stickman Martial Arts Fight! Type fast to punch & kick faster!</p>
+                        <button class="btn btn-yellow mt-2">PLAY STICKMAN 1v1</button>
                     </div>
 
                     <div class="mode-card" onclick="game.openP2PModal()">
@@ -491,13 +499,13 @@
     </script>
 
     <!-- SCRIPTS -->
-    <script src="js/icons.js?v=22"></script>
-    <script src="js/config.js?v=22"></script>
-    <script src="js/auth.js?v=22"></script>
-    <script src="js/audio.js?v=22"></script>
-    <script src="js/renderer.js?v=22"></script>
-    <script src="js/p2p.js?v=22"></script>
-    <script src="js/combat.js?v=22"></script>
-    <script src="js/main.js?v=22"></script>
+    <script src="js/icons.js?v=23"></script>
+    <script src="js/config.js?v=23"></script>
+    <script src="js/auth.js?v=23"></script>
+    <script src="js/audio.js?v=23"></script>
+    <script src="js/renderer.js?v=23"></script>
+    <script src="js/p2p.js?v=23"></script>
+    <script src="js/combat.js?v=23"></script>
+    <script src="js/main.js?v=23"></script>
 </body>
 </html>

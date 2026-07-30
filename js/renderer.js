@@ -26,9 +26,14 @@ class ArenaRenderer {
             facing: -1, hpPercent: 1.0
         };
 
+        this.fighterSkin = 'cyber'; // 'cyber' | 'stickman'
         this.animFrame = 0;
         this.resize();
         window.addEventListener('resize', () => this.resize());
+    }
+
+    setSkinMode(skin = 'cyber') {
+        this.fighterSkin = skin;
     }
 
     resize() {
@@ -238,7 +243,135 @@ class ArenaRenderer {
         ctx.restore();
     }
 
+    drawStickmanFighter(f) {
+        const ctx = this.ctx;
+        ctx.save();
+        ctx.translate(f.x, f.y);
+
+        const bounce = Math.sin(this.animFrame * 0.18) * 5;
+        const color = f.color;
+        const glow = f.glow;
+
+        ctx.shadowBlur = 18;
+        ctx.shadowColor = glow;
+
+        // Shadow under stickman
+        ctx.fillStyle = 'rgba(0,0,0,0.45)';
+        ctx.beginPath();
+        ctx.ellipse(0, 5, 26, 7, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // KO State
+        if (f.hpPercent <= 0) {
+            ctx.rotate(f.facing * 1.5);
+            ctx.translate(0, 35);
+        } else if (f.state === 'hurt') {
+            ctx.rotate(f.facing * -0.25);
+        }
+
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 5;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        const headY = -85 + bounce;
+        const neckY = -72 + bounce;
+        const waistY = -30 + bounce;
+
+        // 1. STICKMAN HEAD
+        ctx.fillStyle = '#090d1a';
+        ctx.beginPath();
+        ctx.arc(0, headY, 14, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Glowing Ninja Headband / Visor
+        ctx.fillStyle = color;
+        ctx.fillRect(f.facing * 2, headY - 3, f.facing * 12, 5);
+        
+        // Headband tail flapping
+        ctx.beginPath();
+        ctx.moveTo(-f.facing * 12, headY - 2);
+        ctx.lineTo(-f.facing * 22, headY + Math.sin(this.animFrame * 0.2) * 6);
+        ctx.stroke();
+
+        // 2. TORSO
+        ctx.beginPath();
+        ctx.moveTo(0, neckY);
+        ctx.lineTo(0, waistY);
+        ctx.stroke();
+
+        // 3. LEGS & KICKS
+        ctx.beginPath();
+        if (f.state === 'attack_heavy') {
+            // Flying Side Kick!
+            ctx.moveTo(0, waistY);
+            ctx.lineTo(40 * f.facing, waistY - 15); // Extended kicking leg
+            ctx.moveTo(0, waistY);
+            ctx.lineTo(-15 * f.facing, waistY + 20); // Supporting back leg
+        } else if (f.state === 'attack_super') {
+            // Spinning Dragon Kick!
+            ctx.moveTo(0, waistY);
+            ctx.lineTo(50 * f.facing, waistY - 35);
+            ctx.moveTo(0, waistY);
+            ctx.lineTo(-25 * f.facing, waistY + 15);
+        } else {
+            // Martial Arts Stance Legs
+            ctx.moveTo(0, waistY);
+            ctx.lineTo(-12 * f.facing, waistY + 15);
+            ctx.lineTo(-22 * f.facing, 0);
+
+            ctx.moveTo(0, waistY);
+            ctx.lineTo(12 * f.facing, waistY + 15);
+            ctx.lineTo(22 * f.facing, 0);
+        }
+        ctx.stroke();
+
+        // 4. ARMS & PUNCHES
+        ctx.beginPath();
+        if (f.state === 'attack_light') {
+            // Rapid Jab Punch
+            ctx.moveTo(0, neckY + 10);
+            ctx.lineTo(55 * f.facing, neckY + 10); // Extended fist
+            ctx.moveTo(0, neckY + 10);
+            ctx.lineTo(15 * f.facing, neckY + 25); // Guard arm
+        } else if (f.state === 'attack_super') {
+            // Dragon Uppercut
+            ctx.moveTo(0, neckY + 10);
+            ctx.lineTo(30 * f.facing, neckY - 40); // Skyward Fist
+            ctx.moveTo(0, neckY + 10);
+            ctx.lineTo(-20 * f.facing, neckY + 20);
+        } else {
+            // Boxing Guard Arms
+            ctx.moveTo(0, neckY + 10);
+            ctx.lineTo(18 * f.facing, neckY + 5);
+            ctx.lineTo(22 * f.facing, neckY - 15);
+
+            ctx.moveTo(0, neckY + 10);
+            ctx.lineTo(-10 * f.facing, neckY + 12);
+            ctx.lineTo(-14 * f.facing, neckY - 8);
+        }
+        ctx.stroke();
+
+        // 5. Energy Fist / Aura Glow on attack
+        if (f.state.startsWith('attack')) {
+            const attackX = f.state === 'attack_heavy' ? 45 * f.facing : (f.state === 'attack_super' ? 30 * f.facing : 55 * f.facing);
+            const attackY = f.state === 'attack_super' ? neckY - 40 : neckY + 10;
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(attackX, attackY, f.state === 'attack_super' ? 16 : 9, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        ctx.restore();
+    }
+
     drawFighter(f) {
+        if (this.fighterSkin === 'stickman') {
+            this.drawStickmanFighter(f);
+            return;
+        }
+
         const ctx = this.ctx;
         ctx.save();
         ctx.translate(f.x, f.y);

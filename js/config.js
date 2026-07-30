@@ -40,23 +40,41 @@ const CONFIG = {
         { level: 25, name: "Ultimate Typing God", baseWPM: 120, maxHp: 350, attackInterval: 1000, avatar: ICONS.trophy, color: '#ffe600', difficulty: 'GOD MODE' }
     ],
 
-    // TYPING PROMPT DICTIONARIES
+    // TYPING PROMPT DICTIONARIES (Huge collection of real-life words & phrases)
     WORDS: {
         EASY: [
-            "jab", "kick", "dash", "punch", "block", "combo", "strike", "clash",
-            "fight", "speed", "power", "cyber", "arena", "blade", "spark", "boost"
+            "focus", "learn", "think", "trust", "brave", "power", "climb", "dream",
+            "happy", "smile", "quick", "sharp", "light", "shine", "vital", "boost",
+            "speed", "clash", "spark", "pulse", "drive", "skill", "force", "value",
+            "honor", "grace", "crest", "noble", "flame", "storm", "chase", "reach",
+            "grasp", "glide", "swift", "smart", "bold", "super", "magic", "prime",
+            "level", "arena", "clear", "guard", "pivot", "craft", "build", "punch",
+            "strike", "shield", "victory", "champion", "energy", "hero", "blitz"
         ],
         MEDIUM: [
-            "counter", "plasma", "hyper", "critical", "overdrive", "warrior",
-            "assassin", "lightning", "velocity", "victory", "impact", "stamina"
+            "friendship", "courage", "champion", "patience", "creativity", "wisdom",
+            "ambition", "harmony", "journey", "inspire", "synergy", "mindset",
+            "database", "network", "software", "hardware", "bandwidth", "future",
+            "algorithm", "innovation", "interface", "developer", "encrypt", "velocity",
+            "stamina", "warrior", "assassin", "victory", "impact", "counter",
+            "plasma", "critical", "overdrive", "recovery", "progress", "momentum",
+            "resilience", "discipline", "potential", "exploring", "knowledge",
+            "discovery", "solution", "technique", "strategy", "strength", "overclock"
         ],
         HARD: [
-            "devastation", "obliteration", "invincible", "retaliation",
-            "annihilation", "cybernetics", "overclocked", "mastermind", "supernova"
+            "stay focused", "never give up", "keep pushing", "think positive",
+            "believe in yourself", "action speaks louder", "chase your dreams",
+            "make it happen", "lead with honor", "practice makes perfect",
+            "master your mind", "continuous learning", "embrace challenge",
+            "unstoppable energy", "determination", "annihilation", "cybernetics",
+            "overclocked", "mastermind", "supernova", "extraordinary",
+            "transformation", "breakthrough", "perseverance", "accomplishment",
+            "unshakeable discipline", "revolutionary power", "supreme victory"
         ],
         POWER_WORDS: [
             "HYPER PUNCH", "PLASMA BEAM", "MEGA COMBO", "ULTIMATE KO",
-            "TURBO STRIKE", "CYBER DESTROYER", "GOD SLAM"
+            "TURBO STRIKE", "CYBER DESTROYER", "GOD SLAM", "DRAGON KNOCKOUT",
+            "PHOENIX RISING", "THUNDER STRIKE", "LIGHTSPEED BATTLE"
         ]
     }
 };

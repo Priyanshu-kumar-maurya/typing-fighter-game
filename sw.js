@@ -1,6 +1,6 @@
-// Typing Fighter - PWA Service Worker v24 (Stickman Close-Quarters Combat & Airborne Knockback Physics)
+// Typing Fighter - PWA Service Worker v25 (Huge Real-Life Word Dictionary & Anti-Repetition Shuffling Engine)
 
-const CACHE_NAME = 'typing-fighter-v24';
+const CACHE_NAME = 'typing-fighter-v25';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',

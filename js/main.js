@@ -26,6 +26,9 @@ class GameApp {
         this.p2pCountdownTimer = null;
         this.p2pLobbyWinner = 1;
 
+        // Anti-Repetition Dictionary History
+        this.recentWordsHistory = [];
+
         // Dom Elements
         this.typeInput = document.getElementById('typeInput');
         this.wordDisplay = document.getElementById('wordDisplay');
@@ -429,6 +432,7 @@ class GameApp {
         this.isMatchPaused = false;
         this.matchSeconds = 0;
         this.customScriptIndex = 0;
+        this.recentWordsHistory = []; // Reset word history on new match start!
         this.lastKeystrokeTime = Date.now();
         if (this.matchTimerInterval) clearInterval(this.matchTimerInterval);
 
@@ -488,13 +492,29 @@ class GameApp {
                 this.currentWord = this.customScriptWords[this.customScriptIndex % this.customScriptWords.length];
                 this.customScriptIndex++;
             } else {
-                // Random Words Mode
+                // Random Words Mode: Filter out recently used words so words NEVER repeat!
                 const diff = combat.bot ? combat.bot.difficulty : 'Medium';
-                let list = CONFIG.WORDS.EASY;
-                if (diff === 'Medium' || diff === 'Hard') list = list.concat(CONFIG.WORDS.MEDIUM);
-                if (diff === 'Expert' || diff === 'NIGHTMARE' || diff === 'BOSS' || diff === 'SUPER BOSS' || diff === 'GOD MODE') list = list.concat(CONFIG.WORDS.HARD);
+                let fullList = [...CONFIG.WORDS.EASY];
+                if (diff === 'Medium' || diff === 'Hard') fullList = fullList.concat(CONFIG.WORDS.MEDIUM);
+                if (diff === 'Expert' || diff === 'NIGHTMARE' || diff === 'BOSS' || diff === 'SUPER BOSS' || diff === 'GOD MODE') fullList = fullList.concat(CONFIG.WORDS.HARD);
 
-                this.currentWord = list[Math.floor(Math.random() * list.length)];
+                // Exclude words used in recent history
+                let availableWords = fullList.filter(w => !this.recentWordsHistory.includes(w));
+                if (availableWords.length === 0) {
+                    // History exhausted — reset history and reshuffle
+                    this.recentWordsHistory = [];
+                    availableWords = fullList;
+                }
+
+                // Pick a fresh random non-repeating word
+                const picked = availableWords[Math.floor(Math.random() * availableWords.length)];
+                this.currentWord = picked;
+
+                // Push to history (prevent reuse for next 40 picks)
+                this.recentWordsHistory.push(picked);
+                if (this.recentWordsHistory.length > 40) {
+                    this.recentWordsHistory.shift();
+                }
             }
         }
 

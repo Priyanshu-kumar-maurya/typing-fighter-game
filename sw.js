@@ -1,6 +1,6 @@
-// Typing Fighter - PWA Service Worker v23 (New 1v1 Stickman Fighter Mode & Martial Arts Engine)
+// Typing Fighter - PWA Service Worker v24 (Stickman Close-Quarters Combat & Airborne Knockback Physics)
 
-const CACHE_NAME = 'typing-fighter-v23';
+const CACHE_NAME = 'typing-fighter-v24';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',

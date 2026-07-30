@@ -11,16 +11,16 @@ class ArenaRenderer {
         
         // Fighter positions & animation states
         this.f1 = {
-            x: 200, y: 360,
-            baseX: 200, baseY: 360,
+            x: 220, y: 360,
+            baseX: 220, baseY: 360, vy: 0, rotation: 0,
             color: '#00f0ff', glow: 'rgba(0, 240, 255, 0.8)',
             state: 'idle', stateTimer: 0,
             facing: 1, hpPercent: 1.0
         };
 
         this.f2 = {
-            x: 760, y: 360,
-            baseX: 760, baseY: 360,
+            x: 740, y: 360,
+            baseX: 740, baseY: 360, vy: 0, rotation: 0,
             color: '#ff0055', glow: 'rgba(255, 0, 85, 0.8)',
             state: 'idle', stateTimer: 0,
             facing: -1, hpPercent: 1.0
@@ -34,6 +34,14 @@ class ArenaRenderer {
 
     setSkinMode(skin = 'cyber') {
         this.fighterSkin = skin;
+        if (skin === 'stickman') {
+            // Close-quarters face-to-face combat stance for stickman!
+            this.f1.baseX = 380;
+            this.f2.baseX = 580;
+        } else {
+            this.f1.baseX = 220;
+            this.f2.baseX = 740;
+        }
     }
 
     resize() {
@@ -54,17 +62,33 @@ class ArenaRenderer {
         attacker.state = attackType === 'super' ? 'attack_super' : (attackType === 'heavy' ? 'attack_heavy' : 'attack_light');
         attacker.stateTimer = 25;
 
-        // Dash movement towards defender
-        const dashDist = attackType === 'super' ? 180 : (attackType === 'heavy' ? 140 : 90);
-        attacker.x = attacker.baseX + (attacker.facing * dashDist);
+        // Lunge directly into defender's face for up-close combat!
+        attacker.x = defender.x - (attacker.facing * 45);
 
         setTimeout(() => {
             defender.state = 'hurt';
-            defender.stateTimer = 20;
-            defender.x = defender.baseX + (defender.facing * -25);
-            this.triggerShake(attackType === 'super' ? 18 : 8, 12);
+            defender.stateTimer = 25;
+
+            // AIR LAUNCH & HEAVY KNOCKBACK PHYSICS (Stickman game style!)
+            if (attackType === 'super') {
+                defender.vy = -22; // Flies high into the sky!
+                defender.x += defender.facing * -160;
+                defender.rotation = defender.facing * -2.5;
+                this.triggerShake(20, 15);
+            } else if (attackType === 'heavy') {
+                defender.vy = -14; // Mid-air launch & knockback
+                defender.x += defender.facing * -110;
+                defender.rotation = defender.facing * -1.4;
+                this.triggerShake(12, 12);
+            } else {
+                defender.vy = -7; // Pop up jab knockback
+                defender.x += defender.facing * -65;
+                defender.rotation = defender.facing * -0.5;
+                this.triggerShake(6, 8);
+            }
+
             this.spawnHitSparks(defender.x, defender.y - 60, attacker.color, attackType);
-        }, 100);
+        }, 90);
     }
 
     spawnHitSparks(x, y, color, type) {
@@ -108,14 +132,28 @@ class ArenaRenderer {
             this.screenShakeTime--;
         }
 
-        // Return fighters to base position gradually
+        // Return fighters to base position gradually & apply jump/gravity physics
         [this.f1, this.f2].forEach(f => {
             if (f.stateTimer > 0) {
                 f.stateTimer--;
                 if (f.stateTimer === 0) f.state = 'idle';
-            } else {
-                f.x += (f.baseX - f.x) * 0.15;
             }
+
+            // GRAVITY & AIR LAUNCH PHYSICS
+            f.y += f.vy;
+            if (f.y < f.baseY || f.vy !== 0) {
+                f.vy += 1.0; // Gravity pulling down
+            }
+            if (f.y >= f.baseY) {
+                f.y = f.baseY;
+                f.vy = 0;
+            }
+
+            // Horizontal position lerp back to baseX
+            f.x += (f.baseX - f.x) * 0.08;
+
+            // Rotation decay
+            f.rotation *= 0.88;
         });
 
         // Update Particles
@@ -261,12 +299,14 @@ class ArenaRenderer {
         ctx.ellipse(0, 5, 26, 7, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // KO State
+        // KO & Airborne Rotation Physics
         if (f.hpPercent <= 0) {
             ctx.rotate(f.facing * 1.5);
             ctx.translate(0, 35);
+        } else if (f.rotation) {
+            ctx.rotate(f.rotation);
         } else if (f.state === 'hurt') {
-            ctx.rotate(f.facing * -0.25);
+            ctx.rotate(f.facing * -0.35);
         }
 
         ctx.strokeStyle = color;
@@ -303,7 +343,16 @@ class ArenaRenderer {
 
         // 3. LEGS & KICKS
         ctx.beginPath();
-        if (f.state === 'attack_heavy') {
+        if (f.y < f.baseY - 15) {
+            // Flailing Airborne Knockback Legs!
+            ctx.moveTo(0, waistY);
+            ctx.lineTo(-20 * f.facing, waistY - 10);
+            ctx.lineTo(-30 * f.facing, waistY + 15);
+
+            ctx.moveTo(0, waistY);
+            ctx.lineTo(20 * f.facing, waistY - 20);
+            ctx.lineTo(35 * f.facing, waistY - 5);
+        } else if (f.state === 'attack_heavy') {
             // Flying Side Kick!
             ctx.moveTo(0, waistY);
             ctx.lineTo(40 * f.facing, waistY - 15); // Extended kicking leg

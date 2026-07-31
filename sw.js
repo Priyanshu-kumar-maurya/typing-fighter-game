@@ -1,6 +1,6 @@
-// Typing Fighter - PWA Service Worker v25 (Huge Real-Life Word Dictionary & Anti-Repetition Shuffling Engine)
+// Typing Fighter - PWA Service Worker v26 (Modular Architecture + Bug Fixes)
 
-const CACHE_NAME = 'typing-fighter-v25';
+const CACHE_NAME = 'typing-fighter-v26';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -14,6 +14,8 @@ const ASSETS_TO_CACHE = [
     './js/renderer.js',
     './js/p2p.js',
     './js/combat.js',
+    './js/word-engine.js',
+    './js/ui-manager.js',
     './js/main.js'
 ];
 

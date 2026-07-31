@@ -1,165 +1,144 @@
-// Typing Fighter - Main Game Controller & Anti-Cheat Engine
+/**
+ * @fileoverview GameApp — Main Application Controller
+ *
+ * Orchestrates all subsystems of Typing Fighter:
+ *   ┌─────────────┐  ┌───────────────┐  ┌──────────────┐
+ *   │  WordEngine  │  │   UIManager   │  │ ArenaRenderer│
+ *   └──────┬──────┘  └──────┬────────┘  └──────┬───────┘
+ *          │                │                   │
+ *          └────────────────▼───────────────────┘
+ *                     GameApp (this file)
+ *          ┌─────────────────────────────────────────┐
+ *          │ CombatEngine · SoundEngine · AuthManager │
+ *          │ P2PNetwork   · CONFIG · ICONS            │
+ *          └─────────────────────────────────────────┘
+ *
+ * External API (called from HTML inline handlers):
+ *   game.handleGuestLogin()         game.startArcadeLevel(n)
+ *   game.startLocal2PMode()         game.startStickmanMode()
+ *   game.pauseMatch()               game.resumeMatch()
+ *   game.restartMatch()             game.playNextLevel()
+ *   game.toggleSound()              game.toggleMic()
+ *   game.toggleFighterSkin()        game.openAuthModal()
+ *   game.handleMobileLogin()        game.handleMobileRegister()
+ *   game.openP2PModal()             game.closeP2PModal()
+ *   game.openCampaignModal()        game.closeCampaignModal()
+ *   game.handleUnifiedP2PConnect()  game.toggleP2PReady()
+ *   game.p2pShareCustomText()       game.leaveP2PRoom()
+ *   game.confirmContentMode(mode)   game.openCustomScriptModal()
+ *   game.closeCustomScriptModal()   game.saveAndStartCustomScript()
+ *   game.closeContentChoiceModal()  game.showMainMenu()
+ *
+ * @module GameApp
+ */
+
+'use strict';
 
 class GameApp {
+
     constructor() {
-        this.renderer = null;
-        this.currentWord = "";
-        this.typedCharIndex = 0;
-        this.isMatchActive = false;
-        this.isMatchPaused = false;
+        // ── Subsystem references (set in _init) ───────────────────────────────
+        /** @type {ArenaRenderer} */   this.renderer  = null;
+        /** @type {WordEngine} */      this.words     = null;
+        /** @type {UIManager} */       this.ui        = null;
+
+        // ── Match state ───────────────────────────────────────────────────────
+        this.isMatchActive   = false;
+        this.isMatchPaused   = false;
+        this.matchSeconds    = 0;
         this.matchTimerInterval = null;
-        this.matchSeconds = 0;
 
-        // Anti-Cheat & Security parameters
-        this.lastKeystrokeTime = 0;
-        this.minKeystrokeDeltaMs = 18; // Max 55 Keystrokes/sec
-
-        // Content Mode
-        this.contentMode = 'words'; // 'words' | 'custom'
-        this.customScriptWords = [];
-        this.customScriptIndex = 0;
+        /**
+         * Closure stored between openContentChoiceModal and the actual game start.
+         * Executed when the player selects their content mode.
+         * @type {Function|null}
+         */
         this.pendingGameStart = null;
 
-        // P2P Lobby Ready-Up State
-        this.p2pMyReady = false;
+        /**
+         * Fighter skin kept across restarts so stickman mode is preserved.
+         * @type {'cyber'|'stickman'}
+         */
+        this.activeSkin = 'cyber';
+
+        // ── Anti-cheat keystroke throttle ─────────────────────────────────────
+        /** Minimum milliseconds between accepted keystrokes (≈55 keys/sec max) */
+        this.minKeystrokeDeltaMs = 18;
+        this.lastKeystrokeTime   = 0;
+
+        // ── P2P ready-up state ────────────────────────────────────────────────
+        this.p2pMyReady       = false;
         this.p2pOpponentReady = false;
         this.p2pCountdownTimer = null;
-        this.p2pLobbyWinner = 1;
 
-        // Anti-Repetition Dictionary History
-        this.recentWordsHistory = [];
-
-        // Dom Elements
-        this.typeInput = document.getElementById('typeInput');
-        this.wordDisplay = document.getElementById('wordDisplay');
+        // ── Cached DOM references ─────────────────────────────────────────────
+        this.typeInput       = document.getElementById('typeInput');
+        this.wordDisplay     = document.getElementById('wordDisplay');
         this.superReadyBanner = document.getElementById('superReadyBanner');
-        this.scriptTextarea = document.getElementById('customScriptTextarea');
+        this.scriptTextarea  = document.getElementById('customScriptTextarea');
 
-        this.init();
+        this._init();
     }
 
-    init() {
-        // Run Cyberpunk Loading Bar Animation on Launch
-        this.runLoadingScreen();
+    // ═══════════════════════════════════════════════════════════════════════════
+    // I. INITIALISATION
+    // ═══════════════════════════════════════════════════════════════════════════
 
-        // Initialize Renderer
+    _init() {
+        this._runLoadingScreen();
+
+        // Instantiate subsystems in dependency order
         this.renderer = new ArenaRenderer('gameCanvas');
+        this.words    = new WordEngine();
+        this.ui       = new UIManager(this.renderer);
 
-        // Setup Keydown Listener
-        window.addEventListener('keydown', (e) => this.handleGlobalKeyDown(e));
-        
-        // Keep hidden input focused on click/tap anywhere on canvas or typing area
-        const focusInput = () => {
-            if (this.typeInput && this.isMatchActive && !this.isMatchPaused) {
-                this.typeInput.focus();
-            }
-        };
-        document.querySelector('.canvas-container').addEventListener('click', focusInput);
-        document.querySelector('.canvas-container').addEventListener('touchstart', focusInput);
-        document.querySelector('.typing-word-card').addEventListener('click', focusInput);
-        document.querySelector('.typing-word-card').addEventListener('touchstart', focusInput);
-
-        // Mobile Touch Virtual Keyboard listener
-        if (this.typeInput) {
-            this.typeInput.addEventListener('input', (e) => {
-                if (!this.isMatchActive || this.isMatchPaused) return;
-                const val = this.typeInput.value;
-                if (val.length > 0) {
-                    const char = val[val.length - 1];
-                    this.processTypedKey(char);
-                    this.typeInput.value = "";
-                }
-            });
-            this.typeInput.addEventListener('paste', (e) => e.preventDefault());
-        }
-
-        // Audio initialization on first user interaction
-        window.addEventListener('pointerdown', () => audio.init(), { once: true });
-
-        // ── MOBILE KEYBOARD DETECTION ─────────────────────────────────────────
-        // When the virtual keyboard opens, viewport height shrinks.
-        // We add body.keyboard-open so CSS can adapt the layout.
-        if (window.visualViewport) {
-            let baseHeight = window.visualViewport.height;
-            let keyboardTimer = null;
-
-            window.visualViewport.addEventListener('resize', () => {
-                clearTimeout(keyboardTimer);
-                const currentH = window.visualViewport.height;
-                const diff = baseHeight - currentH;
-
-                // Keyboard opened (height shrank by more than 120px)
-                if (diff > 120) {
-                    document.body.classList.add('keyboard-open');
-                    // Scroll typing box into view smoothly
-                    keyboardTimer = setTimeout(() => {
-                        const typingBox = document.querySelector('.typing-box-container');
-                        if (typingBox) typingBox.scrollIntoView({ behavior: 'smooth', block: 'end' });
-                    }, 100);
-                } else {
-                    document.body.classList.remove('keyboard-open');
-                    baseHeight = currentH;
-                }
-            });
-
-            // Update baseHeight when orientation changes
-            window.addEventListener('orientationchange', () => {
-                setTimeout(() => {
-                    baseHeight = window.visualViewport.height;
-                    document.body.classList.remove('keyboard-open');
-                }, 500);
-            });
-        }
-
-        // Load saved custom script if available
+        // Restore saved custom script from previous session
         const savedScript = localStorage.getItem('tf_custom_script');
         if (savedScript && this.scriptTextarea) {
-            this.scriptTextarea.value = this.escapeHtml(savedScript);
+            this.scriptTextarea.value = savedScript;
         }
 
-        // Setup Auth Tab Switchers
-        this.setupAuthUI();
+        // Attach input listeners
+        this._setupKeyboardListeners();
+        this._setupMobileViewport();
+        this._setupCanvasFocusTrap();
 
-        // Check active login session on launch
-        if (auth.currentUser) {
-            this.updateUserHeaderUI();
-            document.getElementById('modalStart').classList.remove('hidden');
-            document.getElementById('modalAuth').classList.add('hidden');
-        } else {
-            // Show Auth modal first on application startup
-            document.getElementById('modalStart').classList.add('hidden');
-            document.getElementById('modalAuth').classList.remove('hidden');
-        }
+        // Initialise audio context on first user gesture
+        window.addEventListener('pointerdown', () => audio.init(), { once: true });
 
-        // Setup P2P Network Handlers
-        this.setupP2PListeners();
+        // Wire up header buttons
+        document.getElementById('btnSoundToggle')?.addEventListener('click', () => this.toggleSound());
+        document.getElementById('btnConnectP2P')?.addEventListener('click', () => this.handleUnifiedP2PConnect());
+        document.getElementById('btnOpenP2P')?.addEventListener('click', () => this.openP2PModal());
+        document.getElementById('btnOpenArcade')?.addEventListener('click', () => this.openCampaignModal());
 
-        // Game loop ticker for smooth 60 FPS rendering
+        // Auth screen tab switchers
+        this._setupAuthTabs();
+
+        // Combat engine hooks into game-over handler
+        combat.onGameOverCallback = winner => this.handleGameOver(winner);
+
+        // P2P network event callbacks
+        this._setupP2PCallbacks();
+
+        // Start canvas render loop (60 FPS)
         const loop = () => {
             this.renderer.render();
             requestAnimationFrame(loop);
         };
         requestAnimationFrame(loop);
 
-        // Sound Toggle Button
-        document.getElementById('btnSoundToggle').addEventListener('click', () => this.toggleSound());
-
-        // UNIFIED AUTO-MATCH P2P BUTTON
-        const btnConnectP2P = document.getElementById('btnConnectP2P');
-        if (btnConnectP2P) {
-            btnConnectP2P.addEventListener('click', () => this.handleUnifiedP2PConnect());
+        // Decide which screen to show on load
+        if (auth.currentUser) {
+            this._updateUserHeader();
+            this.ui.showModal('modalStart');
+        } else {
+            this.ui.showModal('modalAuth');
         }
-
-        // Header buttons
-        document.getElementById('btnOpenP2P').addEventListener('click', () => this.openP2PModal());
-        document.getElementById('btnOpenArcade').addEventListener('click', () => this.openCampaignModal());
-
-        // Combat Engine GameOver Hook
-        combat.onGameOverCallback = (winner) => this.handleGameOver(winner);
     }
 
-    runLoadingScreen() {
-        const bar = document.getElementById('loadingBar');
+    _runLoadingScreen() {
+        const bar    = document.getElementById('loadingBar');
         const screen = document.getElementById('loadingScreen');
         if (!bar || !screen) return;
 
@@ -169,718 +148,746 @@ class GameApp {
             bar.style.width = `${pct}%`;
             if (pct >= 100) {
                 clearInterval(interval);
-                setTimeout(() => {
-                    screen.classList.add('fade-out');
-                }, 300);
+                setTimeout(() => screen.classList.add('fade-out'), 300);
             }
         }, 80);
     }
 
-    focusMobileKeyboard() {
-        if (this.typeInput) {
-            this.typeInput.focus();
-            this.typeInput.click();
-            const card = document.querySelector('.typing-word-card');
-            if (card && card.scrollIntoView) {
-                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // ═══════════════════════════════════════════════════════════════════════════
+    // II. INPUT HANDLING
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Global keyboard listener — handles shortcuts and routes game keystrokes.
+     * Blocks synthetic (non-trusted) events for anti-cheat protection.
+     * @private
+     */
+    _setupKeyboardListeners() {
+        window.addEventListener('keydown', e => {
+            // Never intercept events already destined for a text field
+            if (e.target?.tagName === 'INPUT' || e.target?.tagName === 'TEXTAREA') return;
+
+            // ANTI-CHEAT: Reject programmatic / synthetic key events
+            if (e.isTrusted === false) {
+                console.warn('[ANTI-CHEAT] Synthetic keypress blocked.');
+                return;
             }
-        }
-    }
 
-    // TOAST NOTIFICATIONS SYSTEM (REPLACES NATIVE BROWSER ALERT)
-    showToast(message, type = 'info', duration = 3500) {
-        const container = document.getElementById('toastContainer');
-        if (!container) return;
+            const key = e.key.toUpperCase();
 
-        const toast = document.createElement('div');
-        toast.className = `toast toast-${type}`;
+            // ── Global shortcuts (always active) ──────────────────────────────
+            if (key === 'M') { this.toggleSound(); return; }
 
-        let icon = ICONS.lightning;
-        if (type === 'success') icon = ICONS.star;
-        if (type === 'error') icon = ICONS.cross;
+            if (e.key === 'Escape' || key === 'P') {
+                this.isMatchActive && !this.isMatchPaused ? this.pauseMatch() : this.resumeMatch();
+                return;
+            }
 
-        toast.innerHTML = `<span class="toast-icon">${icon}</span> <span>${this.escapeHtml(message)}</span>`;
-        container.appendChild(toast);
+            if (key === 'R') { this.restartMatch(); return; }
 
-        setTimeout(() => {
-            toast.classList.add('fade-out');
-            setTimeout(() => toast.remove(), 300);
-        }, duration);
-    }
+            if (!this.isMatchActive || this.isMatchPaused) {
+                if (e.code === 'Space') this.restartMatch();
+                return;
+            }
 
-    toggleSound() {
-        audio.muted = !audio.muted;
-        const btn = document.getElementById('btnSoundToggle');
-        if (btn) btn.innerHTML = audio.muted ? `${ICONS.volumeOff} Sound: OFF` : `${ICONS.volumeOn} Sound: ON`;
-        this.showToast(audio.muted ? "Audio Muted" : "Audio Enabled", "info", 1500);
-    }
+            // ── ANTI-CHEAT: rate-limit accepted keystrokes ────────────────────
+            const now = Date.now();
+            if (now - this.lastKeystrokeTime < this.minKeystrokeDeltaMs) return;
+            this.lastKeystrokeTime = now;
 
-    // AUTH & PLAYER PROFILE UI HANDLERS
-    setupAuthUI() {
-        const tabGuest = document.getElementById('tabGuest');
-        const tabRegister = document.getElementById('tabRegister');
-        const tabLogin = document.getElementById('tabLogin');
+            // Prevent spacebar page scroll during gameplay
+            if (e.code === 'Space') e.preventDefault();
 
-        const secGuest = document.getElementById('authGuestSection');
-        const secRegister = document.getElementById('authRegisterSection');
-        const secLogin = document.getElementById('authLoginSection');
+            // Accept printable characters and spacebar
+            if (e.key === ' ' || (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey)) {
+                this._processTypedKey(e.key);
+            }
+        });
 
-        if (tabGuest) {
-            tabGuest.addEventListener('click', () => {
-                tabGuest.classList.add('active'); tabRegister.classList.remove('active'); tabLogin.classList.remove('active');
-                secGuest.classList.remove('hidden'); secRegister.classList.add('hidden'); secLogin.classList.add('hidden');
+        // Mobile: hidden input receives virtual keyboard input
+        if (this.typeInput) {
+            this.typeInput.addEventListener('input', () => {
+                if (!this.isMatchActive || this.isMatchPaused) return;
+                const val = this.typeInput.value;
+                if (val.length > 0) {
+                    this._processTypedKey(val[val.length - 1]);
+                    this.typeInput.value = '';
+                }
             });
-        }
-
-        if (tabRegister) {
-            tabRegister.addEventListener('click', () => {
-                tabRegister.classList.add('active'); tabGuest.classList.remove('active'); tabLogin.classList.remove('active');
-                secRegister.classList.remove('hidden'); secGuest.classList.add('hidden'); secLogin.classList.add('hidden');
-            });
-        }
-
-        if (tabLogin) {
-            tabLogin.addEventListener('click', () => {
-                tabLogin.classList.add('active'); tabGuest.classList.remove('active'); tabRegister.classList.remove('active');
-                secLogin.classList.remove('hidden'); secGuest.classList.add('hidden'); secRegister.classList.add('hidden');
-            });
+            this.typeInput.addEventListener('paste', e => e.preventDefault());
         }
     }
 
-    openAuthModal() {
-        document.getElementById('authStatus').innerText = "";
-        document.getElementById('modalAuth').classList.remove('hidden');
+    /**
+     * Tap on canvas or typing card focuses the hidden input (triggers virtual keyboard).
+     * @private
+     */
+    _setupCanvasFocusTrap() {
+        const focus = () => {
+            if (this.typeInput && this.isMatchActive && !this.isMatchPaused) {
+                this.typeInput.focus();
+            }
+        };
+        document.querySelector('.canvas-container')?.addEventListener('click', focus);
+        document.querySelector('.canvas-container')?.addEventListener('touchstart', focus, { passive: true });
+        document.querySelector('.typing-word-card')?.addEventListener('click', focus);
+        document.querySelector('.typing-word-card')?.addEventListener('touchstart', focus, { passive: true });
     }
 
-    closeAuthModal() {
-        document.getElementById('modalAuth').classList.add('hidden');
-    }
+    /**
+     * Detect virtual keyboard open/close via visualViewport on mobile devices.
+     * Adds/removes body.keyboard-open CSS class that CSS uses for layout reflow.
+     * @private
+     */
+    _setupMobileViewport() {
+        if (!window.visualViewport) return;
+        let baseHeight = window.visualViewport.height;
+        let timer = null;
 
-    handleGuestLogin() {
-        const nameInput = document.getElementById('guestNameInput');
-        const ageInput = document.getElementById('guestAgeInput');
+        window.visualViewport.addEventListener('resize', () => {
+            clearTimeout(timer);
+            const diff = baseHeight - window.visualViewport.height;
 
-        const name = nameInput ? nameInput.value.trim() : "";
-        const age = ageInput ? ageInput.value.trim() : "";
+            if (diff > 120) {
+                // Keyboard opened — shrink canvas container via CSS
+                document.body.classList.add('keyboard-open');
+                timer = setTimeout(() => {
+                    document.querySelector('.typing-box-container')?.scrollIntoView({
+                        behavior: 'smooth', block: 'end'
+                    });
+                }, 100);
+            } else {
+                document.body.classList.remove('keyboard-open');
+                baseHeight = window.visualViewport.height;
+            }
+        });
 
-        if (!name) {
-            this.showToast("Please enter your Player Name!", "error");
-            if (nameInput) nameInput.focus();
-            return;
-        }
-
-        if (!age) {
-            this.showToast("Please enter your Age!", "error");
-            if (ageInput) ageInput.focus();
-            return;
-        }
-
-        const res = auth.loginAsGuest(name, age);
-        if (res.success) {
-            this.updateUserHeaderUI();
-            this.closeAuthModal();
-            this.showMainMenu();
-            this.showToast(`Welcome Guest ${res.user.name}!`, "success");
-        }
-    }
-
-    handleMobileRegister() {
-        const name = document.getElementById('regNameInput').value;
-        const age = document.getElementById('regAgeInput').value;
-        const mobile = document.getElementById('regMobileInput').value;
-        const pass = document.getElementById('regPassInput').value;
-
-        if (!name.trim()) {
-            this.showToast("Please enter your Player Name!", "error");
-            return;
-        }
-        if (!age.trim()) {
-            this.showToast("Please enter your Age!", "error");
-            return;
-        }
-
-        const res = auth.registerWithMobile(name, age, mobile, pass);
-        if (res.success) {
-            this.showToast("Account registered successfully!", "success");
-            this.updateUserHeaderUI();
-            this.closeAuthModal();
-            this.showMainMenu();
-        } else {
-            this.showToast(res.message, "error");
-        }
-    }
-
-    handleMobileLogin() {
-        const mobile = document.getElementById('loginMobileInput').value;
-        const pass = document.getElementById('loginPassInput').value;
-
-        if (!mobile.trim() || !pass.trim()) {
-            this.showToast("Please enter Mobile Number and Password!", "error");
-            return;
-        }
-
-        const res = auth.loginWithMobile(mobile, pass);
-        if (res.success) {
-            this.showToast(`Welcome back ${res.user.name}!`, "success");
-            this.updateUserHeaderUI();
-            this.closeAuthModal();
-            this.showMainMenu();
-        } else {
-            this.showToast(res.message, "error");
-        }
-    }
-
-    updateUserHeaderUI() {
-        if (!auth.currentUser) return;
-        const nameElem = document.getElementById('headerUserName');
-        const metaElem = document.getElementById('headerUserMeta');
-
-        const lvl = auth.currentUser.unlockedLevel || combat.unlockedLevel || 1;
-        const typeTag = auth.currentUser.type === 'registered' ? 'Registered' : 'Guest';
-
-        if (nameElem) nameElem.innerText = auth.currentUser.name;
-        if (metaElem) metaElem.innerText = `${typeTag} | Age: ${auth.currentUser.age || 18} | Stage ${lvl}`;
-
-        combat.unlockedLevel = lvl;
-    }
-
-    escapeHtml(str) {
-        if (typeof str !== 'string') return '';
-        return str.replace(/[&<>"']/g, (m) => {
-            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => {
+                baseHeight = window.visualViewport.height;
+                document.body.classList.remove('keyboard-open');
+            }, 500);
         });
     }
 
-    toggleMic() {
-        const isEnabled = p2p.toggleMic();
-        const btn = document.getElementById('btnMicToggle');
-        if (btn) {
-            btn.innerHTML = isEnabled ? `${ICONS.micOn} Mic: ON` : `${ICONS.micOff} Mic: MUTED`;
-            btn.style.color = isEnabled ? "var(--neon-cyan)" : "#ff0055";
-        }
-        this.showToast(isEnabled ? "Microphone Unmuted" : "Microphone Muted", isEnabled ? "success" : "info");
-    }
+    /**
+     * Validate and process a single typed character against the current word.
+     * Correct keystroke → progress word; word complete → fire player attack.
+     * Wrong keystroke  → display typo shake, break combo.
+     * @private
+     * @param {string} key - The pressed character
+     */
+    _processTypedKey(key) {
+        const expected = this.words.currentWord[this.words.typedCharIndex];
+        if (!expected) return;
 
-    toggleFighterSkin(skin = null) {
-        if (!this.renderer) return;
-        const currentSkin = skin || (this.renderer.fighterSkin === 'cyber' ? 'stickman' : 'cyber');
-        this.renderer.setSkinMode(currentSkin);
-        const btn = document.getElementById('btnSkinToggle');
-        if (btn) {
-            btn.innerHTML = currentSkin === 'stickman' ? `${ICONS.stickman} Fighter: STICKMAN` : `Fighter: CYBER`;
-            btn.style.color = currentSkin === 'stickman' ? "var(--neon-yellow)" : "var(--neon-cyan)";
-        }
-        this.showToast(currentSkin === 'stickman' ? "⚡ STICKMAN Fighter Skin Activated!" : "CYBER Fighter Skin Activated!", "success");
-    }
+        const isCorrect = key.toLowerCase() === expected.toLowerCase()
+            || (key === ' ' && expected === ' ');
 
-    startStickmanMode() {
-        this.toggleFighterSkin('stickman');
-        this.pendingGameStart = () => {
-            this.closeModals();
-            combat.reset('local2p');
-            document.getElementById('stageBadge').innerText = `⚡ STICKMAN CLASH`;
-            this.setupPlayerUI(1, auth.currentUser ? auth.currentUser.name : "STICKMAN 1", ICONS.stickman, "#00f0ff");
-            this.setupPlayerUI(2, "STICKMAN 2", ICONS.stickman, "#ff0055");
-            this.startMatch();
-            this.showToast("⚡ Stickman Clash Started! Type fast to punch & kick faster!", "success", 4000);
-        };
-
-        this.openContentChoiceModal();
-    }
-
-    startArcadeLevel(levelNum = 1) {
-        if (!auth.currentUser) {
-            this.openAuthModal();
-            return;
-        }
-        if (levelNum > combat.unlockedLevel) return;
-
-        this.pendingGameStart = () => {
-            this.closeModals();
-            combat.reset('arcade', levelNum);
-            document.getElementById('stageBadge').innerText = `STAGE ${levelNum}/25`;
-            this.setupPlayerUI(1, auth.currentUser.name, ICONS.lightning, "#00f0ff");
-            this.setupPlayerUI(2, combat.bot.name, combat.bot.avatar, combat.bot.color);
-            this.startMatch();
-
-            combat.startAI((aiAttack) => {
-                this.renderer.triggerAttack(2, aiAttack.attackType);
-                this.renderer.addFloatingText(this.renderer.f1.x, this.renderer.f1.y - 70, `-${aiAttack.damage} HP`, '#ff0055', 26);
-                audio.playPunch();
-                this.updateHUD();
-            });
-        };
-
-        this.openContentChoiceModal();
-    }
-
-    startLocal2PMode() {
-        this.pendingGameStart = () => {
-            this.closeModals();
-            combat.reset('local2p');
-            document.getElementById('stageBadge').innerText = `1v1 LOCAL`;
-            this.setupPlayerUI(1, auth.currentUser ? auth.currentUser.name : "PLAYER 1", ICONS.lightning, "#00f0ff");
-            this.setupPlayerUI(2, "PLAYER 2", ICONS.fire, "#ff0055");
-            this.startMatch();
-        };
-
-        this.openContentChoiceModal();
-    }
-
-    startMatch() {
-        this.isMatchActive = true;
-        this.isMatchPaused = false;
-        this.matchSeconds = 0;
-        this.customScriptIndex = 0;
-        this.recentWordsHistory = []; // Reset word history on new match start!
-        this.lastKeystrokeTime = Date.now();
-        if (this.matchTimerInterval) clearInterval(this.matchTimerInterval);
-
-        this.matchTimerInterval = setInterval(() => {
-            if (!this.isMatchActive || this.isMatchPaused) return;
-            this.matchSeconds++;
-            const mins = String(Math.floor(this.matchSeconds / 60)).padStart(2, '0');
-            const secs = String(this.matchSeconds % 60).padStart(2, '0');
-            document.getElementById('matchTime').innerText = `${mins}:${secs}`;
-        }, 1000);
-
-        this.generateNewWord();
-        this.updateHUD();
-        if (this.typeInput) {
-            this.typeInput.value = "";
-            this.typeInput.focus();
-        }
-    }
-
-    pauseMatch() {
-        if (!this.isMatchActive) {
-            this.showMainMenu();
-            return;
-        }
-        this.isMatchPaused = true;
-        combat.stopAI();
-        document.getElementById('modalPause').classList.remove('hidden');
-    }
-
-    resumeMatch() {
-        this.isMatchPaused = false;
-        document.getElementById('modalPause').classList.add('hidden');
-        if (combat.mode === 'arcade') {
-            combat.startAI((aiAttack) => {
-                this.renderer.triggerAttack(2, aiAttack.attackType);
-                this.renderer.addFloatingText(this.renderer.f1.x, this.renderer.f1.y - 70, `-${aiAttack.damage} HP`, '#ff0055', 26);
-                audio.playPunch();
-                this.updateHUD();
-            });
-        }
-        if (this.typeInput) this.typeInput.focus();
-    }
-
-    generateNewWord() {
-        this.typedCharIndex = 0;
-
-        if (combat.p1.superActive) {
-            // Pick a Super Power Word
-            const list = CONFIG.WORDS.POWER_WORDS;
-            this.currentWord = list[Math.floor(Math.random() * list.length)];
-            this.superReadyBanner.classList.remove('hidden');
-        } else {
-            this.superReadyBanner.classList.add('hidden');
-
-            if (this.contentMode === 'custom' && this.customScriptWords.length > 0) {
-                // Use sequential word/phrase from custom user script!
-                this.currentWord = this.customScriptWords[this.customScriptIndex % this.customScriptWords.length];
-                this.customScriptIndex++;
-            } else {
-                // Random Words Mode: Filter out recently used words so words NEVER repeat!
-                const diff = combat.bot ? combat.bot.difficulty : 'Medium';
-                let fullList = [...CONFIG.WORDS.EASY];
-                if (diff === 'Medium' || diff === 'Hard') fullList = fullList.concat(CONFIG.WORDS.MEDIUM);
-                if (diff === 'Expert' || diff === 'NIGHTMARE' || diff === 'BOSS' || diff === 'SUPER BOSS' || diff === 'GOD MODE') fullList = fullList.concat(CONFIG.WORDS.HARD);
-
-                // Exclude words used in recent history
-                let availableWords = fullList.filter(w => !this.recentWordsHistory.includes(w));
-                if (availableWords.length === 0) {
-                    // History exhausted — reset history and reshuffle
-                    this.recentWordsHistory = [];
-                    availableWords = fullList;
-                }
-
-                // Pick a fresh random non-repeating word
-                const picked = availableWords[Math.floor(Math.random() * availableWords.length)];
-                this.currentWord = picked;
-
-                // Push to history (prevent reuse for next 40 picks)
-                this.recentWordsHistory.push(picked);
-                if (this.recentWordsHistory.length > 40) {
-                    this.recentWordsHistory.shift();
-                }
-            }
-        }
-
-        this.renderWordDisplay();
-    }
-
-    renderWordDisplay() {
-        if (!this.wordDisplay) return;
-        this.wordDisplay.innerHTML = "";
-
-        for (let i = 0; i < this.currentWord.length; i++) {
-            const char = this.currentWord[i];
-            const span = document.createElement('span');
-
-            if (char === ' ') {
-                span.className = 'char-space';
-            } else {
-                span.innerText = char;
-            }
-
-            if (i < this.typedCharIndex) {
-                span.classList.add('char-correct');
-            } else if (i === this.typedCharIndex) {
-                span.classList.add('char-current');
-            } else {
-                span.classList.add('char-untyped');
-            }
-
-            this.wordDisplay.appendChild(span);
-        }
-    }
-
-    // KEYBOARD SHORTCUTS SYSTEM (P, M, R, ESC)
-    handleGlobalKeyDown(e) {
-        // DO NOT INTERFERE when user is typing inside ANY input box or textarea!
-        if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
-            return;
-        }
-
-        // ANTI-CHEAT SECURITY: Ensure event is trusted
-        if (e.isTrusted === false) {
-            console.warn("[ANTI-CHEAT] Fake untrusted keypress blocked!");
-            return;
-        }
-
-        // Global Shortcuts: M (Mute), P (Pause), R (Restart when game active/paused)
-        const keyUpper = e.key.toUpperCase();
-
-        if (keyUpper === 'M') {
-            this.toggleSound();
-            return;
-        }
-
-        if (e.key === 'Escape' || keyUpper === 'P') {
-            if (this.isMatchActive) {
-                if (this.isMatchPaused) this.resumeMatch();
-                else this.pauseMatch();
-            } else {
-                this.showMainMenu();
-            }
-            return;
-        }
-
-        if (keyUpper === 'R' && (this.isMatchActive || !document.getElementById('modalGameOver').classList.contains('hidden') || this.isMatchPaused)) {
-            this.restartMatch();
-            this.showToast("Match Restarted!", "info", 1500);
-            return;
-        }
-
-        if (!this.isMatchActive || this.isMatchPaused) {
-            if (e.code === 'Space' && !document.getElementById('modalGameOver').classList.contains('hidden')) {
-                this.restartMatch();
-            }
-            return;
-        }
-
-        // ANTI-CHEAT SECURITY: Rate-limit keypress interval (max 55 keys/sec)
-        const now = Date.now();
-        if (now - this.lastKeystrokeTime < this.minKeystrokeDeltaMs) {
-            return;
-        }
-        this.lastKeystrokeTime = now;
-
-        // Prevent space bar page scrolling during active gameplay
-        if (e.code === 'Space' || e.key === ' ') {
-            e.preventDefault();
-        }
-
-        // Handle single character / key input including spacebar
-        if (e.key === ' ' || (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey)) {
-            this.processTypedKey(e.key);
-        }
-    }
-
-    processTypedKey(key) {
-        const expectedChar = this.currentWord[this.typedCharIndex];
-        
-        // Case insensitive match & Space match
-        if (key.toLowerCase() === expectedChar.toLowerCase() || (key === ' ' && expectedChar === ' ')) {
-            // Correct Keypress
+        if (isCorrect) {
             combat.registerKey(1, true);
             audio.playKeyPress();
 
-            // TRIGGER IMMEDIATE PUNCH / STRIKE ON EVERY SINGLE CORRECT KEYSTROKE!
+            // Per-keystroke light attack animation for responsive feel
             this.renderer.triggerAttack(1, 'light');
             this.renderer.spawnHitSparks(this.renderer.f2.x, this.renderer.f2.y - 50, '#00f0ff', 'light');
 
-            this.typedCharIndex++;
+            this.words.typedCharIndex++;
 
+            // Broadcast keystroke progress to P2P opponent
             if (p2p.isConnected) {
-                p2p.send('KEYSTROKE', { charIndex: this.typedCharIndex });
+                p2p.send('KEYSTROKE', { charIndex: this.words.typedCharIndex });
             }
 
-            if (this.typedCharIndex >= this.currentWord.length) {
-                // Word Completed! Launch Full Heavy Combo / Plasma Strike
-                this.executePlayerAttack(1, this.currentWord);
-                this.generateNewWord();
+            if (this.words.typedCharIndex >= this.words.currentWord.length) {
+                // Full word completed — execute heavy attack
+                this._executePlayerAttack(1, this.words.currentWord);
+                this._generateNextWord();
             } else {
-                this.renderWordDisplay();
+                this.words.renderDisplay(this.wordDisplay);
             }
         } else {
-            // Typo / Wrong key
+            // Wrong key — typo feedback
             combat.registerKey(1, false);
             audio.playError();
-            
-            // Visual Shake on Error
-            const span = this.wordDisplay.children[this.typedCharIndex];
+
+            const span = this.wordDisplay?.children[this.words.typedCharIndex];
             if (span) {
                 span.classList.add('char-error');
                 setTimeout(() => span.classList.remove('char-error'), 250);
             }
         }
 
-        this.updateHUD();
+        this.ui.updateHUD(combat.p1, combat.p2);
     }
 
-    executePlayerAttack(playerNum, word) {
-        const attack = combat.processWordCompletion(playerNum, word);
+    /**
+     * Execute a word-completion attack: compute damage via combat engine,
+     * trigger renderer animation, play audio, and broadcast over P2P.
+     * @private
+     * @param {1|2}   playerNum
+     * @param {string} word
+     */
+    _executePlayerAttack(playerNum, word) {
+        const attack  = combat.processWordCompletion(playerNum, word);
         const defender = playerNum === 1 ? this.renderer.f2 : this.renderer.f1;
 
-        // Trigger Canvas Heavy Combo Animation
-        const attackType = attack.isSuper ? 'super' : (attack.isHeavy ? 'heavy' : 'heavy');
+        // BUG FIX: was '(heavy : heavy)' — now correctly distinguishes light vs heavy
+        const attackType = attack.isSuper ? 'super'
+            : attack.isHeavy                ? 'heavy'
+            :                                 'light';
+
         this.renderer.triggerAttack(playerNum, attackType);
 
-        // Sound FX
-        if (attack.isSuper) audio.playSuper();
+        // Audio feedback
+        if (attack.isSuper)     audio.playSuper();
         else if (attack.isHeavy) audio.playKick();
-        else audio.playPunch();
+        else                     audio.playPunch();
+        if (attack.combo > 1)    audio.playCombo(attack.combo);
 
-        // Audio Combo feedback
-        if (attack.combo > 1) audio.playCombo(attack.combo);
-
-        // Floating Damage Number
-        const dmgText = attack.isSuper ? `SUPER HIT! -${attack.damage}` : `-${attack.damage} HP`;
+        // Floating damage number
+        const dmgText = attack.isSuper
+            ? `SUPER HIT! -${attack.damage}`
+            : `-${attack.damage} HP`;
         const color = attack.isSuper ? '#ffe600' : (playerNum === 1 ? '#00f0ff' : '#ff0055');
         this.renderer.addFloatingText(defender.x, defender.y - 70, dmgText, color, attack.isSuper ? 34 : 26);
 
-        // Send over P2P network if connected
+        // Broadcast to P2P opponent (player 1 only — it's our own attack)
         if (p2p.isConnected && playerNum === 1) {
             p2p.send('ATTACK_COMPLETED', {
-                word: word,
-                damage: attack.damage,
+                word:    word,
+                damage:  attack.damage,
                 isSuper: attack.isSuper,
-                combo: attack.combo
+                combo:   attack.combo
             });
         }
 
-        this.updateHUD();
+        this.ui.updateHUD(combat.p1, combat.p2);
     }
 
-    updateHUD() {
-        // Player 1 HUD
-        const hpP1 = (combat.p1.hp / combat.p1.maxHp) * 100;
-        document.getElementById('p1HpBar').style.width = `${Math.max(0, hpP1)}%`;
-        document.getElementById('p1HpText').innerText = `${combat.p1.hp} / ${combat.p1.maxHp} HP`;
-        document.getElementById('p1Wpm').innerText = combat.p1.wpm;
-        document.getElementById('p1Acc').innerText = combat.p1.accuracy;
-        document.getElementById('p1SuperBar').style.width = `${combat.p1.superMeter}%`;
-        document.getElementById('p1SuperText').innerText = combat.p1.superActive ? "SUPER READY!" : `SUPER: ${combat.p1.superMeter}%`;
-        this.renderer.f1.hpPercent = combat.p1.hp / combat.p1.maxHp;
+    // ═══════════════════════════════════════════════════════════════════════════
+    // III. WORD GENERATION
+    // ═══════════════════════════════════════════════════════════════════════════
 
-        // Combo Badge
-        const comboBadge = document.getElementById('p1ComboBadge');
-        if (combat.p1.combo >= 2) {
-            comboBadge.innerText = `COMBO x${combat.p1.combo}`;
-            comboBadge.classList.remove('hidden');
-        } else {
-            comboBadge.classList.add('hidden');
-        }
+    /**
+     * Pick the next word and refresh the typing display.
+     * Super banner visibility is also toggled here.
+     * @private
+     */
+    _generateNextWord() {
+        const difficulty = combat.bot?.difficulty || 'Medium';
+        this.words.nextWord(difficulty, combat.p1.superActive);
+        this.words.renderDisplay(this.wordDisplay);
 
-        // Player 2 HUD
-        const hpP2 = (combat.p2.hp / combat.p2.maxHp) * 100;
-        document.getElementById('p2HpBar').style.width = `${Math.max(0, hpP2)}%`;
-        document.getElementById('p2HpText').innerText = `${combat.p2.hp} / ${combat.p2.maxHp} HP`;
-        document.getElementById('p2Wpm').innerText = combat.p2.wpm;
-        document.getElementById('p2Acc').innerText = combat.p2.accuracy;
-        document.getElementById('p2SuperBar').style.width = `${combat.p2.superMeter}%`;
-        document.getElementById('p2SuperText').innerText = `SUPER: ${combat.p2.superMeter}%`;
-        this.renderer.f2.hpPercent = combat.p2.hp / combat.p2.maxHp;
-    }
-
-    setupPlayerUI(playerNum, name, avatar, color) {
-        if (playerNum === 1) {
-            document.getElementById('p1Name').innerText = this.escapeHtml(name);
-            this.renderer.f1.color = color;
-        } else {
-            document.getElementById('p2Name').innerText = this.escapeHtml(name);
-            document.getElementById('p2Avatar').innerHTML = avatar;
-            this.renderer.f2.color = color;
+        // Super-move banner
+        if (this.superReadyBanner) {
+            this.superReadyBanner.classList.toggle('hidden', !combat.p1.superActive);
         }
     }
 
-    // CONTENT MODE DIALOG & CUSTOM SCRIPT HANDLERS
-    openContentChoiceModal() {
-        document.getElementById('modalStart').classList.add('hidden');
-        document.getElementById('modalCampaign').classList.add('hidden');
-        document.getElementById('modalContentChoice').classList.remove('hidden');
-    }
+    // ═══════════════════════════════════════════════════════════════════════════
+    // IV. MATCH LIFECYCLE
+    // ═══════════════════════════════════════════════════════════════════════════
 
-    confirmContentMode(mode) {
-        this.contentMode = mode;
-        document.getElementById('modalContentChoice').classList.add('hidden');
-        if (this.pendingGameStart) {
-            const callback = this.pendingGameStart;
-            this.pendingGameStart = null;
-            callback();
+    /**
+     * Begin a match: activate timers, reset word engine, focus keyboard.
+     * @private — called only after pendingGameStart() sets up the combat state.
+     */
+    _startMatch() {
+        this.isMatchActive  = true;
+        this.isMatchPaused  = false;
+        this.matchSeconds   = 0;
+        this.lastKeystrokeTime = Date.now();
+
+        if (this.matchTimerInterval) clearInterval(this.matchTimerInterval);
+        this.matchTimerInterval = setInterval(() => {
+            if (!this.isMatchActive || this.isMatchPaused) return;
+            this.matchSeconds++;
+            const mm = String(Math.floor(this.matchSeconds / 60)).padStart(2, '0');
+            const ss = String(this.matchSeconds % 60).padStart(2, '0');
+            const el = document.getElementById('matchTime');
+            if (el) el.innerText = `${mm}:${ss}`;
+        }, 1000);
+
+        this.words.reset();
+        this._generateNextWord();
+        this.ui.updateHUD(combat.p1, combat.p2);
+
+        if (this.typeInput) {
+            this.typeInput.value = '';
+            this.typeInput.focus();
         }
     }
 
-    openCustomScriptModal() {
-        document.getElementById('modalContentChoice').classList.add('hidden');
-        document.getElementById('modalCustomScript').classList.remove('hidden');
+    pauseMatch() {
+        if (!this.isMatchActive) { this.showMainMenu(); return; }
+        this.isMatchPaused = true;
+        combat.stopAI();
+        this.ui.showModal('modalPause');
     }
 
-    closeCustomScriptModal() {
-        this.pendingGameStart = null;
-        document.getElementById('modalCustomScript').classList.add('hidden');
-        if (!this.isMatchActive) {
-            document.getElementById('modalStart').classList.remove('hidden');
+    resumeMatch() {
+        if (!this.isMatchActive) return;
+        this.isMatchPaused = false;
+        this.ui.hideModal('modalPause');
+
+        if (combat.mode === 'arcade') {
+            combat.startAI(aiHit => this._handleAIAttack(aiHit));
         }
+        this.typeInput?.focus();
     }
 
-    saveAndStartCustomScript() {
-        const rawText = this.scriptTextarea ? this.scriptTextarea.value.trim() : "";
-        if (!rawText) {
-            this.showToast("Please paste or type custom text script first.", "error");
+    /**
+     * Restart the current match instantly — same mode, same skin, same content settings.
+     * Does NOT re-open the content-choice modal so the R-key / Space shortcut feels snappy.
+     */
+    restartMatch() {
+        this.ui.hideModal('modalGameOver');
+        this.ui.hideModal('modalPause');
+
+        if (combat.mode === 'arcade') {
+            // Re-run the full arcade start (re-opens content choice for arcade — expected behavior)
+            this.startArcadeLevel(combat.currentLevel);
             return;
         }
 
-        const safeText = this.escapeHtml(rawText);
+        // Local / Stickman / P2P: reset combat and restart directly (no modal flow)
+        const prevMode    = combat.mode;
+        const prevSkin    = this.activeSkin;
+        const prevContent = this.words.contentMode;
+        const prevCustom  = [...this.words.customScriptWords];
 
-        // Save custom script to localStorage
-        localStorage.setItem('tf_custom_script', safeText);
+        combat.reset(prevMode);
+        this.renderer.setSkinMode(prevSkin);
 
-        // Parse custom text into clean words / short phrases
-        this.customScriptWords = safeText.split(/\s+/).filter(w => w.length > 0);
-        this.contentMode = 'custom';
+        // Restore content mode from previous match
+        this.words.contentMode       = prevContent;
+        this.words.customScriptWords = prevCustom;
+        this.words.customScriptIndex = 0;
 
-        document.getElementById('modalCustomScript').classList.add('hidden');
+        if (prevSkin === 'stickman') {
+            document.getElementById('stageBadge').innerText = '⚡ STICKMAN CLASH';
+            this.ui.setupPlayerPanel(1, auth.currentUser?.name || 'STICKMAN 1', ICONS.stickman, '#00f0ff');
+            this.ui.setupPlayerPanel(2, 'STICKMAN 2', ICONS.stickman, '#ff0055');
+        } else if (prevMode === 'local2p') {
+            document.getElementById('stageBadge').innerText = '1v1 LOCAL';
+            this.ui.setupPlayerPanel(1, auth.currentUser?.name || 'PLAYER 1', ICONS.lightning, '#00f0ff');
+            this.ui.setupPlayerPanel(2, 'PLAYER 2', ICONS.fire, '#ff0055');
+        } else {
+            // P2P or fallback
+            document.getElementById('stageBadge').innerText = 'P2P ONLINE';
+            this.ui.setupPlayerPanel(1, auth.currentUser?.name || 'HERO (YOU)', ICONS.lightning, '#00f0ff');
+            this.ui.setupPlayerPanel(2, 'FRIEND (ONLINE)', ICONS.globe, '#ff0055');
+        }
 
-        if (this.pendingGameStart) {
-            const callback = this.pendingGameStart;
-            this.pendingGameStart = null;
-            callback();
+        this.ui.closeAllModals();
+        this._startMatch();
+        this.ui.showToast('Match Restarted!', 'info', 1500);
+    }
+
+    playNextLevel() {
+        this.ui.hideModal('modalGameOver');
+        if (combat.currentLevel < CONFIG.CAMPAIGN_LEVELS.length) {
+            this.startArcadeLevel(combat.currentLevel + 1);
+        } else {
+            this.openCampaignModal();
         }
     }
 
-    closeContentChoiceModal() {
-        this.pendingGameStart = null;
-        document.getElementById('modalContentChoice').classList.add('hidden');
-        if (!this.isMatchActive) {
-            document.getElementById('modalStart').classList.remove('hidden');
-        }
+    // ── AI ATTACK HANDLER ──────────────────────────────────────────────────────
+
+    /**
+     * Invoked by CombatEngine's AI timer on each AI attack tick.
+     * @private
+     * @param {{ attackType: string, damage: number, botName: string }} aiHit
+     */
+    _handleAIAttack(aiHit) {
+        this.renderer.triggerAttack(2, aiHit.attackType);
+        this.renderer.addFloatingText(
+            this.renderer.f1.x, this.renderer.f1.y - 70,
+            `-${aiHit.damage} HP`, '#ff0055', 26
+        );
+        audio.playPunch();
+        this.ui.updateHUD(combat.p1, combat.p2);
     }
 
-    // P2P Multiplayer Networking Integration
-    setupP2PListeners() {
-        p2p.onConnectCallback = () => {
-            // INSTANT BATTLE LAUNCH: Close all modals and start fight immediately on both devices!
-            this.closeModals();
-            combat.reset('p2p');
-            document.getElementById('stageBadge').innerText = `P2P ONLINE`;
-            this.setupPlayerUI(1, auth.currentUser ? auth.currentUser.name : "HERO (YOU)", ICONS.lightning, "#00f0ff");
-            this.setupPlayerUI(2, "FRIEND (ONLINE)", ICONS.globe, "#ff0055");
-            this.startMatch();
-            this.showToast("P2P Online Battle Started! Type to Attack!", "success");
+    // ── GAME OVER ─────────────────────────────────────────────────────────────
+
+    /** Called by combat.onGameOverCallback */
+    handleGameOver(winner) {
+        this.isMatchActive  = false;
+        this.isMatchPaused  = false;
+        if (this.matchTimerInterval) clearInterval(this.matchTimerInterval);
+
+        if (winner === 1) audio.playVictory();
+        else              audio.playDefeat();
+
+        // Persist progress for registered players
+        if (auth.currentUser) {
+            auth.updateProgress(combat.unlockedLevel, combat.p1.wpm, winner === 1);
+            this._updateUserHeader();
+        }
+
+        // P2P mode: show lobby for rematch instead of standard game-over screen
+        if (combat.mode === 'p2p' && p2p.isConnected) {
+            this._openP2PLobby(winner);
+            return;
+        }
+
+        const targetWPM  = combat.bot?.baseWPM || 15;
+        const stageRank  = this._calculateRank(combat.p1.wpm, combat.p1.accuracy, targetWPM);
+
+        this.ui.populateGameOver(winner, combat, stageRank);
+        this.ui.showModal('modalGameOver');
+    }
+
+    /**
+     * @private
+     * @param {number} wpm
+     * @param {number} acc
+     * @param {number} target
+     * @returns {string}
+     */
+    _calculateRank(wpm, acc, target) {
+        if (wpm >= target + 15 && acc >= 95) return `${ICONS.lightning} S-RANK`;
+        if (wpm >= target +  8 && acc >= 90) return `${ICONS.fire} A-RANK`;
+        if (wpm >= target       && acc >= 85) return `${ICONS.shield} B-RANK`;
+        return `${ICONS.fist} C-RANK`;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // V. GAME MODES
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Start a Campaign (Arcade) stage against a bot opponent.
+     * @param {number} levelNum - 1-based stage number (1–25)
+     */
+    startArcadeLevel(levelNum = 1) {
+        if (!auth.currentUser) { this.openAuthModal(); return; }
+        if (levelNum > combat.unlockedLevel) return;
+
+        this.activeSkin = 'cyber';
+        this.pendingGameStart = () => {
+            this.ui.closeAllModals();
+            this.renderer.setSkinMode('cyber');
+            combat.reset('arcade', levelNum);
+
+            document.getElementById('stageBadge').innerText = `STAGE ${levelNum}/25`;
+            this.ui.setupPlayerPanel(1, auth.currentUser.name,  ICONS.lightning, '#00f0ff');
+            this.ui.setupPlayerPanel(2, combat.bot.name, combat.bot.avatar, combat.bot.color);
+
+            this._startMatch();
+            combat.startAI(aiHit => this._handleAIAttack(aiHit));
         };
 
-        p2p.onMessageCallback = (data) => {
-            const { type, payload } = data;
+        this._openContentChoiceModal();
+    }
 
-            // ── GAME messages ────────────────────────────────────────────────
-            if (type === 'KEYSTROKE') {
-                this.renderer.triggerAttack(2, 'light');
-            } else if (type === 'ATTACK_COMPLETED') {
-                const validDamage = Math.min(payload.damage || 0, 50);
-                combat.p1.hp = Math.max(0, combat.p1.hp - validDamage);
-                this.renderer.triggerAttack(2, payload.isSuper ? 'super' : 'heavy');
-                audio.playPunch();
-                this.renderer.addFloatingText(this.renderer.f1.x, this.renderer.f1.y - 70, `-${validDamage} HP`, '#ff0055', 28);
-                this.updateHUD();
-                combat.checkGameOver();
+    /** Start a local 2-player match (same device, same keyboard) */
+    startLocal2PMode() {
+        this.activeSkin = 'cyber';
+        this.pendingGameStart = () => {
+            this.ui.closeAllModals();
+            this.renderer.setSkinMode('cyber');
+            combat.reset('local2p');
 
-            // ── LOBBY / READY-UP messages ────────────────────────────────────
-            } else if (type === 'P2P_READY') {
-                this.setOpponentReady(true);
-                this.showToast('Friend is READY! Click Ready Up to start!', 'success', 3000);
-            } else if (type === 'P2P_UNREADY') {
-                this.setOpponentReady(false);
-                if (this.p2pCountdownTimer) {
-                    clearInterval(this.p2pCountdownTimer);
-                    this.p2pCountdownTimer = null;
-                    const cd = document.getElementById('p2pCountdown');
-                    if (cd) cd.classList.add('hidden');
-                    this.showToast('Friend cancelled ready. Waiting...', 'info', 2500);
+            document.getElementById('stageBadge').innerText = '1v1 LOCAL';
+            this.ui.setupPlayerPanel(1, auth.currentUser?.name || 'PLAYER 1', ICONS.lightning, '#00f0ff');
+            this.ui.setupPlayerPanel(2, 'PLAYER 2', ICONS.fire, '#ff0055');
+            this._startMatch();
+        };
+
+        this._openContentChoiceModal();
+    }
+
+    /**
+     * Start the ⚡ STICKMAN CLASH mode — close-quarters stickman fighters,
+     * air-launch physics, and ragdoll knockback.
+     */
+    startStickmanMode() {
+        this.activeSkin = 'stickman';
+        this.pendingGameStart = () => {
+            this.ui.closeAllModals();
+            this.renderer.setSkinMode('stickman');
+            combat.reset('local2p');
+
+            document.getElementById('stageBadge').innerText = '⚡ STICKMAN CLASH';
+            this.ui.setupPlayerPanel(1, auth.currentUser?.name || 'STICKMAN 1', ICONS.stickman, '#00f0ff');
+            this.ui.setupPlayerPanel(2, 'STICKMAN 2', ICONS.stickman, '#ff0055');
+            this._startMatch();
+            this.ui.showToast('⚡ Stickman Clash! Type fast to punch harder!', 'success', 4000);
+        };
+
+        this._openContentChoiceModal();
+    }
+
+    /**
+     * Bring up the mobile virtual keyboard by programmatically focusing the
+     * hidden input element.  Called from onclick handlers on the typing card
+     * and the "⌨ Tap to Type" button in the mobile layout.
+     */
+    focusMobileKeyboard() {
+        if (!this.typeInput) return;
+        this.typeInput.focus();
+        this.typeInput.click();
+        document.querySelector('.typing-word-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    toggleFighterSkin(forceSkin = null) {
+        if (!this.renderer) return;
+        const next = forceSkin || (this.renderer.fighterSkin === 'cyber' ? 'stickman' : 'cyber');
+        this.activeSkin = next;
+        this.renderer.setSkinMode(next);
+
+        const btn = document.getElementById('btnSkinToggle');
+        if (btn) {
+            btn.innerHTML    = next === 'stickman' ? `${ICONS.stickman} Fighter: STICKMAN` : 'Fighter: CYBER';
+            btn.style.color  = next === 'stickman' ? 'var(--neon-yellow)' : 'var(--neon-cyan)';
+        }
+        this.ui.showToast(
+            next === 'stickman' ? '⚡ STICKMAN Fighter Activated!' : 'CYBER Fighter Activated!',
+            'success'
+        );
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // VI. SOUND & HUD CONTROLS
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    toggleSound() {
+        audio.muted = !audio.muted;
+        const btn = document.getElementById('btnSoundToggle');
+        if (btn) btn.innerHTML = audio.muted
+            ? `${ICONS.volumeOff} Sound: OFF`
+            : `${ICONS.volumeOn} Sound: ON`;
+        this.ui.showToast(audio.muted ? 'Audio Muted' : 'Audio Enabled', 'info', 1500);
+    }
+
+    toggleMic() {
+        const isEnabled = p2p.toggleMic();
+        const btn = document.getElementById('btnMicToggle');
+        if (btn) {
+            btn.innerHTML   = isEnabled ? `${ICONS.micOn} Mic: ON` : `${ICONS.micOff} Mic: MUTED`;
+            btn.style.color = isEnabled ? 'var(--neon-cyan)' : '#ff0055';
+        }
+        this.ui.showToast(isEnabled ? 'Microphone Unmuted' : 'Microphone Muted', isEnabled ? 'success' : 'info');
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // VII. AUTH FLOW
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    _setupAuthTabs() {
+        const tabs = { tabGuest: 'authGuestSection', tabRegister: 'authRegisterSection', tabLogin: 'authLoginSection' };
+
+        Object.keys(tabs).forEach(tabId => {
+            const tabEl = document.getElementById(tabId);
+            if (!tabEl) return;
+            tabEl.addEventListener('click', () => {
+                // Deactivate all tabs and hide all sections
+                Object.keys(tabs).forEach(t => {
+                    document.getElementById(t)?.classList.remove('active');
+                    document.getElementById(tabs[t])?.classList.add('hidden');
+                });
+                // Activate the clicked tab
+                tabEl.classList.add('active');
+                document.getElementById(tabs[tabId])?.classList.remove('hidden');
+            });
+        });
+    }
+
+    openAuthModal() {
+        const statusEl = document.getElementById('authStatus');
+        if (statusEl) statusEl.innerText = '';
+        this.ui.showModal('modalAuth');
+    }
+
+    closeAuthModal() {
+        this.ui.hideModal('modalAuth');
+    }
+
+    handleGuestLogin() {
+        const name = document.getElementById('guestNameInput')?.value.trim();
+        const age  = document.getElementById('guestAgeInput')?.value.trim();
+
+        if (!name) { this.ui.showToast('Please enter your Player Name!', 'error'); return; }
+        if (!age)  { this.ui.showToast('Please enter your Age!', 'error'); return; }
+
+        const res = auth.loginAsGuest(name, age);
+        if (res.success) {
+            this._updateUserHeader();
+            this.closeAuthModal();
+            this.showMainMenu();
+            this.ui.showToast(`Welcome Guest ${res.user.name}!`, 'success');
+        }
+    }
+
+    handleMobileRegister() {
+        const name   = document.getElementById('regNameInput')?.value;
+        const age    = document.getElementById('regAgeInput')?.value;
+        const mobile = document.getElementById('regMobileInput')?.value;
+        const pass   = document.getElementById('regPassInput')?.value;
+
+        if (!name?.trim())   { this.ui.showToast('Please enter your Player Name!', 'error'); return; }
+        if (!age?.trim())    { this.ui.showToast('Please enter your Age!', 'error'); return; }
+        if (!mobile?.trim()) { this.ui.showToast('Please enter your Mobile Number!', 'error'); return; }
+        if (!pass?.trim())   { this.ui.showToast('Please enter a Password!', 'error'); return; }
+
+        const res = auth.registerWithMobile(name, age, mobile, pass);
+        if (res.success) {
+            this.ui.showToast('Account registered successfully!', 'success');
+            this._updateUserHeader();
+            this.closeAuthModal();
+            this.showMainMenu();
+        } else {
+            this.ui.showToast(res.message, 'error');
+        }
+    }
+
+    handleMobileLogin() {
+        const mobile = document.getElementById('loginMobileInput')?.value;
+        const pass   = document.getElementById('loginPassInput')?.value;
+
+        if (!mobile?.trim() || !pass?.trim()) {
+            this.ui.showToast('Please enter Mobile Number and Password!', 'error');
+            return;
+        }
+
+        const res = auth.loginWithMobile(mobile, pass);
+        if (res.success) {
+            this.ui.showToast(`Welcome back ${res.user.name}!`, 'success');
+            this._updateUserHeader();
+            this.closeAuthModal();
+            this.showMainMenu();
+        } else {
+            this.ui.showToast(res.message, 'error');
+        }
+    }
+
+    /** @private Sync header name/level badge with auth.currentUser */
+    _updateUserHeader() {
+        if (!auth.currentUser) return;
+        const lvl     = auth.currentUser.unlockedLevel || combat.unlockedLevel || 1;
+        const typeTag = auth.currentUser.type === 'registered' ? 'Registered' : 'Guest';
+
+        const nameEl = document.getElementById('headerUserName');
+        const metaEl = document.getElementById('headerUserMeta');
+        if (nameEl) nameEl.innerText = auth.currentUser.name;
+        if (metaEl) metaEl.innerText = `${typeTag} | Age: ${auth.currentUser.age || 18} | Stage ${lvl}`;
+
+        combat.unlockedLevel = lvl;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // VIII. P2P MULTIPLAYER & LOBBY
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /** @private Wire P2P network event callbacks */
+    _setupP2PCallbacks() {
+        // Both players connect → start battle immediately
+        p2p.onConnectCallback = () => {
+            this.ui.closeAllModals();
+            this.renderer.setSkinMode('cyber');
+            combat.reset('p2p');
+
+            document.getElementById('stageBadge').innerText = 'P2P ONLINE';
+            this.ui.setupPlayerPanel(1, auth.currentUser?.name || 'HERO (YOU)', ICONS.lightning, '#00f0ff');
+            this.ui.setupPlayerPanel(2, 'FRIEND (ONLINE)', ICONS.globe, '#ff0055');
+            this._startMatch();
+            this.ui.showToast('P2P Online Battle Started! Type to Attack!', 'success');
+        };
+
+        // Incoming messages from P2P opponent
+        p2p.onMessageCallback = ({ type, payload }) => {
+            switch (type) {
+                case 'KEYSTROKE':
+                    this.renderer.triggerAttack(2, 'light');
+                    break;
+
+                case 'ATTACK_COMPLETED': {
+                    // Cap incoming damage (anti-cheat: mirror client-side cap)
+                    const validDamage = Math.min(payload.damage || 0, 50);
+                    combat.p1.hp = Math.max(0, combat.p1.hp - validDamage);
+                    this.renderer.triggerAttack(2, payload.isSuper ? 'super' : 'heavy');
+                    audio.playPunch();
+                    this.renderer.addFloatingText(
+                        this.renderer.f1.x, this.renderer.f1.y - 70,
+                        `-${validDamage} HP`, '#ff0055', 28
+                    );
+                    this.ui.updateHUD(combat.p1, combat.p2);
+                    combat.checkGameOver();
+                    break;
                 }
-            } else if (type === 'P2P_CUSTOM_TEXT') {
-                // Friend shared custom text — load it
-                const textarea = document.getElementById('p2pLobbyCustomText');
-                if (textarea && payload.text) textarea.value = payload.text;
-                const shareStatus = document.getElementById('p2pTextShareStatus');
-                if (shareStatus) shareStatus.innerHTML = `<span style="color:#00f0ff;">✅ Friend shared custom text! Using it for next round.</span>`;
-                this.showToast('Friend sent you custom typing text!', 'info', 3500);
+
+                case 'P2P_READY':
+                    this.setOpponentReady(true);
+                    this.ui.showToast('Friend is READY! Click Ready Up to start!', 'success', 3000);
+                    break;
+
+                case 'P2P_UNREADY':
+                    this.setOpponentReady(false);
+                    if (this.p2pCountdownTimer) {
+                        clearInterval(this.p2pCountdownTimer);
+                        this.p2pCountdownTimer = null;
+                        document.getElementById('p2pCountdown')?.classList.add('hidden');
+                        this.ui.showToast('Friend cancelled ready. Waiting...', 'info', 2500);
+                    }
+                    break;
+
+                case 'P2P_CUSTOM_TEXT': {
+                    const ta = document.getElementById('p2pLobbyCustomText');
+                    if (ta && payload.text) ta.value = payload.text;
+                    const shareStatus = document.getElementById('p2pTextShareStatus');
+                    if (shareStatus) shareStatus.innerHTML = `<span style="color:#00f0ff;">✅ Friend shared custom text!</span>`;
+                    this.ui.showToast('Friend sent custom typing text!', 'info', 3500);
+                    break;
+                }
             }
         };
 
-        p2p.onDisconnectCallback = (msg) => {
-            // Close lobby if open
-            const lobby = document.getElementById('modalP2PLobby');
-            if (lobby) lobby.classList.add('hidden');
+        // Friend disconnected
+        p2p.onDisconnectCallback = msg => {
+            this.ui.hideModal('modalP2PLobby');
             if (this.p2pCountdownTimer) {
                 clearInterval(this.p2pCountdownTimer);
                 this.p2pCountdownTimer = null;
             }
-            this.showToast(msg || "Online P2P friend disconnected.", "error");
+            this.ui.showToast(msg || 'Online friend disconnected.', 'error');
             this.showMainMenu();
         };
     }
 
+    /**
+     * Handle the unified "CONNECT & START BATTLE" P2P button.
+     * Tries HOST first; falls back to GUEST if room already exists.
+     */
     handleUnifiedP2PConnect() {
-        const inputElem = document.getElementById('inputUnifiedRoomCode');
-        const code = inputElem ? inputElem.value.trim() : "";
-        const statusDiv = document.getElementById('p2pUnifiedStatus');
+        const inputEl    = document.getElementById('inputUnifiedRoomCode');
+        const statusDiv  = document.getElementById('p2pUnifiedStatus');
         const connectBtn = document.getElementById('btnConnectP2P');
+        const code       = inputEl?.value.trim() || '';
 
-        if (!code || code.length < 2) {
-            this.showToast("Please type a Room Code (min 2 characters).", "error");
-            if (inputElem) inputElem.focus();
+        if (code.length < 2) {
+            this.ui.showToast('Please type a Room Code (min 2 characters).', 'error');
+            inputEl?.focus();
             return;
         }
 
         const clean = p2p.sanitizeInput(code).toUpperCase();
         if (!clean || clean.length < 2) {
-            this.showToast("Invalid Room Code. Use letters and numbers only.", "error");
+            this.ui.showToast('Invalid Room Code. Use letters and numbers only.', 'error');
             return;
         }
 
-        // Disable button to prevent double-click
+        // Disable button to prevent duplicate submissions
         if (connectBtn) {
-            connectBtn.disabled = true;
+            connectBtn.disabled  = true;
             connectBtn.innerText = '⏳ Connecting...';
         }
-
         const resetBtn = () => {
             if (connectBtn) {
-                connectBtn.disabled = false;
+                connectBtn.disabled  = false;
                 connectBtn.innerHTML = '⚡ CONNECT & START BATTLE';
             }
         };
@@ -890,280 +897,171 @@ class GameApp {
         p2p.connectToRoom(
             clean,
             () => {
-                // Guest joined successfully
-                if (statusDiv) statusDiv.innerHTML = `<span style="color:#00ff88; font-weight:bold;">✅ CONNECTED! Starting battle...</span>`;
-                this.showToast(`Joined Room "${clean}"! Battle starting...`, "success");
+                // Guest connected successfully
+                if (statusDiv) statusDiv.innerHTML = `<span style="color:#00ff88;font-weight:bold;">✅ CONNECTED! Starting battle...</span>`;
+                this.ui.showToast(`Joined Room "${clean}"! Battle starting...`, 'success');
                 resetBtn();
             },
-            (err) => {
-                if (statusDiv) statusDiv.innerHTML = `<span style="color:#ff0055;">❌ ${this.escapeHtml(err)}</span>`;
-                this.showToast(err, "error");
+            err => {
+                if (statusDiv) statusDiv.innerHTML = `<span style="color:#ff0055;">❌ ${this._esc(err)}</span>`;
+                this.ui.showToast(err, 'error');
                 resetBtn();
             },
-            (waitingCode) => {
-                // We are HOST — waiting for friend
+            waitingCode => {
+                // We are HOST — waiting for friend to join
                 if (statusDiv) statusDiv.innerHTML =
                     `🟢 Room <strong style="color:#00f0ff;">${waitingCode}</strong> is LIVE!<br>` +
-                    `Tell your friend to enter code <strong style="color:#ffe600;">${waitingCode}</strong> and click Connect!<br>` +
-                    `<small style="opacity:0.7;">(Waiting for friend to join...)</small>`;
-                this.showToast(`Room "${waitingCode}" ready! Waiting for friend...`, "info", 6000);
-                // Reset button so host can cancel if needed
+                    `Tell your friend to enter <strong style="color:#ffe600;">${waitingCode}</strong> and click Connect!<br>` +
+                    `<small style="opacity:0.7;">(Waiting for friend to join…)</small>`;
+                this.ui.showToast(`Room "${waitingCode}" ready! Waiting for friend...`, 'info', 6000);
                 if (connectBtn) {
-                    connectBtn.disabled = false;
+                    connectBtn.disabled  = false;
                     connectBtn.innerHTML = '❌ Cancel / Change Code';
                 }
             }
         );
     }
 
-    calculateStageRank(wpm, accuracy, targetWPM) {
-        if (wpm >= targetWPM + 15 && accuracy >= 95) return `${ICONS.lightning} S-RANK`;
-        if (wpm >= targetWPM + 8 && accuracy >= 90) return `${ICONS.fire} A-RANK`;
-        if (wpm >= targetWPM && accuracy >= 85) return `${ICONS.shield} B-RANK`;
-        return `${ICONS.fist} C-RANK`;
-    }
-
-    handleGameOver(winner) {
-        this.isMatchActive = false;
-        this.isMatchPaused = false;
-        if (this.matchTimerInterval) clearInterval(this.matchTimerInterval);
-
-        if (winner === 1) audio.playVictory();
-        else audio.playDefeat();
-
-        const btnNextLevel = document.getElementById('btnNextLevel');
-
-        // Save Auth User Progress
-        if (auth.currentUser) {
-            auth.updateProgress(combat.unlockedLevel, combat.p1.wpm, winner === 1);
-            this.updateUserHeaderUI();
-        }
-
-        // Calculate Stage Rank
-        const targetWPM = combat.bot ? combat.bot.baseWPM : 15;
-        const stageRank = this.calculateStageRank(combat.p1.wpm, combat.p1.accuracy, targetWPM);
-
-        // ── P2P MODE: Show P2P Rematch Lobby instead of normal game over ──
-        if (combat.mode === 'p2p' && p2p.isConnected) {
-            this.openP2PLobby(winner);
-            return;
-        }
-
-        // Populate Game Over Stats Modal (Arcade & Local)
-        if (combat.mode === 'arcade') {
-            if (winner === 1) {
-                document.getElementById('winnerTitle').innerText = `STAGE ${combat.currentLevel} CLEARED!`;
-                document.getElementById('winnerSubtitle').innerText = combat.currentLevel < CONFIG.CAMPAIGN_LEVELS.length 
-                    ? `Target ${combat.bot.baseWPM} WPM Passed! Stage ${combat.currentLevel + 1} Unlocked!` 
-                    : "CONGRATULATIONS! YOU DEFEATED ALL 25 CAMPAIGN BOSSES!";
-                if (btnNextLevel) btnNextLevel.classList.remove('hidden');
-            } else {
-                if (combat.lastDefeatReason && combat.lastDefeatReason.startsWith('WPM_TOO_LOW')) {
-                    const reqWPM = combat.lastDefeatReason.split(':')[1];
-                    document.getElementById('winnerTitle').innerText = `STAGE ${combat.currentLevel} FAILED!`;
-                    document.getElementById('winnerSubtitle').innerText = `Speed was ${combat.p1.wpm} WPM. Required speed is ${reqWPM} WPM to pass this Stage!`;
-                } else {
-                    document.getElementById('winnerTitle').innerText = `DEFEAT! HEALTH DEPLETED!`;
-                    document.getElementById('winnerSubtitle').innerText = `Keep practicing your typing speed!`;
-                }
-                if (btnNextLevel) btnNextLevel.classList.add('hidden');
-            }
-        } else {
-            document.getElementById('winnerTitle').innerText = winner === 1 ? "VICTORY! YOU WIN!" : "DEFEAT! OPPONENT WON!";
-            document.getElementById('winnerSubtitle').innerText = winner === 1 ? "Sensational typing speed & precision!" : "Keep practicing your typing speed!";
-            if (btnNextLevel) btnNextLevel.classList.add('hidden');
-        }
-
-        document.getElementById('winnerTitle').style.color = winner === 1 ? "#00f0ff" : "#ff0055";
-
-        document.getElementById('statWpm').innerHTML = `${combat.p1.wpm} <span class="unit">WPM</span>`;
-        document.getElementById('statAcc').innerHTML = `${combat.p1.accuracy}<span class="unit">%</span>`;
-        document.getElementById('statCombo').innerText = `${combat.p1.maxCombo}x`;
-        document.getElementById('statRank').innerHTML = winner === 1 ? stageRank : `${ICONS.cross} NO RANK`;
-
-        document.getElementById('modalGameOver').classList.remove('hidden');
-    }
-
     // ── P2P REMATCH LOBBY ─────────────────────────────────────────────────────
 
-    openP2PLobby(winner) {
-        this.p2pLobbyWinner = winner;
-        this.p2pMyReady = false;
+    /** @private Open the post-game P2P rematch lobby */
+    _openP2PLobby(winner) {
+        this.p2pMyReady       = false;
         this.p2pOpponentReady = false;
         if (this.p2pCountdownTimer) {
             clearInterval(this.p2pCountdownTimer);
             this.p2pCountdownTimer = null;
         }
 
-        // Populate result
-        const isWin = winner === 1;
-        document.getElementById('p2pLobbyResultIcon').innerText = isWin ? '🏆' : '💀';
-        document.getElementById('p2pLobbyTitle').innerText = isWin ? 'VICTORY!' : 'DEFEAT!';
-        document.getElementById('p2pLobbyTitle').style.color = isWin ? 'var(--neon-cyan)' : '#ff0055';
-        document.getElementById('p2pLobbySubtitle').innerText = isWin
-            ? `You outtyped your friend! WPM: ${combat.p1.wpm}`
-            : `Friend was faster this time! WPM: ${combat.p1.wpm}`;
+        const isWin  = winner === 1;
+        const myName = auth.currentUser?.name?.toUpperCase() || 'YOU';
 
-        // Stats
-        document.getElementById('p2pStatWpm').innerText = combat.p1.wpm;
-        document.getElementById('p2pStatAcc').innerText = `${combat.p1.accuracy}%`;
-        document.getElementById('p2pStatCombo').innerText = `${combat.p1.maxCombo}x`;
+        this.ui.populateP2PLobby(isWin, combat.p1, myName);
+        this.ui.updateReadyCard('my',  false);
+        this.ui.updateReadyCard('opp', false);
 
-        // Player name
-        const myName = auth.currentUser ? auth.currentUser.name.toUpperCase() : 'YOU';
-        document.getElementById('p2pMyName').innerText = myName;
-
-        // Reset ready states
-        this._updateReadyUI('my', false);
-        this._updateReadyUI('opp', false);
-
-        // Reset ready button
+        // Reset ready button to initial state
         const readyBtn = document.getElementById('btnP2PReady');
         if (readyBtn) {
             readyBtn.classList.remove('is-ready-state');
             readyBtn.innerHTML = '⚡ CLICK TO READY UP';
         }
 
-        // Hide countdown
-        const cd = document.getElementById('p2pCountdown');
-        if (cd) cd.classList.add('hidden');
-
-        // Clear custom text area
-        const textarea = document.getElementById('p2pLobbyCustomText');
-        if (textarea) textarea.value = '';
+        document.getElementById('p2pCountdown')?.classList.add('hidden');
+        const ta = document.getElementById('p2pLobbyCustomText');
+        if (ta) ta.value = '';
         const shareStatus = document.getElementById('p2pTextShareStatus');
         if (shareStatus) shareStatus.innerHTML = '';
 
-        // Show lobby
-        this.closeModals();
-        document.getElementById('modalP2PLobby').classList.remove('hidden');
+        this.ui.closeAllModals();
+        this.ui.showModal('modalP2PLobby');
 
         if (isWin) audio.playVictory();
-        else audio.playDefeat();
+        else        audio.playDefeat();
     }
 
-    _updateReadyUI(who, isReady) {
-        const card = document.getElementById(who === 'my' ? 'p2pMyReadyCard' : 'p2pOpponentReadyCard');
-        const status = document.getElementById(who === 'my' ? 'p2pMyStatus' : 'p2pOpponentStatus');
-        if (!card || !status) return;
-        if (isReady) {
-            card.className = 'ready-player-card is-ready';
-            status.innerText = '✅ READY!';
-        } else {
-            card.className = 'ready-player-card not-ready';
-            status.innerText = who === 'my' ? 'NOT READY' : 'WAITING...';
-        }
-    }
-
+    /** Toggle own ready state and broadcast to opponent */
     toggleP2PReady() {
         this.p2pMyReady = !this.p2pMyReady;
-        this._updateReadyUI('my', this.p2pMyReady);
+        this.ui.updateReadyCard('my', this.p2pMyReady);
 
-        const readyBtn = document.getElementById('btnP2PReady');
+        const btn = document.getElementById('btnP2PReady');
         if (this.p2pMyReady) {
-            readyBtn.classList.add('is-ready-state');
-            readyBtn.innerHTML = '✅ READY! (Click to Cancel)';
+            btn?.classList.add('is-ready-state');
+            if (btn) btn.innerHTML = '✅ READY! (Click to Cancel)';
             p2p.send('P2P_READY', {});
-            this.showToast('You are READY! Waiting for friend...', 'success', 2500);
+            this.ui.showToast('You are READY! Waiting for friend...', 'success', 2500);
         } else {
-            readyBtn.classList.remove('is-ready-state');
-            readyBtn.innerHTML = '⚡ CLICK TO READY UP';
+            btn?.classList.remove('is-ready-state');
+            if (btn) btn.innerHTML = '⚡ CLICK TO READY UP';
             p2p.send('P2P_UNREADY', {});
-            // Cancel countdown if running
             if (this.p2pCountdownTimer) {
                 clearInterval(this.p2pCountdownTimer);
                 this.p2pCountdownTimer = null;
-                const cd = document.getElementById('p2pCountdown');
-                if (cd) cd.classList.add('hidden');
+                document.getElementById('p2pCountdown')?.classList.add('hidden');
             }
         }
 
-        this.checkBothReady();
+        this._checkBothReady();
     }
 
+    /** @param {boolean} isReady */
     setOpponentReady(isReady) {
         this.p2pOpponentReady = isReady;
-        this._updateReadyUI('opp', isReady);
-        this.checkBothReady();
+        this.ui.updateReadyCard('opp', isReady);
+        this._checkBothReady();
     }
 
-    checkBothReady() {
+    /**
+     * @private
+     * When both players are ready, start a 3-second countdown then launch rematch.
+     */
+    _checkBothReady() {
         if (this.p2pMyReady && this.p2pOpponentReady) {
-            // Both ready! Start countdown
-            if (this.p2pCountdownTimer) return; // Already counting
+            if (this.p2pCountdownTimer) return; // Already counting down
 
             let count = 3;
-            const cd = document.getElementById('p2pCountdown');
-            const num = document.getElementById('p2pCountdownNum');
-            if (cd) cd.classList.remove('hidden');
-            if (num) num.innerText = count;
-
-            this.showToast('Both READY! Starting in 3...', 'success', 3500);
+            const cdEl  = document.getElementById('p2pCountdown');
+            const numEl = document.getElementById('p2pCountdownNum');
+            cdEl?.classList.remove('hidden');
+            if (numEl) numEl.innerText = count;
+            this.ui.showToast('Both READY! Starting in 3...', 'success', 3500);
 
             this.p2pCountdownTimer = setInterval(() => {
                 count--;
-                if (num) num.innerText = count;
+                if (numEl) numEl.innerText = count;
                 if (count <= 0) {
                     clearInterval(this.p2pCountdownTimer);
                     this.p2pCountdownTimer = null;
-                    if (cd) cd.classList.add('hidden');
-                    this.startP2PRematch();
+                    cdEl?.classList.add('hidden');
+                    this._startP2PRematch();
                 }
             }, 1000);
+
         } else if (this.p2pCountdownTimer) {
-            // Someone unreadied — cancel countdown
+            // One player un-readied — cancel countdown
             clearInterval(this.p2pCountdownTimer);
             this.p2pCountdownTimer = null;
-            const cd = document.getElementById('p2pCountdown');
-            if (cd) cd.classList.add('hidden');
+            document.getElementById('p2pCountdown')?.classList.add('hidden');
         }
     }
 
-    startP2PRematch() {
-        // Read custom text from lobby textarea
-        const textarea = document.getElementById('p2pLobbyCustomText');
-        const customText = textarea ? textarea.value.trim() : '';
+    /** @private Launch the P2P rematch with lobby settings applied */
+    _startP2PRematch() {
+        const ta = document.getElementById('p2pLobbyCustomText');
+        const customText = ta?.value.trim() || '';
 
         if (customText.length > 0) {
-            this.customScriptWords = customText.split(/\s+/).filter(w => w.length > 0);
-            this.contentMode = 'custom';
-            this.customScriptIndex = 0;
+            this.words.setCustomScript(customText);
         } else {
-            this.contentMode = 'words';
-            this.customScriptWords = [];
+            this.words.contentMode       = 'words';
+            this.words.customScriptWords = [];
         }
 
-        // Reset ready state
-        this.p2pMyReady = false;
+        this.p2pMyReady       = false;
         this.p2pOpponentReady = false;
 
-        // Close lobby and restart match
-        document.getElementById('modalP2PLobby').classList.add('hidden');
+        this.ui.hideModal('modalP2PLobby');
         combat.reset('p2p');
-        document.getElementById('stageBadge').innerText = `P2P ONLINE`;
-        this.setupPlayerUI(1, auth.currentUser ? auth.currentUser.name : "HERO (YOU)", ICONS.lightning, "#00f0ff");
-        this.setupPlayerUI(2, "FRIEND (ONLINE)", ICONS.globe, "#ff0055");
-        this.startMatch();
-        this.showToast('P2P Rematch Started! Type to Attack!', 'success');
+        document.getElementById('stageBadge').innerText = 'P2P ONLINE';
+        this.ui.setupPlayerPanel(1, auth.currentUser?.name || 'HERO (YOU)', ICONS.lightning, '#00f0ff');
+        this.ui.setupPlayerPanel(2, 'FRIEND (ONLINE)', ICONS.globe, '#ff0055');
+        this._startMatch();
+        this.ui.showToast('P2P Rematch Started! Type to Attack!', 'success');
     }
 
+    /** Share typed custom text from the lobby textarea to the opponent over P2P */
     p2pShareCustomText() {
-        const textarea = document.getElementById('p2pLobbyCustomText');
-        const text = textarea ? textarea.value.trim() : '';
-        const shareStatus = document.getElementById('p2pTextShareStatus');
+        const ta     = document.getElementById('p2pLobbyCustomText');
+        const text   = ta?.value.trim() || '';
+        const status = document.getElementById('p2pTextShareStatus');
 
-        if (!text) {
-            this.showToast('Please type some custom text first!', 'error', 2000);
-            return;
-        }
-        if (!p2p.isConnected) {
-            this.showToast('Not connected to friend!', 'error');
-            return;
-        }
+        if (!text) { this.ui.showToast('Please type some custom text first!', 'error', 2000); return; }
+        if (!p2p.isConnected) { this.ui.showToast('Not connected to friend!', 'error'); return; }
 
-        p2p.send('P2P_CUSTOM_TEXT', { text: text });
-        if (shareStatus) shareStatus.innerHTML = `<span style="color:#00ff88;">✅ Custom text sent to friend!</span>`;
-        this.showToast('Custom text shared with friend!', 'success', 2500);
+        p2p.send('P2P_CUSTOM_TEXT', { text });
+        if (status) status.innerHTML = `<span style="color:#00ff88;">✅ Custom text sent to friend!</span>`;
+        this.ui.showToast('Custom text shared with friend!', 'success', 2500);
     }
 
     leaveP2PRoom() {
@@ -1172,109 +1070,143 @@ class GameApp {
             this.p2pCountdownTimer = null;
         }
         p2p.disconnect();
-        document.getElementById('modalP2PLobby').classList.add('hidden');
+        this.ui.hideModal('modalP2PLobby');
         this.showMainMenu();
-        this.showToast('Left P2P room. See you next time!', 'info');
+        this.ui.showToast('Left P2P room. See you next time!', 'info');
     }
 
-    playNextLevel() {
-        document.getElementById('modalGameOver').classList.add('hidden');
-        if (combat.currentLevel < CONFIG.CAMPAIGN_LEVELS.length) {
-            this.startArcadeLevel(combat.currentLevel + 1);
-        } else {
-            this.openCampaignModal();
-        }
-    }
-
-    renderCampaignGrid() {
-        const grid = document.getElementById('campaignGrid');
-        if (!grid) return;
-        grid.innerHTML = "";
-
-        CONFIG.CAMPAIGN_LEVELS.forEach(lvl => {
-            const isUnlocked = lvl.level <= combat.unlockedLevel;
-            const isCleared = lvl.level < combat.unlockedLevel;
-
-            const card = document.createElement('div');
-            card.className = `level-card ${isUnlocked ? '' : 'locked'}`;
-
-            let badgeHtml = `<span class="level-status-badge status-locked">${ICONS.lock} LOCKED</span>`;
-            if (isCleared) badgeHtml = `<span class="level-status-badge status-cleared">${ICONS.star} CLEARED</span>`;
-            else if (isUnlocked) badgeHtml = `<span class="level-status-badge status-unlocked">${ICONS.unlocked} UNLOCKED</span>`;
-
-            card.innerHTML = `
-                <div class="level-num">STAGE ${lvl.level}</div>
-                <div class="level-avatar">${lvl.avatar}</div>
-                <h4>${this.escapeHtml(lvl.name)}</h4>
-                <div class="level-wpm">${lvl.baseWPM} WPM | ${lvl.maxHp} HP</div>
-                ${badgeHtml}
-            `;
-
-            if (isUnlocked) {
-                card.onclick = () => this.startArcadeLevel(lvl.level);
-            }
-
-            grid.appendChild(card);
-        });
-    }
-
-    restartMatch() {
-        document.getElementById('modalGameOver').classList.add('hidden');
-        document.getElementById('modalPause').classList.add('hidden');
-        if (combat.mode === 'arcade') this.startArcadeLevel(combat.currentLevel);
-        else if (combat.mode === 'local2p') this.startLocal2PMode();
-        else this.startArcadeLevel(1);
-    }
+    // ═══════════════════════════════════════════════════════════════════════════
+    // IX. MODAL ROUTING
+    // ═══════════════════════════════════════════════════════════════════════════
 
     showMainMenu() {
-        this.isMatchActive = false;
-        this.isMatchPaused = false;
+        this.isMatchActive  = false;
+        this.isMatchPaused  = false;
         combat.stopAI();
-        this.closeModals();
-        document.getElementById('modalStart').classList.remove('hidden');
+        this.ui.closeAllModals();
+        this.ui.showModal('modalStart');
     }
 
     openP2PModal() {
-        this.closeModals();
-        document.getElementById('modalP2P').classList.remove('hidden');
+        this.ui.closeAllModals();
+        this.ui.showModal('modalP2P');
     }
 
     closeP2PModal() {
         this.pendingGameStart = null;
-        document.getElementById('modalP2P').classList.add('hidden');
-        if (!this.isMatchActive) {
-            document.getElementById('modalStart').classList.remove('hidden');
-        }
+        this.ui.hideModal('modalP2P');
+        if (!this.isMatchActive) this.ui.showModal('modalStart');
     }
 
     openCampaignModal() {
-        this.closeModals();
-        this.renderCampaignGrid();
-        document.getElementById('modalCampaign').classList.remove('hidden');
+        this.ui.closeAllModals();
+        this.ui.renderCampaignGrid(
+            CONFIG.CAMPAIGN_LEVELS,
+            combat.unlockedLevel,
+            lvl => this.startArcadeLevel(lvl)
+        );
+        this.ui.showModal('modalCampaign');
     }
 
     closeCampaignModal() {
         this.pendingGameStart = null;
-        document.getElementById('modalCampaign').classList.add('hidden');
-        if (!this.isMatchActive) {
-            document.getElementById('modalStart').classList.remove('hidden');
+        this.ui.hideModal('modalCampaign');
+        if (!this.isMatchActive) this.ui.showModal('modalStart');
+    }
+
+    // ── CONTENT CHOICE MODAL ──────────────────────────────────────────────────
+
+    /** @private Show the content-selection modal (words vs custom script) */
+    _openContentChoiceModal() {
+        this.ui.hideModal('modalStart');
+        this.ui.hideModal('modalCampaign');
+        this.ui.showModal('modalContentChoice');
+    }
+
+    /**
+     * Called when player picks a content mode from the choice dialog.
+     * @param {'words'|'custom'} mode
+     */
+    confirmContentMode(mode) {
+        this.words.contentMode = mode;
+        this.ui.hideModal('modalContentChoice');
+        if (this.pendingGameStart) {
+            const start = this.pendingGameStart;
+            this.pendingGameStart = null;
+            start();
         }
     }
 
-    closeModals() {
-        this.pendingGameStart = null;
-        document.getElementById('modalStart').classList.add('hidden');
-        document.getElementById('modalP2P').classList.add('hidden');
-        document.getElementById('modalP2PLobby').classList.add('hidden');
-        document.getElementById('modalCampaign').classList.add('hidden');
-        document.getElementById('modalContentChoice').classList.add('hidden');
-        document.getElementById('modalCustomScript').classList.add('hidden');
-        document.getElementById('modalPause').classList.add('hidden');
-        document.getElementById('modalAuth').classList.add('hidden');
-        document.getElementById('modalGameOver').classList.add('hidden');
+    openCustomScriptModal() {
+        this.ui.hideModal('modalContentChoice');
+        this.ui.showModal('modalCustomScript');
     }
+
+    closeCustomScriptModal() {
+        this.pendingGameStart = null;
+        this.ui.hideModal('modalCustomScript');
+        if (!this.isMatchActive) this.ui.showModal('modalStart');
+    }
+
+    closeContentChoiceModal() {
+        this.pendingGameStart = null;
+        this.ui.hideModal('modalContentChoice');
+        if (!this.isMatchActive) this.ui.showModal('modalStart');
+    }
+
+    /**
+     * Parse custom text from the textarea, persist it, and launch the game.
+     * BUG FIX: Previously split the HTML-escaped text, causing entities like
+     * &amp; to appear as typed words. Now splits the raw input before escaping.
+     */
+    saveAndStartCustomScript() {
+        const rawText = this.scriptTextarea?.value.trim() || '';
+        if (!rawText) {
+            this.ui.showToast('Please paste or type a custom text script first.', 'error');
+            return;
+        }
+
+        // Persist raw text (escaping happens only when text is rendered to DOM)
+        localStorage.setItem('tf_custom_script', rawText);
+
+        const accepted = this.words.setCustomScript(rawText);
+        if (!accepted) {
+            this.ui.showToast('Custom script appears empty — please try again.', 'error');
+            return;
+        }
+
+        this.ui.hideModal('modalCustomScript');
+
+        if (this.pendingGameStart) {
+            const start = this.pendingGameStart;
+            this.pendingGameStart = null;
+            start();
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // X. UTILITIES
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * HTML-escape a string for safe insertion into the DOM.
+     * Kept on GameApp for backward compatibility with any inline HTML handlers.
+     * @param {string} str
+     * @returns {string}
+     */
+    escapeHtml(str) {
+        if (typeof str !== 'string') return '';
+        return str.replace(/[&<>"']/g, m =>
+            ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]));
+    }
+
+    /** @private Alias for escapeHtml used within this class */
+    _esc(str) { return this.escapeHtml(str); }
 }
 
+// ── BOOTSTRAP ────────────────────────────────────────────────────────────────
+
+/** @type {GameApp} Global instance — all HTML onclick handlers reference this */
 let game;
 window.addEventListener('DOMContentLoaded', () => {
     game = new GameApp();

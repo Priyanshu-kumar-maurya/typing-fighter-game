@@ -35,13 +35,30 @@ class ArenaRenderer {
     setSkinMode(skin = 'cyber') {
         this.fighterSkin = skin;
         if (skin === 'stickman') {
-            // Close-quarters face-to-face combat stance for stickman!
+            // Close-quarters face-to-face combat stance for stickman mode
             this.f1.baseX = 380;
             this.f2.baseX = 580;
         } else {
             this.f1.baseX = 220;
             this.f2.baseX = 740;
         }
+    }
+
+    /**
+     * Update a fighter's color and its corresponding glow/shadow color together.
+     * Always call this instead of setting f.color directly to keep them in sync.
+     *
+     * @param {1|2}    playerNum
+     * @param {string} color - CSS hex color e.g. '#00f0ff'
+     */
+    setFighterColor(playerNum, color) {
+        const f = playerNum === 1 ? this.f1 : this.f2;
+        f.color = color;
+        // Derive rgba glow from the hex color with 80% opacity
+        const r = parseInt(color.slice(1, 3), 16);
+        const g = parseInt(color.slice(3, 5), 16);
+        const b = parseInt(color.slice(5, 7), 16);
+        f.glow = `rgba(${r}, ${g}, ${b}, 0.8)`;
     }
 
     resize() {
@@ -140,13 +157,15 @@ class ArenaRenderer {
             }
 
             // GRAVITY & AIR LAUNCH PHYSICS
-            f.y += f.vy;
-            if (f.y < f.baseY || f.vy !== 0) {
-                f.vy += 1.0; // Gravity pulling down
-            }
-            if (f.y >= f.baseY) {
-                f.y = f.baseY;
-                f.vy = 0;
+            // Only simulate when the fighter is airborne (has vertical velocity or is above ground)
+            if (f.vy !== 0 || f.y < f.baseY) {
+                f.y  += f.vy;
+                f.vy += 1.0; // Gravity constant — pulls fighter back to ground
+
+                if (f.y >= f.baseY) {
+                    f.y  = f.baseY; // Snap to ground
+                    f.vy = 0;       // Zero out velocity on landing
+                }
             }
 
             // Horizontal position lerp back to baseX

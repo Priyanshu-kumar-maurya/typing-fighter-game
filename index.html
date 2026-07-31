@@ -498,14 +498,18 @@
         }
     </script>
 
-    <!-- SCRIPTS -->
-    <script src="js/icons.js?v=25"></script>
-    <script src="js/config.js?v=25"></script>
-    <script src="js/auth.js?v=25"></script>
-    <script src="js/audio.js?v=25"></script>
-    <script src="js/renderer.js?v=25"></script>
-    <script src="js/p2p.js?v=25"></script>
-    <script src="js/combat.js?v=25"></script>
-    <script src="js/main.js?v=25"></script>
+    <!-- SCRIPTS (load order matters: dependencies before dependents) -->
+    <script src="js/icons.js?v=26"></script>
+    <script src="js/config.js?v=26"></script>
+    <script src="js/auth.js?v=26"></script>
+    <script src="js/audio.js?v=26"></script>
+    <script src="js/renderer.js?v=26"></script>
+    <script src="js/p2p.js?v=26"></script>
+    <script src="js/combat.js?v=26"></script>
+    <!-- Modular sub-systems (loaded before main orchestrator) -->
+    <script src="js/word-engine.js?v=26"></script>
+    <script src="js/ui-manager.js?v=26"></script>
+    <!-- Main application controller -->
+    <script src="js/main.js?v=26"></script>
 </body>
 </html>

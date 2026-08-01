@@ -30,9 +30,26 @@ class P2PNetwork {
 
         // PeerJS Cloud Server Config — uses peerjs.com free hosted signaling server
         this.peerConfig = {
-            debug: 1,
+            debug: 0, // Never log WebRTC internals in production (was leaking peer IDs)
             config: { iceServers: this.iceServers }
         };
+
+        /**
+         * Per-message-type rate-limit tracker.
+         * Tracks the last accepted timestamp for each message type
+         * so an attacker cannot flood a specific message type.
+         * @type {Object.<string, number>}
+         */
+        this._lastMsgTime = {};
+
+        /** Allowlist of valid incoming message types — unknown types are silently dropped */
+        this._validMsgTypes = new Set([
+            'KEYSTROKE', 'ATTACK_COMPLETED', 'P2P_READY', 'P2P_UNREADY',
+            'P2P_CUSTOM_TEXT', 'P2P_GAME_OVER', 'ROOM_FULL'
+        ]);
+
+        /** Minimum milliseconds between ATTACK_COMPLETED messages from one opponent */
+        this.ATTACK_RATE_LIMIT_MS = 300;
 
         window.addEventListener('beforeunload', () => this.disconnect());
     }
@@ -327,7 +344,7 @@ class P2PNetwork {
         this.conn.on('data', (rawMsg) => {
             if (!rawMsg || typeof rawMsg !== 'object') return;
 
-            // Room Full rejection
+            // Room Full rejection (pre-connection, no allowlist check needed)
             if (rawMsg.type === 'ROOM_FULL') {
                 this.isConnected = false;
                 const msg = rawMsg.payload?.message || "Room is Full! Max 2 players per room.";
@@ -341,6 +358,12 @@ class P2PNetwork {
             }
 
             const msgType = String(rawMsg.type || '');
+
+            // SECURITY: Drop any message type not on the allowlist
+            if (!this._validMsgTypes.has(msgType)) {
+                console.warn(`[P2P Security] Unknown message type "${msgType}" — dropped.`);
+                return;
+            }
 
             // ── LOBBY / REMATCH messages (safe passthrough) ──────────────────────
             if (msgType === 'P2P_READY' || msgType === 'P2P_UNREADY') {
@@ -364,7 +387,26 @@ class P2PNetwork {
                 return;
             }
 
-            // ── GAME messages (strict sanitization) ─────────────────────────────
+            // ── GAME messages (strict sanitization + rate-limiting) ───────────────
+            const now = Date.now();
+
+            // RATE LIMIT: ATTACK_COMPLETED max once per 300ms — flood protection
+            if (msgType === 'ATTACK_COMPLETED') {
+                const last = this._lastMsgTime['ATTACK_COMPLETED'] || 0;
+                if (now - last < this.ATTACK_RATE_LIMIT_MS) {
+                    console.warn('[P2P Security] ATTACK_COMPLETED rate-limited — dropped.');
+                    return;
+                }
+                this._lastMsgTime['ATTACK_COMPLETED'] = now;
+            }
+
+            // RATE LIMIT: KEYSTROKE max 60/sec (one per ~16ms)
+            if (msgType === 'KEYSTROKE') {
+                const last = this._lastMsgTime['KEYSTROKE'] || 0;
+                if (now - last < 16) return;
+                this._lastMsgTime['KEYSTROKE'] = now;
+            }
+
             const sanitizedMsg = {
                 type: msgType,
                 senderIsHost: Boolean(rawMsg.senderIsHost),

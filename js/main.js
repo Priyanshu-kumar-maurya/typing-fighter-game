@@ -802,11 +802,16 @@ class GameApp {
         p2p.onMessageCallback = ({ type, payload }) => {
             switch (type) {
                 case 'KEYSTROKE':
+                    // Guard: only process during an active, unpaused match
+                    if (!this.isMatchActive || this.isMatchPaused) return;
                     this.renderer.triggerAttack(2, 'light');
                     break;
 
                 case 'ATTACK_COMPLETED': {
-                    // Cap incoming damage (anti-cheat: mirror client-side cap)
+                    // Guard: only process during an active, unpaused match
+                    if (!this.isMatchActive || this.isMatchPaused) return;
+
+                    // Damage is already hard-capped at 50 in p2p.js; double-check here
                     const validDamage = Math.min(payload.damage || 0, 50);
                     combat.p1.hp = Math.max(0, combat.p1.hp - validDamage);
                     this.renderer.triggerAttack(2, payload.isSuper ? 'super' : 'heavy');

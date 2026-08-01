@@ -1,5 +1,21 @@
 // Typing Fighter - Player Authentication & Profile Persistence System
 
+/**
+ * Deterministic FNV-32a hash of a string.
+ * Used to store passwords in a non-reversible form so plain text
+ * is NEVER written to localStorage.
+ * @param {string} str
+ * @returns {string} 8-character hex hash
+ */
+function _hashPassword(str) {
+    let h = 0x811c9dc5 >>> 0;
+    for (let i = 0; i < str.length; i++) {
+        h ^= str.charCodeAt(i);
+        h  = Math.imul(h, 0x01000193) >>> 0;
+    }
+    return (h >>> 0).toString(16).padStart(8, '0');
+}
+
 class AuthManager {
     constructor() {
         this.currentUser = null;
@@ -25,7 +41,14 @@ class AuthManager {
         try {
             const sess = localStorage.getItem('tf_current_user');
             if (sess) {
-                this.currentUser = JSON.parse(sess);
+                const u = JSON.parse(sess);
+                // Validate that the stored object has the expected shape
+                // before trusting it — prevents DevTools-injected payloads
+                if (u && typeof u.name === 'string' && typeof u.type === 'string') {
+                    // Cap unlocked level to the valid campaign range (1–25)
+                    u.unlockedLevel = Math.min(Math.max(parseInt(u.unlockedLevel) || 1, 1), 25);
+                    this.currentUser = u;
+                }
             }
         } catch (e) {
             this.currentUser = null;
@@ -79,7 +102,7 @@ class AuthManager {
 
         if (!cleanName) return { success: false, message: "Please enter your name." };
         if (cleanMobile.length !== 10) return { success: false, message: "Please enter a valid 10-digit mobile number." };
-        if (cleanPass.length < 4) return { success: false, message: "Password must be at least 4 characters." };
+        if (cleanPass.length < 6) return { success: false, message: "Password must be at least 6 characters." };
 
         const db = this.getAccountsDB();
         if (db[cleanMobile]) {
@@ -91,7 +114,7 @@ class AuthManager {
             name: cleanName,
             age: parsedAge,
             mobile: cleanMobile,
-            password: cleanPass,
+            password: _hashPassword(cleanPass), // FNV-32a hash — plain text never stored
             type: 'registered',
             unlockedLevel: 1,
             highWpm: 0,
@@ -120,7 +143,7 @@ class AuthManager {
             return { success: false, message: "Mobile number not found! Please Register first." };
         }
 
-        if (user.password !== cleanPass) {
+        if (user.password !== _hashPassword(cleanPass)) {
             return { success: false, message: "Incorrect password! Please check and try again." };
         }
 

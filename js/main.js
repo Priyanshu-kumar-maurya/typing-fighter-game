@@ -128,13 +128,14 @@ class GameApp {
         };
         requestAnimationFrame(loop);
 
-        // Decide which screen to show on load
+        // Always show the main menu first. Auth is optional — users can play
+        // as Guest right away. The auth modal is only shown if they explicitly
+        // open it (or when they log out). If a session is already stored, also
+        // update the header to show their name/level.
         if (auth.currentUser) {
             this._updateUserHeader();
-            this.ui.showModal('modalStart');
-        } else {
-            this.ui.showModal('modalAuth');
         }
+        this.ui.showModal('modalStart');
     }
 
     _runLoadingScreen() {
@@ -446,8 +447,28 @@ class GameApp {
         this.ui.hideModal('modalPause');
 
         if (combat.mode === 'arcade') {
-            // Re-run the full arcade start (re-opens content choice for arcade — expected behavior)
-            this.startArcadeLevel(combat.currentLevel);
+            // Restart the same level directly using the SAME content mode (skip content choice modal)
+            // This makes R / Space feel snappy — no extra click needed
+            const lvl        = combat.currentLevel;
+            const prevContent = this.words.contentMode;
+            const prevCustom  = [...this.words.customScriptWords];
+
+            this.ui.closeAllModals();
+            this.renderer.setSkinMode('cyber');
+            combat.reset('arcade', lvl);
+
+            document.getElementById('stageBadge').innerText = `STAGE ${lvl}/25`;
+            this.ui.setupPlayerPanel(1, auth.currentUser?.name || 'HERO',  ICONS.lightning, '#00f0ff');
+            this.ui.setupPlayerPanel(2, combat.bot.name, combat.bot.avatar, combat.bot.color);
+
+            // Restore previous content mode (words / custom) without re-asking
+            this.words.contentMode       = prevContent;
+            this.words.customScriptWords = prevCustom;
+            this.words.customScriptIndex = 0;
+
+            this._startMatch();
+            combat.startAI(aiHit => this._handleAIAttack(aiHit));
+            this.ui.showToast(`Stage ${lvl} Restarted!`, 'info', 1500);
             return;
         }
 
@@ -561,11 +582,21 @@ class GameApp {
 
     /**
      * Start a Campaign (Arcade) stage against a bot opponent.
+     * If the user has no session, a quick "Guest Warrior" session is auto-created
+     * so the game is always playable without forcing a registration form.
      * @param {number} levelNum - 1-based stage number (1–25)
      */
     startArcadeLevel(levelNum = 1) {
-        if (!auth.currentUser) { this.openAuthModal(); return; }
-        if (levelNum > combat.unlockedLevel) return;
+        // Auto-create a guest session so players never get blocked by the auth modal
+        if (!auth.currentUser) {
+            auth.loginAsGuest('Guest Warrior', 18);
+            this._updateUserHeader();
+        }
+
+        if (levelNum > combat.unlockedLevel) {
+            this.ui.showToast(`Stage ${levelNum} is still locked! Clear previous stages first.`, 'error', 3000);
+            return;
+        }
 
         this.activeSkin = 'cyber';
         this.pendingGameStart = () => {

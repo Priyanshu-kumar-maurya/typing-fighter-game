@@ -184,12 +184,19 @@ class GameApp {
                 return;
             }
 
-            if (key === 'R') { this.restartMatch(); return; }
-
-            if (!this.isMatchActive || this.isMatchPaused) {
-                if (e.code === 'Space') this.restartMatch();
+            // R / Space — only restart when in-match, paused, or on the game-over screen.
+            // Do NOT fire while campaign grid, content-choice, or other menus are open,
+            // as that would wipe pendingGameStart and close the campaign launch flow.
+            if (key === 'R' || e.code === 'Space') {
+                const gameOverOpen = !document.getElementById('modalGameOver')?.classList.contains('hidden');
+                const pauseOpen    = !document.getElementById('modalPause')?.classList.contains('hidden');
+                if (this.isMatchActive || this.isMatchPaused || gameOverOpen || pauseOpen) {
+                    this.restartMatch();
+                }
                 return;
             }
+
+            if (!this.isMatchActive || this.isMatchPaused) return;
 
             // ── ANTI-CHEAT: rate-limit accepted keystrokes ────────────────────
             const now = Date.now();
@@ -582,12 +589,15 @@ class GameApp {
 
     /**
      * Start a Campaign (Arcade) stage against a bot opponent.
-     * If the user has no session, a quick "Guest Warrior" session is auto-created
-     * so the game is always playable without forcing a registration form.
+     * Starts IMMEDIATELY — no content-choice modal, no pendingGameStart closure.
+     * Campaign always uses the current words.contentMode (defaults to 'words').
+     * This eliminates the intermittent "kabhi kabhi nahi khulta" bug caused by
+     * R-key firing while the content-choice modal was open (wiped the closure).
+     *
+     * If the user has no session, a "Guest Warrior" session is auto-created.
      * @param {number} levelNum - 1-based stage number (1–25)
      */
     startArcadeLevel(levelNum = 1) {
-        // Auto-create a guest session so players never get blocked by the auth modal
         if (!auth.currentUser) {
             auth.loginAsGuest('Guest Warrior', 18);
             this._updateUserHeader();
@@ -598,21 +608,18 @@ class GameApp {
             return;
         }
 
+        // Direct start — no intermediate modal, no closure needed
         this.activeSkin = 'cyber';
-        this.pendingGameStart = () => {
-            this.ui.closeAllModals();
-            this.renderer.setSkinMode('cyber');
-            combat.reset('arcade', levelNum);
+        this.ui.closeAllModals();
+        this.renderer.setSkinMode('cyber');
+        combat.reset('arcade', levelNum);
 
-            document.getElementById('stageBadge').innerText = `STAGE ${levelNum}/25`;
-            this.ui.setupPlayerPanel(1, auth.currentUser.name,  ICONS.lightning, '#00f0ff');
-            this.ui.setupPlayerPanel(2, combat.bot.name, combat.bot.avatar, combat.bot.color);
+        document.getElementById('stageBadge').innerText = `STAGE ${levelNum}/25`;
+        this.ui.setupPlayerPanel(1, auth.currentUser.name,  ICONS.lightning, '#00f0ff');
+        this.ui.setupPlayerPanel(2, combat.bot.name, combat.bot.avatar, combat.bot.color);
 
-            this._startMatch();
-            combat.startAI(aiHit => this._handleAIAttack(aiHit));
-        };
-
-        this._openContentChoiceModal();
+        this._startMatch();
+        combat.startAI(aiHit => this._handleAIAttack(aiHit));
     }
 
     /** Start a local 2-player match (same device, same keyboard) */

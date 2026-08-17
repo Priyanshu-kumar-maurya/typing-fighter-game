@@ -1,6 +1,6 @@
-// Typing Fighter - PWA Service Worker v26 (Modular Architecture + Bug Fixes)
+// Typing Fighter - PWA Service Worker v27 (Direct campaign start + R-key guard)
 
-const CACHE_NAME = 'typing-fighter-v26';
+const CACHE_NAME = 'typing-fighter-v27';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',

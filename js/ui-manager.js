@@ -334,4 +334,74 @@ class UIManager {
         return str.replace(/[&<>"']/g, m =>
             ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]));
     }
+    /**
+     * Render the character upgrade shop modal.
+     * @param {UpgradeSystem} ups - The upgrades singleton
+     */
+    renderShop(ups) {
+        // ── Coin balance ──────────────────────────────────────────────────────
+        const bal = this._el('shopCoinBalance');
+        if (bal) bal.innerText = ups.coins.toLocaleString();
+
+        // ── Upgrade grid ──────────────────────────────────────────────────────
+        const grid = this._el('upgradeGrid');
+        if (grid) {
+            grid.innerHTML = '';
+            Object.entries(CONFIG.UPGRADES).forEach(([key, def]) => {
+                const curLvl    = ups.upgrades[key] ?? 0;
+                const isMaxed   = curLvl >= def.maxLevel;
+                const nextCost  = isMaxed ? '—' : def.costs[curLvl].toLocaleString();
+                const canAfford = !isMaxed && ups.coins >= def.costs[curLvl];
+
+                // Level indicator dots
+                const dots = Array.from({ length: def.maxLevel }, (_, i) =>
+                    `<span class="upg-dot ${i < curLvl ? 'filled' : ''}"></span>`
+                ).join('');
+
+                const card = document.createElement('div');
+                card.className = `upgrade-card ${isMaxed ? 'maxed' : ''} ${canAfford && !isMaxed ? 'can-afford' : ''}`;
+                card.innerHTML = `
+                    <div class="upg-icon">${this._esc(def.icon)}</div>
+                    <div class="upg-info">
+                        <div class="upg-name">${this._esc(def.name)}</div>
+                        <div class="upg-desc">${this._esc(def.desc)}</div>
+                        <div class="upg-dots">${dots}</div>
+                        <div class="upg-level">Lv ${curLvl} / ${def.maxLevel}</div>
+                    </div>
+                    <div class="upg-action">
+                        ${isMaxed
+                            ? `<span class="upg-max-badge">MAX ✓</span>`
+                            : `<div class="upg-cost">🪙 ${nextCost}</div>
+                               <button class="btn btn-neon btn-small upg-btn"
+                                       onclick="game.buyUpgrade('${key}')"
+                                       ${canAfford ? '' : 'disabled'}>
+                                   ${canAfford ? 'UPGRADE' : 'NO COINS'}
+                               </button>`
+                        }
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // ── Coin packages grid ────────────────────────────────────────────────
+        const pkgGrid = this._el('coinPackagesGrid');
+        if (pkgGrid) {
+            pkgGrid.innerHTML = '';
+            CONFIG.COIN_SHOP.forEach(pkg => {
+                const div = document.createElement('div');
+                div.className = 'coin-pkg-card';
+                div.innerHTML = `
+                    <div class="pkg-icon">${this._esc(pkg.icon)}</div>
+                    <div class="pkg-label">${this._esc(pkg.label)}</div>
+                    <div class="pkg-coins">🪙 ${pkg.coins.toLocaleString()}</div>
+                    ${pkg.bonus ? `<div class="pkg-bonus">${this._esc(pkg.bonus)}</div>` : ''}
+                    <div class="pkg-price">${this._esc(pkg.price)}</div>
+                    <button class="btn btn-magenta btn-small"
+                            onclick="game.buyCoinPackage('${this._esc(pkg.id)}')">BUY NOW</button>
+                `;
+                pkgGrid.appendChild(div);
+            });
+        }
+    }
 }

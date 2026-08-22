@@ -53,7 +53,9 @@ class CombatEngine {
         this.bot = CONFIG.CAMPAIGN_LEVELS[this.currentLevel - 1] || CONFIG.CAMPAIGN_LEVELS[0];
         this.lastDefeatReason = "";
 
-        const maxHpP1 = 100;
+        // ── v29: Vitality upgrade adds bonus Max HP ───────────────────────────
+        const bonusHp = (typeof upgrades !== 'undefined') ? upgrades.extraMaxHp : 0;
+        const maxHpP1 = 100 + bonusHp;
         const maxHpP2 = mode === 'arcade' ? this.bot.maxHp : 100;
 
         this.p1 = {
@@ -86,20 +88,26 @@ class CombatEngine {
         if (this.mode !== 'arcade') return;
         if (this.aiTimer) clearInterval(this.aiTimer);
 
-        // AI attacks periodically based on difficulty interval
         this.aiTimer = setInterval(() => {
             if (this.p1.hp <= 0 || this.p2.hp <= 0) return;
 
-            // Calculate AI attack damage
+            // Base AI attack
             const isHeavy = Math.random() < (0.25 + (this.currentLevel * 0.02));
-            const damage = isHeavy ? (8 + Math.floor(this.currentLevel * 0.8)) : (5 + Math.floor(this.currentLevel * 0.5));
+            let damage = isHeavy
+                ? (8 + Math.floor(this.currentLevel * 0.8))
+                : (5 + Math.floor(this.currentLevel * 0.5));
+
+            // ── v29: Defense upgrade reduces incoming damage ───────────────────
+            const defMult = (typeof upgrades !== 'undefined') ? upgrades.defenseMultiplier : 1;
+            damage = Math.max(1, Math.round(damage * defMult));
+
             this.p1.hp = Math.max(0, this.p1.hp - damage);
 
             if (onAIAttack) {
                 onAIAttack({
                     attackType: isHeavy ? 'heavy' : 'light',
-                    damage: damage,
-                    botName: this.bot.name
+                    damage:     damage,
+                    botName:    this.bot.name
                 });
             }
 
@@ -158,36 +166,39 @@ class CombatEngine {
         // ── Speed Multiplier based on Word Length & Time ──────────────────────
         const speedBonus = Math.max(1.0, (word.length / Math.max(0.8, timeTakenSec)) * 0.4);
 
-        // ── NEW v28: Critical Hit — word typed in under CRITICAL_MS ──────────
-        const isCritical = timeTakenMs < CONFIG.GAME.CRITICAL_MS && word.length >= 4;
+        // ── Critical Hit — use upgrade-adjusted window ─────────────────────────
+        const critMs     = (typeof upgrades !== 'undefined') ? upgrades.criticalMs : CONFIG.GAME.CRITICAL_MS;
+        const isCritical = timeTakenMs < critMs && word.length >= 4;
 
         // ── Super move check ──────────────────────────────────────────────────
         const isSuper = player.superActive;
         let baseDmg = isSuper ? CONFIG.GAME.SUPER_DAMAGE : (word.length >= 7 ? 14 : CONFIG.GAME.BASE_DAMAGE);
+
+        // ── v29: Attack upgrade adds flat bonus to base damage ────────────────
+        if (!isSuper) baseDmg += (typeof upgrades !== 'undefined') ? upgrades.extraDamage : 0;
+
         let totalDamage = Math.round(baseDmg * comboMultiplier * speedBonus);
 
-        // Apply Critical Hit (2× multiplier, stacks with combo/speed bonuses)
+        // Apply Critical Hit (2× multiplier)
         if (isCritical && !isSuper) totalDamage = Math.round(totalDamage * 2);
 
-        // ── NEW v28: Rage Mode — low HP boosts damage ─────────────────────────
-        const isRage = playerNum === 1
-            && (player.hp / player.maxHp) < CONFIG.GAME.RAGE_HP_RATIO;
+        // ── Rage Mode — use upgrade-adjusted threshold ────────────────────────
+        const rageThresh = (typeof upgrades !== 'undefined') ? upgrades.rageThreshold : CONFIG.GAME.RAGE_HP_RATIO;
+        const isRage = playerNum === 1 && (player.hp / player.maxHp) < rageThresh;
         if (isRage) totalDamage = Math.round(totalDamage * 1.5);
 
-        // Security cap: max damage per single word
+        // Security cap
         totalDamage = Math.min(totalDamage, 60);
 
         // ── Apply damage ──────────────────────────────────────────────────────
         opponent.hp = Math.max(0, opponent.hp - totalDamage);
 
-        // ── NEW v28: Combo Heal — reward sustained accuracy ───────────────────
+        // ── Combo Heal — use upgrade-adjusted heal amount ─────────────────────
         let healed = 0;
-        if (
-            playerNum === 1
-            && player.combo > 0
-            && player.combo % CONFIG.GAME.COMBO_HEAL_EVERY === 0
-        ) {
-            healed = CONFIG.GAME.COMBO_HEAL_AMOUNT;
+        if (playerNum === 1 && player.combo > 0 && player.combo % CONFIG.GAME.COMBO_HEAL_EVERY === 0) {
+            const baseHeal  = CONFIG.GAME.COMBO_HEAL_AMOUNT;
+            const bonusHeal = (typeof upgrades !== 'undefined') ? upgrades.extraComboHeal : 0;
+            healed = baseHeal + bonusHeal;
             player.hp = Math.min(player.maxHp, player.hp + healed);
         }
 

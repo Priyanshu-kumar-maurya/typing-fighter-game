@@ -1,6 +1,6 @@
-// Typing Fighter - PWA Service Worker v28 (Critical Hits, Rage Mode, Combo Heal, Personal Best)
+// Typing Fighter - PWA Service Worker v29 (Coin System, Character Shop & Upgrade Trees)
 
-const CACHE_NAME = 'typing-fighter-v28';
+const CACHE_NAME = 'typing-fighter-v29';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',

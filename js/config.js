@@ -21,6 +21,55 @@ const CONFIG = {
         COMBO_HEAL_AMOUNT: 3
     },
 
+    // ── CHARACTER UPGRADE TREES ───────────────────────────────────────────────
+    // Each upgrade has: name, icon, desc, maxLevel, costs[] (one per level)
+    UPGRADES: {
+        attack:   {
+            name: 'Power Fist',    icon: '⚔️',
+            desc: '+2 Attack Damage per level. Destroy enemies faster!',
+            maxLevel: 5,
+            costs: [100, 200, 400, 800, 1600]
+        },
+        defense:  {
+            name: 'Iron Shield',   icon: '🛡️',
+            desc: '-8% AI Damage taken per level. Survive longer!',
+            maxLevel: 5,
+            costs: [150, 300, 600, 1200, 2400]
+        },
+        fury:     {
+            name: 'Fury Engine',   icon: '🔥',
+            desc: 'Rage Mode triggers at +5% HP threshold per level!',
+            maxLevel: 3,
+            costs: [200, 400, 800]
+        },
+        critical: {
+            name: 'Critical Eye',  icon: '💥',
+            desc: '+200ms Critical Hit window. Land Crits more easily!',
+            maxLevel: 2,
+            costs: [250, 500]
+        },
+        vitality: {
+            name: 'Vital Core',    icon: '❤️',
+            desc: '+10 Max HP per level. More room to make mistakes!',
+            maxLevel: 4,
+            costs: [200, 400, 800, 1600]
+        },
+        combo:    {
+            name: 'Combo Rush',    icon: '💚',
+            desc: '+2 HP healed per Combo Heal event. Stay in the fight!',
+            maxLevel: 3,
+            costs: [150, 300, 600]
+        }
+    },
+
+    // ── COIN SHOP PACKAGES ────────────────────────────────────────────────────
+    COIN_SHOP: [
+        { id: 'coins_500',  coins: 500,  price: '₹49',  label: 'Starter Pack',  icon: '💰', bonus: '' },
+        { id: 'coins_1200', coins: 1200, price: '₹99',  label: 'Pro Pack',      icon: '💎', bonus: '+200 BONUS' },
+        { id: 'coins_3000', coins: 3000, price: '₹199', label: 'Elite Pack',    icon: '👑', bonus: '+600 BONUS' },
+        { id: 'coins_7500', coins: 7500, price: '₹399', label: 'God Pack',      icon: '⚡', bonus: '+1500 BONUS' }
+    ],
+
     // 25 PROGRESSIVE CAMPAIGN BOSS STAGES (15 WPM to 120 WPM)
     CAMPAIGN_LEVELS: [
         { level: 1, name: "Rookie Bot", baseWPM: 15, maxHp: 100, attackInterval: 4500, avatar: ICONS.robot, color: '#00f0ff', difficulty: 'Easy' },

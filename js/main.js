@@ -128,13 +128,10 @@ class GameApp {
         };
         requestAnimationFrame(loop);
 
-        // Always show the main menu first. Auth is optional — users can play
-        // as Guest right away. The auth modal is only shown if they explicitly
-        // open it (or when they log out). If a session is already stored, also
-        // update the header to show their name/level.
         if (auth.currentUser) {
             this._updateUserHeader();
         }
+        this._updateCoinDisplay();  // Show coin balance in header from first load
         this.ui.showModal('modalStart');
     }
 
@@ -591,7 +588,7 @@ class GameApp {
             this._updateUserHeader();
         }
 
-        // ── NEW v28: Save personal best WPM for this level ────────────────────
+        // ── Save personal best WPM for this level ────────────────────────────
         if (combat.mode === 'arcade' && winner === 1 && combat.p1.wpm > 0) {
             const lvl     = combat.currentLevel;
             const key     = `tf_best_wpm_lvl_${lvl}`;
@@ -607,14 +604,34 @@ class GameApp {
             }
         }
 
+        const targetWPM  = combat.bot?.baseWPM || 15;
+        const stageRank  = this._calculateRank(combat.p1.wpm, combat.p1.accuracy, targetWPM);
+
+        // ── v29: Award coins on arcade win ────────────────────────────────────
+        if (combat.mode === 'arcade' && winner === 1) {
+            const lvl       = combat.currentLevel;
+            const rankMult  = stageRank.includes('S') ? 2.0
+                : stageRank.includes('A') ? 1.5
+                : stageRank.includes('B') ? 1.2 : 1.0;
+            const baseCoins = lvl * 30 + 50;
+            const earned    = Math.round(baseCoins * rankMult);
+
+            upgrades.addCoins(earned);
+            this._updateCoinDisplay();
+
+            setTimeout(() => {
+                this.ui.showToast(
+                    `🪙 +${earned} Coins! (${stageRank.replace(/[^\w\s-]/g, '').trim()})`,
+                    'success', 3500
+                );
+            }, 800);
+        }
+
         // P2P mode: show lobby for rematch instead of standard game-over screen
         if (combat.mode === 'p2p' && p2p.isConnected) {
             this._openP2PLobby(winner);
             return;
         }
-
-        const targetWPM  = combat.bot?.baseWPM || 15;
-        const stageRank  = this._calculateRank(combat.p1.wpm, combat.p1.accuracy, targetWPM);
 
         this.ui.populateGameOver(winner, combat, stageRank);
         this.ui.showModal('modalGameOver');
@@ -632,6 +649,80 @@ class GameApp {
         if (wpm >= target +  8 && acc >= 90) return `${ICONS.fire} A-RANK`;
         if (wpm >= target       && acc >= 85) return `${ICONS.shield} B-RANK`;
         return `${ICONS.fist} C-RANK`;
+    }
+
+    /** @private Refresh the coin balance shown in the header */
+    _updateCoinDisplay() {
+        const el = document.getElementById('headerCoinBalance');
+        if (el) el.innerText = `🪙 ${upgrades.coins.toLocaleString()}`;
+    }
+
+    // ── SHOP MODAL ─────────────────────────────────────────────────────────────
+
+    openShopModal() {
+        this.ui.closeAllModals();
+        this.ui.renderShop(upgrades);
+        this.ui.showModal('modalShop');
+    }
+
+    closeShopModal() {
+        this.ui.hideModal('modalShop');
+        if (!this.isMatchActive) this.ui.showModal('modalStart');
+    }
+
+    switchShopTab(tab) {
+        const upgEl  = document.getElementById('shopTabUpgrades');
+        const coinEl = document.getElementById('shopTabCoins');
+        const btnUpg = document.getElementById('shopBtnUpgrades');
+        const btnCoin= document.getElementById('shopBtnCoins');
+        if (tab === 'upgrades') {
+            upgEl?.classList.remove('hidden');
+            coinEl?.classList.add('hidden');
+            btnUpg?.classList.add('active');
+            btnCoin?.classList.remove('active');
+        } else {
+            coinEl?.classList.remove('hidden');
+            upgEl?.classList.add('hidden');
+            btnCoin?.classList.add('active');
+            btnUpg?.classList.remove('active');
+        }
+    }
+
+    /**
+     * Purchase one level of a character upgrade.
+     * Called from upgrade card buttons inside the shop modal.
+     * @param {string} key - Upgrade key (attack | defense | fury | critical | vitality | combo)
+     */
+    buyUpgrade(key) {
+        const result = upgrades.purchaseUpgrade(key);
+        if (result.ok) {
+            this._updateCoinDisplay();
+            this.ui.renderShop(upgrades);   // refresh shop UI
+            this.ui.showToast(
+                `✅ ${CONFIG.UPGRADES[key].icon} ${CONFIG.UPGRADES[key].name} upgraded to Level ${result.newLevel}!`,
+                'success', 3000
+            );
+        } else {
+            this.ui.showToast(`❌ ${result.reason}`, 'error', 3000);
+        }
+    }
+
+    /**
+     * Simulate buying a coin package.
+     * In production: integrate Razorpay / Stripe / Google Play Billing here.
+     * @param {string} id - Package ID from CONFIG.COIN_SHOP
+     */
+    buyCoinPackage(id) {
+        const pkg = CONFIG.COIN_SHOP.find(p => p.id === id);
+        if (!pkg) return;
+
+        // Payment Gateway placeholder — show intent to user
+        this.ui.showToast(
+            `💳 Payment gateway coming soon! (${pkg.label} — ${pkg.price} for ${pkg.coins} 🪙)`,
+            'info', 4000
+        );
+        // TODO: Integrate Razorpay: window.Razorpay({...}).open()
+        // After successful payment callback: upgrades.addCoins(pkg.coins); this._updateCoinDisplay();
     }
 
     // ═══════════════════════════════════════════════════════════════════════════

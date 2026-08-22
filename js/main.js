@@ -132,7 +132,7 @@ class GameApp {
             this._updateUserHeader();
         }
         this._updateCoinDisplay();  // Show coin balance in header from first load
-        this.ui.showModal('modalStart');
+        this.showDashboard();       // Always show dashboard on startup!
     }
 
     _runLoadingScreen() {
@@ -439,6 +439,9 @@ class GameApp {
         this.matchSeconds   = 0;
         this.lastKeystrokeTime = Date.now();
 
+        // Switch from Dashboard to Arena view
+        this.ui.showArena();
+
         if (this.matchTimerInterval) clearInterval(this.matchTimerInterval);
         this.matchTimerInterval = setInterval(() => {
             if (!this.isMatchActive || this.isMatchPaused) return;
@@ -667,7 +670,7 @@ class GameApp {
 
     closeShopModal() {
         this.ui.hideModal('modalShop');
-        if (!this.isMatchActive) this.ui.showModal('modalStart');
+        if (!this.isMatchActive) this.showDashboard();
     }
 
     switchShopTab(tab) {
@@ -825,6 +828,13 @@ class GameApp {
             btn.innerHTML    = next === 'stickman' ? `${ICONS.stickman} Fighter: STICKMAN` : 'Fighter: CYBER';
             btn.style.color  = next === 'stickman' ? 'var(--neon-yellow)' : 'var(--neon-cyan)';
         }
+
+        // Also sync dashboard elements if on dashboard
+        const dashSkinBadge = document.getElementById('dashSkinBadge');
+        const dashAvatarIcon = document.getElementById('dashAvatarIcon');
+        if (dashSkinBadge) dashSkinBadge.innerText = next.toUpperCase();
+        if (dashAvatarIcon) dashAvatarIcon.innerText = next === 'stickman' ? '🥋' : '⚡';
+
         this.ui.showToast(
             next === 'stickman' ? '⚡ STICKMAN Fighter Activated!' : 'CYBER Fighter Activated!',
             'success'
@@ -1261,15 +1271,42 @@ class GameApp {
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // IX. MODAL ROUTING
+    // IX. MODAL & SCREEN ROUTING
     // ═══════════════════════════════════════════════════════════════════════════
 
     showMainMenu() {
+        this.showDashboard();
+    }
+
+    /**
+     * Show the Home Dashboard (Main Hub).
+     * Stops any match, stops AI timer, hides modals, updates dashboard stats.
+     */
+    showDashboard() {
         this.isMatchActive  = false;
         this.isMatchPaused  = false;
         combat.stopAI();
+        if (this.matchTimerInterval) clearInterval(this.matchTimerInterval);
+        this.ui.closeAllModals();
+        this._updateCoinDisplay();
+        if (auth.currentUser) this._updateUserHeader();
+        this.ui.showDashboard(combat, upgrades, auth, this.activeSkin);
+    }
+
+    /**
+     * Open the Mode Selection modal when user clicks PLAY NOW on the dashboard.
+     */
+    openModeSelect() {
         this.ui.closeAllModals();
         this.ui.showModal('modalStart');
+    }
+
+    /**
+     * Close the Mode Selection modal and return to dashboard.
+     */
+    closeModeSelect() {
+        this.ui.hideModal('modalStart');
+        if (!this.isMatchActive) this.showDashboard();
     }
 
     openP2PModal() {
@@ -1280,7 +1317,7 @@ class GameApp {
     closeP2PModal() {
         this.pendingGameStart = null;
         this.ui.hideModal('modalP2P');
-        if (!this.isMatchActive) this.ui.showModal('modalStart');
+        if (!this.isMatchActive) this.showDashboard();
     }
 
     openCampaignModal() {
@@ -1296,7 +1333,7 @@ class GameApp {
     closeCampaignModal() {
         this.pendingGameStart = null;
         this.ui.hideModal('modalCampaign');
-        if (!this.isMatchActive) this.ui.showModal('modalStart');
+        if (!this.isMatchActive) this.showDashboard();
     }
 
     // ── CONTENT CHOICE MODAL ──────────────────────────────────────────────────
@@ -1330,13 +1367,13 @@ class GameApp {
     closeCustomScriptModal() {
         this.pendingGameStart = null;
         this.ui.hideModal('modalCustomScript');
-        if (!this.isMatchActive) this.ui.showModal('modalStart');
+        if (!this.isMatchActive) this.showDashboard();
     }
 
     closeContentChoiceModal() {
         this.pendingGameStart = null;
         this.ui.hideModal('modalContentChoice');
-        if (!this.isMatchActive) this.ui.showModal('modalStart');
+        if (!this.isMatchActive) this.showDashboard();
     }
 
     /**

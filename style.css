@@ -2084,3 +2084,430 @@ canvas {
     .upgrade-card        { padding: 10px; gap: 10px; }
     .upg-icon            { font-size: 1.5rem; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   v30 — HOME DASHBOARD SCREEN & HERO PLAY SYSTEM
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.dashboard-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    width: 100%;
+    animation: fadeIn 0.3s ease;
+}
+
+/* ── NAV DASHBOARD BUTTON ───────────────────────────────────────────────── */
+.nav-dashboard-btn {
+    background: rgba(0, 240, 255, 0.12) !important;
+    border: 1px solid var(--neon-cyan) !important;
+    color: var(--neon-cyan) !important;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+}
+.nav-dashboard-btn:hover {
+    background: rgba(0, 240, 255, 0.25) !important;
+    box-shadow: 0 0 18px rgba(0, 240, 255, 0.5);
+    transform: scale(1.05);
+}
+
+/* ── DASHBOARD HERO BANNER ──────────────────────────────────────────────── */
+.dashboard-hero {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(7, 9, 19, 0.98));
+    border: 1.5px solid rgba(0, 240, 255, 0.35);
+    border-radius: 18px;
+    padding: 32px 24px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(0, 240, 255, 0.12);
+}
+.dashboard-hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(0, 240, 255, 0.08) 0%, transparent 60%);
+    pointer-events: none;
+    animation: pulse 4s infinite alternate;
+}
+
+.hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0, 240, 255, 0.12);
+    border: 1px solid rgba(0, 240, 255, 0.5);
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-family: var(--font-heading);
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--neon-cyan);
+    letter-spacing: 1px;
+    margin-bottom: 14px;
+}
+.badge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--neon-cyan);
+    box-shadow: 0 0 8px var(--neon-cyan);
+    animation: pulse 1s infinite alternate;
+}
+
+.hero-title {
+    font-family: var(--font-heading);
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 900;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+    text-shadow: 0 0 25px rgba(0, 240, 255, 0.4);
+}
+.hero-subtitle {
+    font-size: clamp(0.9rem, 2.2vw, 1.1rem);
+    color: #a0aec0;
+    max-width: 720px;
+    margin: 0 auto 24px;
+    line-height: 1.5;
+}
+
+/* ── HERO PLAY BUTTON ───────────────────────────────────────────────────── */
+.hero-action-box {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
+.btn-hero-play {
+    position: relative;
+    background: linear-gradient(135deg, #00f0ff 0%, #00a8ff 50%, #9d00ff 100%);
+    border: none;
+    border-radius: 16px;
+    padding: 16px 36px;
+    color: #000;
+    cursor: pointer;
+    overflow: hidden;
+    box-shadow: 0 0 25px rgba(0, 240, 255, 0.6), 0 8px 30px rgba(0, 0, 0, 0.5);
+    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    animation: heroPlayPulse 2s infinite;
+}
+.btn-hero-play:hover {
+    transform: scale(1.04) translateY(-2px);
+    box-shadow: 0 0 45px rgba(0, 240, 255, 0.9), 0 12px 35px rgba(0, 0, 0, 0.6);
+    background: linear-gradient(135deg, #33f3ff 0%, #00c3ff 50%, #b833ff 100%);
+}
+.btn-hero-play:active {
+    transform: scale(0.98);
+}
+
+@keyframes heroPlayPulse {
+    0%   { box-shadow: 0 0 20px rgba(0, 240, 255, 0.5), 0 0 40px rgba(157, 0, 255, 0.2); }
+    50%  { box-shadow: 0 0 35px rgba(0, 240, 255, 0.85), 0 0 60px rgba(157, 0, 255, 0.4); }
+    100% { box-shadow: 0 0 20px rgba(0, 240, 255, 0.5), 0 0 40px rgba(157, 0, 255, 0.2); }
+}
+
+.play-btn-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: relative;
+    z-index: 2;
+}
+.play-icon {
+    font-size: 2.2rem;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+}
+.play-texts {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+}
+.play-main-text {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    font-weight: 900;
+    letter-spacing: 1px;
+    color: #000;
+    line-height: 1.1;
+}
+.play-sub-text {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: rgba(0, 0, 0, 0.75);
+    letter-spacing: 0.5px;
+    font-family: var(--font-heading);
+}
+.play-arrow {
+    font-size: 1.4rem;
+    font-weight: 900;
+    color: #000;
+    margin-left: 8px;
+    transition: transform 0.2s;
+}
+.btn-hero-play:hover .play-arrow {
+    transform: translateX(4px);
+}
+
+/* ── DASHBOARD GRID ─────────────────────────────────────────────────────── */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+.dash-card {
+    background: rgba(15, 20, 42, 0.85);
+    border: 1.5px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    transition: all 0.22s ease;
+}
+.dash-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(0, 240, 255, 0.6);
+    box-shadow: 0 8px 25px rgba(0, 240, 255, 0.15);
+}
+
+.dash-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.dash-card-title {
+    font-family: var(--font-heading);
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #718096;
+    letter-spacing: 1px;
+}
+.dash-link-btn {
+    background: none;
+    border: none;
+    color: var(--neon-cyan);
+    font-family: var(--font-heading);
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+.dash-link-btn:hover {
+    text-decoration: underline;
+}
+
+.dash-card-badge {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    font-family: var(--font-heading);
+    font-size: 0.65rem;
+    font-weight: 900;
+    background: rgba(0, 240, 255, 0.15);
+    border: 1px solid var(--neon-cyan);
+    color: var(--neon-cyan);
+    padding: 2px 8px;
+    border-radius: 6px;
+}
+.dash-card-icon {
+    font-size: 2.2rem;
+}
+.dash-card h3 {
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    font-weight: 800;
+    margin: 0;
+}
+.dash-card p {
+    font-size: 0.8rem;
+    color: #a0aec0;
+    line-height: 1.4;
+    flex: 1;
+}
+.dash-card-action {
+    margin-top: 6px;
+}
+
+/* Specific Card Accents */
+.dash-campaign-card:hover {
+    border-color: var(--neon-cyan);
+    box-shadow: 0 8px 25px rgba(0, 240, 255, 0.25);
+}
+.dash-shop-card {
+    border-color: rgba(255, 230, 0, 0.3);
+}
+.dash-shop-card:hover {
+    border-color: var(--neon-yellow);
+    box-shadow: 0 8px 25px rgba(255, 230, 0, 0.25);
+}
+.dash-shop-card .dash-card-badge {
+    border-color: var(--neon-yellow);
+    color: var(--neon-yellow);
+    background: rgba(255, 230, 0, 0.12);
+}
+.dash-stickman-card {
+    border-color: rgba(255, 230, 0, 0.25);
+}
+.dash-stickman-card:hover {
+    border-color: var(--neon-yellow);
+    box-shadow: 0 8px 25px rgba(255, 230, 0, 0.25);
+}
+.dash-stickman-card .dash-card-badge {
+    border-color: var(--neon-yellow);
+    color: var(--neon-yellow);
+    background: rgba(255, 230, 0, 0.12);
+}
+.dash-p2p-card {
+    border-color: rgba(255, 0, 85, 0.25);
+}
+.dash-p2p-card:hover {
+    border-color: var(--neon-magenta);
+    box-shadow: 0 8px 25px rgba(255, 0, 85, 0.25);
+}
+.dash-p2p-card .dash-card-badge {
+    border-color: var(--neon-magenta);
+    color: var(--neon-magenta);
+    background: rgba(255, 0, 85, 0.12);
+}
+
+/* ── FIGHTER PROFILE CARD BODY ──────────────────────────────────────────── */
+.dash-player-card {
+    cursor: default;
+}
+.dash-player-body {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+.dash-avatar-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+.dash-avatar {
+    font-size: 2.5rem;
+    width: 60px;
+    height: 60px;
+    background: rgba(0, 240, 255, 0.1);
+    border: 1.5px solid var(--neon-cyan);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+}
+.dash-skin-tag {
+    font-family: var(--font-heading);
+    font-size: 0.6rem;
+    font-weight: 900;
+    color: var(--neon-cyan);
+}
+.dash-player-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+.dash-player-info h3 {
+    font-size: 1.1rem;
+    color: #fff;
+}
+.dash-meta-line {
+    font-size: 0.75rem;
+    color: var(--neon-cyan);
+    font-weight: 700;
+    font-family: var(--font-heading);
+}
+.dash-stats-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+}
+.dash-stat-pill {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    padding: 4px 8px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+.pill-label {
+    font-size: 0.6rem;
+    color: #718096;
+    font-family: var(--font-heading);
+    font-weight: 800;
+}
+.pill-val {
+    font-family: var(--font-heading);
+    font-size: 0.8rem;
+    font-weight: 900;
+    color: #ffe600;
+}
+
+/* ── DASHBOARD FOOTER FEATURE BAR ───────────────────────────────────────── */
+.dashboard-footer-bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    background: rgba(15, 20, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 12px 16px;
+}
+.dash-feature {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    color: #a0aec0;
+}
+.feat-icon {
+    font-size: 0.95rem;
+}
+
+/* ── RESPONSIVE MOBILE DASHBOARD ────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .dashboard-hero {
+        padding: 22px 14px;
+    }
+    .hero-title {
+        font-size: 1.8rem;
+    }
+    .hero-subtitle {
+        font-size: 0.85rem;
+        margin-bottom: 16px;
+    }
+    .btn-hero-play {
+        padding: 12px 20px;
+        width: 100%;
+    }
+    .play-main-text {
+        font-size: 1.2rem;
+    }
+    .play-sub-text {
+        font-size: 0.65rem;
+    }
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+    .dashboard-footer-bar {
+        gap: 8px;
+        padding: 8px 10px;
+    }
+    .dash-feature {
+        font-size: 0.7rem;
+    }
+}
+

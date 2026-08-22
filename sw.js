@@ -1,6 +1,6 @@
-// Typing Fighter - PWA Service Worker v29 (Coin System, Character Shop & Upgrade Trees)
+// Typing Fighter - PWA Service Worker v30 (Home Dashboard & Hero Play System)
 
-const CACHE_NAME = 'typing-fighter-v29';
+const CACHE_NAME = 'typing-fighter-v30';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -9,6 +9,7 @@ const ASSETS_TO_CACHE = [
     './manifest.json',
     './js/icons.js',
     './js/config.js',
+    './js/upgrades.js',
     './js/auth.js',
     './js/audio.js',
     './js/renderer.js',

@@ -33,8 +33,72 @@ class UIManager {
         this._modalIds = [
             'modalStart', 'modalP2P', 'modalP2PLobby', 'modalCampaign',
             'modalContentChoice', 'modalCustomScript', 'modalPause',
-            'modalAuth', 'modalGameOver'
+            'modalAuth', 'modalGameOver', 'modalShop'
         ];
+    }
+
+    // ── SCREEN ROUTING (DASHBOARD vs ARENA) ───────────────────────────────────
+
+    /**
+     * Show the Home Dashboard view and hide the game arena.
+     * Synchronises all profile stats and badges on the dashboard.
+     *
+     * @param {CombatEngine} [combat]
+     * @param {UpgradeSystem} [upgrades]
+     * @param {AuthManager} [auth]
+     * @param {'cyber'|'stickman'} [skinMode='cyber']
+     */
+    showDashboard(combat, upgrades, auth, skinMode = 'cyber') {
+        this.closeAllModals();
+        const dash  = this._el('dashboardView');
+        const arena = this._el('arenaWrapper');
+
+        if (dash)  dash.classList.remove('hidden');
+        if (arena) arena.classList.add('hidden');
+
+        // Populate Player Profile details
+        const userName = auth?.currentUser?.name || 'Guest Warrior';
+        this._setText('dashPlayerName', 'innerText', userName);
+
+        const unLocked = combat?.unlockedLevel || 1;
+        this._setText('dashPlayerStage', 'innerText', `Stage ${unLocked} / 25 Unlocked`);
+
+        const coins = upgrades?.coins || 0;
+        this._setText('dashPlayerCoins', 'innerText', `🪙 ${coins.toLocaleString()}`);
+
+        // Calculate highest best WPM recorded across levels
+        let bestWpm = 0;
+        for (let i = 1; i <= 25; i++) {
+            const recorded = parseInt(localStorage.getItem(`tf_best_wpm_lvl_${i}`)) || 0;
+            if (recorded > bestWpm) bestWpm = recorded;
+        }
+        if (auth?.currentUser?.highestWpm && auth.currentUser.highestWpm > bestWpm) {
+            bestWpm = auth.currentUser.highestWpm;
+        }
+        this._setText('dashPlayerBestWpm', 'innerText', `🏆 ${bestWpm > 0 ? bestWpm + ' WPM' : '0 WPM'}`);
+
+        // Update skin mode tag & avatar
+        const isStickman = skinMode === 'stickman';
+        this._setText('dashSkinBadge', 'innerText', isStickman ? 'STICKMAN' : 'CYBER');
+        this._setText('dashAvatarIcon', 'innerText', isStickman ? '🥋' : '⚡');
+    }
+
+    /** Hide the dashboard and display the combat battle arena */
+    showArena() {
+        const dash  = this._el('dashboardView');
+        const arena = this._el('arenaWrapper');
+
+        if (dash)  dash.classList.add('hidden');
+        if (arena) arena.classList.remove('hidden');
+
+        if (this.renderer) {
+            this.renderer.resize();
+        }
+    }
+
+    /** Hide dashboard explicitly */
+    hideDashboard() {
+        this._el('dashboardView')?.classList.add('hidden');
     }
 
     // ── TOAST NOTIFICATIONS ───────────────────────────────────────────────────

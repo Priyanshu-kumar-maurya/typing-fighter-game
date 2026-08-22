@@ -71,6 +71,8 @@
             </div>
 
             <div class="header-controls">
+                <!-- Dashboard Home Button -->
+                <button id="btnNavDashboard" class="icon-btn nav-dashboard-btn" title="Back to Dashboard" onclick="game.showDashboard()">🏠 DASHBOARD</button>
                 <!-- v29: Coin balance — click to open shop -->
                 <button id="headerCoinBalance" class="icon-btn coin-btn" title="Character Shop" onclick="game.openShopModal()">🪙 0</button>
                 <button id="btnSoundToggle" class="icon-btn" title="Toggle Audio (Shortcut: M)">Sound: ON</button>
@@ -82,8 +84,122 @@
             </div>
         </header>
 
-        <!-- MAIN ARENA CONTAINER -->
-        <main class="arena-wrapper">
+        <!-- ============================================================== -->
+        <!-- v30: HOME DASHBOARD SCREEN (Default View on Startup)          -->
+        <!-- ============================================================== -->
+        <section id="dashboardView" class="dashboard-wrapper">
+            <!-- HERO BANNER -->
+            <div class="dashboard-hero">
+                <div class="hero-badge"><span class="badge-dot"></span> REAL-TIME 1v1 TYPING CLASH ARENA</div>
+                <h1 class="hero-title">TYPING <span class="glow-cyan">FIGHTER</span></h1>
+                <p class="hero-subtitle">Type fast to punch, kick, and unleash super combos! Battle 25 AI Bosses, Stickman Martial Arts, or Friends with Live P2P Voice Chat.</p>
+
+                <!-- BIG PROMINENT PLAY BUTTON -->
+                <div class="hero-action-box">
+                    <button id="btnDashboardPlay" class="btn-hero-play" onclick="game.openModeSelect()">
+                        <div class="play-btn-glow"></div>
+                        <div class="play-btn-content">
+                            <span class="play-icon">⚔️</span>
+                            <div class="play-texts">
+                                <span class="play-main-text">PLAY NOW</span>
+                                <span class="play-sub-text">CHOOSE GAME MODE & START FIGHTING</span>
+                            </div>
+                            <span class="play-arrow">▶</span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- DASHBOARD GRID: STATS & QUICK LAUNCH CARDS -->
+            <div class="dashboard-grid">
+                <!-- FIGHTER PROFILE CARD -->
+                <div class="dash-card dash-player-card">
+                    <div class="dash-card-header">
+                        <span class="dash-card-title">FIGHTER PROFILE</span>
+                        <button class="dash-link-btn" onclick="game.openAuthModal()">LOGIN / EDIT ✎</button>
+                    </div>
+                    <div class="dash-player-body">
+                        <div class="dash-avatar-box">
+                            <div id="dashAvatarIcon" class="dash-avatar">🥋</div>
+                            <div id="dashSkinBadge" class="dash-skin-tag">CYBER</div>
+                        </div>
+                        <div class="dash-player-info">
+                            <h3 id="dashPlayerName">Guest Warrior</h3>
+                            <div id="dashPlayerStage" class="dash-meta-line">Stage 1 / 25 Unlocked</div>
+                            <div class="dash-stats-row">
+                                <div class="dash-stat-pill">
+                                    <span class="pill-label">COINS</span>
+                                    <span id="dashPlayerCoins" class="pill-val">🪙 0</span>
+                                </div>
+                                <div class="dash-stat-pill">
+                                    <span class="pill-label">BEST SPEED</span>
+                                    <span id="dashPlayerBestWpm" class="pill-val">🏆 0 WPM</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary btn-small full-width mt-2" onclick="game.toggleFighterSkin()">
+                        SWITCH SKIN (CYBER / STICKMAN)
+                    </button>
+                </div>
+
+                <!-- QUICK ACCESS: 25 CAMPAIGN BOSSES -->
+                <div class="dash-card dash-campaign-card" onclick="game.openCampaignModal()">
+                    <div class="dash-card-badge">25 STAGES</div>
+                    <div class="dash-card-icon">🏆</div>
+                    <h3>VS AI CAMPAIGN</h3>
+                    <p>From 15 WPM to 120 WPM! Beat each boss to earn coins & unlock stages.</p>
+                    <div class="dash-card-action">
+                        <button class="btn btn-neon btn-small">PLAY CAMPAIGN ▶</button>
+                    </div>
+                </div>
+
+                <!-- QUICK ACCESS: CHARACTER UPGRADE SHOP -->
+                <div class="dash-card dash-shop-card" onclick="game.openShopModal()">
+                    <div class="dash-card-badge">UPGRADES</div>
+                    <div class="dash-card-icon">🛒</div>
+                    <h3>CHARACTER SHOP</h3>
+                    <p>Upgrade Power Fist, Iron Shield, Fury Engine, Vital Core & Critical Hits!</p>
+                    <div class="dash-card-action">
+                        <button class="btn btn-gold btn-small">🪙 OPEN SHOP</button>
+                    </div>
+                </div>
+
+                <!-- QUICK ACCESS: STICKMAN 1v1 -->
+                <div class="dash-card dash-stickman-card" onclick="game.startStickmanMode()">
+                    <div class="dash-card-badge">HOT MODE</div>
+                    <div class="dash-card-icon">⚡</div>
+                    <h3>STICKMAN 1v1</h3>
+                    <p>Close combat martial arts with airborne launch and ragdoll physics!</p>
+                    <div class="dash-card-action">
+                        <button class="btn btn-yellow btn-small">PLAY STICKMAN ▶</button>
+                    </div>
+                </div>
+
+                <!-- QUICK ACCESS: ONLINE P2P -->
+                <div class="dash-card dash-p2p-card" onclick="game.openP2PModal()">
+                    <div class="dash-card-badge">MULTIPLAYER</div>
+                    <div class="dash-card-icon">🌐</div>
+                    <h3>ONLINE P2P & VOICE</h3>
+                    <p>Connect with a room code anywhere & battle friends with live audio voice chat!</p>
+                    <div class="dash-card-action">
+                        <button class="btn btn-magenta btn-small">JOIN ROOM 🎙️</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HIGHLIGHTS / CONTROLS FOOTER -->
+            <div class="dashboard-footer-bar">
+                <div class="dash-feature"><span class="feat-icon">💥</span> Critical Hits (&lt; 1s)</div>
+                <div class="dash-feature"><span class="feat-icon">🔥</span> Rage Mode (&lt; 30% HP)</div>
+                <div class="dash-feature"><span class="feat-icon">💚</span> Combo Healing (8x)</div>
+                <div class="dash-feature"><span class="feat-icon">📱</span> Mobile Keyboard Ready</div>
+                <div class="dash-feature"><span class="feat-icon">🔒</span> Anti-Cheat Protected</div>
+            </div>
+        </section>
+
+        <!-- MAIN ARENA CONTAINER (Hidden by default, shown during match) -->
+        <main id="arenaWrapper" class="arena-wrapper hidden">
             <!-- HUD TOP BAR (HEALTH & METERS) -->
             <div class="hud">
                 <!-- PLAYER 1 (HERO) -->
@@ -236,7 +352,8 @@
                     <button class="btn btn-neon btn-large" onclick="game.resumeMatch()">RESUME FIGHT (P)</button>
                     <button class="btn btn-magenta btn-large" onclick="game.restartMatch()">RESTART LEVEL (R)</button>
                     <button class="btn btn-gold btn-large" onclick="game.openShopModal()">🪙 CHARACTER SHOP</button>
-                    <button class="btn btn-secondary btn-large" onclick="game.showMainMenu()">QUIT TO MAIN MENU</button>
+                    <button class="btn btn-secondary btn-large" onclick="game.openModeSelect()">CHANGE MODE</button>
+                    <button class="btn btn-secondary btn-large" onclick="game.showDashboard()">🏠 QUIT TO DASHBOARD</button>
                 </div>
             </div>
         </div>
@@ -277,11 +394,12 @@
             </div>
         </div>
 
-        <!-- START / MODE SELECT OVERLAY MODAL -->
-        <div id="modalStart" class="modal-overlay">
+        <!-- START / MODE SELECT OVERLAY MODAL (Opened via PLAY NOW button) -->
+        <div id="modalStart" class="modal-overlay hidden">
             <div class="modal-card main-menu-card">
-                <h1 class="game-title">TYPING <span class="glow-cyan">FIGHTER</span></h1>
-                <p class="subtitle">Speed Up Your Typing Skills in Real-Time 1v1 Fighting Battles!</p>
+                <button class="btn-close-modal" title="Back to Dashboard" onclick="game.closeModeSelect()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                <h1 class="game-title">SELECT <span class="glow-cyan">GAME MODE</span></h1>
+                <p class="subtitle">Choose how you want to battle in the Typing Clash Arena!</p>
 
                 <div class="shortcut-hints">
                     <span>Shortcuts: <strong>[P]</strong> Pause | <strong>[M]</strong> Mute Sound | <strong>[R]</strong> Restart</span>
@@ -323,6 +441,10 @@
                         <p>Spend Coins to upgrade Attack, Defense, HP & more! Earn coins by winning levels.</p>
                         <button class="btn btn-gold mt-2">🪙 OPEN SHOP</button>
                     </div>
+                </div>
+
+                <div class="modal-footer-action" style="margin-top: 18px; text-align: center;">
+                    <button class="btn btn-secondary" onclick="game.closeModeSelect()">← BACK TO DASHBOARD</button>
                 </div>
             </div>
         </div>
@@ -434,6 +556,7 @@
                     <button id="btnNextLevel" class="btn btn-neon btn-large hidden" onclick="game.playNextLevel()">NEXT LEVEL</button>
                     <button class="btn btn-magenta btn-large" onclick="game.restartMatch()">RETRY LEVEL (R)</button>
                     <button class="btn btn-secondary btn-large" onclick="game.openCampaignModal()">LEVEL MAP</button>
+                    <button class="btn btn-secondary btn-large" onclick="game.showDashboard()">🏠 DASHBOARD</button>
                 </div>
             </div>
         </div>

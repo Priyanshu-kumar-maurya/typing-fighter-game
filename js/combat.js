@@ -137,57 +137,86 @@ class CombatEngine {
     }
 
     processWordCompletion(playerNum, word) {
-        const player = playerNum === 1 ? this.p1 : this.p2;
+        const player   = playerNum === 1 ? this.p1 : this.p2;
         const opponent = playerNum === 1 ? this.p2 : this.p1;
 
-        const timeTakenSec = (Date.now() - this.wordStartTime) / 1000;
+        const timeTakenMs  = Date.now() - this.wordStartTime;
+        const timeTakenSec = timeTakenMs / 1000;
         this.wordStartTime = Date.now();
 
-        // Increment Combo
+        // ── Combo tracking ────────────────────────────────────────────────────
         player.combo++;
         if (player.combo > player.maxCombo) player.maxCombo = player.combo;
         player.wordsCompleted++;
 
-        // Combo Damage Multiplier
+        // ── Combo Damage Multiplier ───────────────────────────────────────────
         let comboMultiplier = 1.0;
-        if (player.combo >= 15) comboMultiplier = 2.0;
+        if      (player.combo >= 15) comboMultiplier = 2.0;
         else if (player.combo >= 10) comboMultiplier = 1.6;
-        else if (player.combo >= 5) comboMultiplier = 1.3;
+        else if (player.combo >=  5) comboMultiplier = 1.3;
 
-        // Speed Multiplier based on Word Length & Time
+        // ── Speed Multiplier based on Word Length & Time ──────────────────────
         const speedBonus = Math.max(1.0, (word.length / Math.max(0.8, timeTakenSec)) * 0.4);
-        
-        let isSuper = player.superActive;
+
+        // ── NEW v28: Critical Hit — word typed in under CRITICAL_MS ──────────
+        const isCritical = timeTakenMs < CONFIG.GAME.CRITICAL_MS && word.length >= 4;
+
+        // ── Super move check ──────────────────────────────────────────────────
+        const isSuper = player.superActive;
         let baseDmg = isSuper ? CONFIG.GAME.SUPER_DAMAGE : (word.length >= 7 ? 14 : CONFIG.GAME.BASE_DAMAGE);
         let totalDamage = Math.round(baseDmg * comboMultiplier * speedBonus);
 
-        // Security Cap: Max damage per single word completion
-        totalDamage = Math.min(totalDamage, 50);
+        // Apply Critical Hit (2× multiplier, stacks with combo/speed bonuses)
+        if (isCritical && !isSuper) totalDamage = Math.round(totalDamage * 2);
 
-        // Apply Damage to Opponent
+        // ── NEW v28: Rage Mode — low HP boosts damage ─────────────────────────
+        const isRage = playerNum === 1
+            && (player.hp / player.maxHp) < CONFIG.GAME.RAGE_HP_RATIO;
+        if (isRage) totalDamage = Math.round(totalDamage * 1.5);
+
+        // Security cap: max damage per single word
+        totalDamage = Math.min(totalDamage, 60);
+
+        // ── Apply damage ──────────────────────────────────────────────────────
         opponent.hp = Math.max(0, opponent.hp - totalDamage);
 
-        // Charge Super Meter
+        // ── NEW v28: Combo Heal — reward sustained accuracy ───────────────────
+        let healed = 0;
+        if (
+            playerNum === 1
+            && player.combo > 0
+            && player.combo % CONFIG.GAME.COMBO_HEAL_EVERY === 0
+        ) {
+            healed = CONFIG.GAME.COMBO_HEAL_AMOUNT;
+            player.hp = Math.min(player.maxHp, player.hp + healed);
+        }
+
+        // ── Charge / consume Super Meter ──────────────────────────────────────
         if (!isSuper) {
-            player.superMeter = Math.min(CONFIG.GAME.SUPER_METER_MAX, player.superMeter + CONFIG.GAME.SUPER_METER_PER_WORD);
+            player.superMeter = Math.min(
+                CONFIG.GAME.SUPER_METER_MAX,
+                player.superMeter + CONFIG.GAME.SUPER_METER_PER_WORD
+            );
             if (player.superMeter >= CONFIG.GAME.SUPER_METER_MAX) {
                 player.superActive = true;
             }
         } else {
-            // Super move consumed
-            player.superMeter = 0;
+            player.superMeter  = 0;
             player.superActive = false;
         }
 
         this.updateWPM(playerNum);
 
         const attackData = {
-            attacker: playerNum,
-            word: word,
-            damage: totalDamage,
-            isSuper: isSuper,
-            isHeavy: word.length >= 7,
-            combo: player.combo
+            attacker:   playerNum,
+            word:       word,
+            damage:     totalDamage,
+            isSuper:    isSuper,
+            isCritical: isCritical,
+            isRage:     isRage,
+            healed:     healed,
+            isHeavy:    word.length >= 7,
+            combo:      player.combo
         };
 
         this.checkGameOver();

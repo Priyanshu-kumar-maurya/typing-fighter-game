@@ -337,36 +337,71 @@ class GameApp {
      * @param {string} word
      */
     _executePlayerAttack(playerNum, word) {
-        const attack  = combat.processWordCompletion(playerNum, word);
+        const attack   = combat.processWordCompletion(playerNum, word);
+        const attacker = playerNum === 1 ? this.renderer.f1 : this.renderer.f2;
         const defender = playerNum === 1 ? this.renderer.f2 : this.renderer.f1;
 
-        // BUG FIX: was '(heavy : heavy)' — now correctly distinguishes light vs heavy
-        const attackType = attack.isSuper ? 'super'
+        // ── Attack animation type ─────────────────────────────────────────────
+        const attackType = attack.isSuper   ? 'super'
+            : attack.isCritical             ? 'heavy'  // critical = heavy hit anim
             : attack.isHeavy                ? 'heavy'
             :                                 'light';
 
         this.renderer.triggerAttack(playerNum, attackType);
 
-        // Audio feedback
-        if (attack.isSuper)     audio.playSuper();
-        else if (attack.isHeavy) audio.playKick();
-        else                     audio.playPunch();
-        if (attack.combo > 1)    audio.playCombo(attack.combo);
+        // ── Audio feedback ────────────────────────────────────────────────────
+        if (attack.isSuper)           audio.playSuper();
+        else if (attack.isCritical)   audio.playKick();
+        else if (attack.isHeavy)      audio.playKick();
+        else                          audio.playPunch();
+        if (attack.combo > 1)         audio.playCombo(attack.combo);
 
-        // Floating damage number
-        const dmgText = attack.isSuper
-            ? `SUPER HIT! -${attack.damage}`
-            : `-${attack.damage} HP`;
-        const color = attack.isSuper ? '#ffe600' : (playerNum === 1 ? '#00f0ff' : '#ff0055');
-        this.renderer.addFloatingText(defender.x, defender.y - 70, dmgText, color, attack.isSuper ? 34 : 26);
+        // ── Floating damage text ──────────────────────────────────────────────
+        let dmgText, dmgColor, dmgSize;
 
-        // Broadcast to P2P opponent (player 1 only — it's our own attack)
+        if (attack.isSuper) {
+            dmgText  = `⚡ SUPER! -${attack.damage}`;
+            dmgColor = '#ffe600';
+            dmgSize  = 34;
+            this.renderer.spawnHitSparks(defender.x, defender.y - 60, '#ffe600', 'super');
+
+        } else if (attack.isCritical) {
+            dmgText  = `💥 CRITICAL! -${attack.damage}`;
+            dmgColor = '#ff8800';
+            dmgSize  = 30;
+            // Extra orange sparks at the attacker to show the burst
+            this.renderer.spawnHitSparks(attacker.x, attacker.y - 40, '#ff8800', 'heavy');
+            this.renderer.spawnHitSparks(defender.x, defender.y - 60, '#ff8800', 'heavy');
+
+        } else if (attack.isRage) {
+            dmgText  = `🔥 RAGE! -${attack.damage}`;
+            dmgColor = '#ff2222';
+            dmgSize  = 28;
+            this.renderer.triggerShake(5, 10);
+
+        } else {
+            dmgText  = `-${attack.damage} HP`;
+            dmgColor = playerNum === 1 ? '#00f0ff' : '#ff0055';
+            dmgSize  = 26;
+        }
+
+        this.renderer.addFloatingText(defender.x, defender.y - 70, dmgText, dmgColor, dmgSize);
+
+        // ── NEW v28: Combo Heal visual ────────────────────────────────────────
+        if (attack.healed > 0) {
+            this.renderer.addFloatingText(
+                attacker.x, attacker.y - 90,
+                `💚 +${attack.healed} HP!`, '#00ff88', 24
+            );
+        }
+
+        // ── P2P broadcast ─────────────────────────────────────────────────────
         if (p2p.isConnected && playerNum === 1) {
             p2p.send('ATTACK_COMPLETED', {
-                word:    word,
-                damage:  attack.damage,
-                isSuper: attack.isSuper,
-                combo:   attack.combo
+                word:       word,
+                damage:     attack.damage,
+                isSuper:    attack.isSuper,
+                combo:      attack.combo
             });
         }
 
@@ -554,6 +589,22 @@ class GameApp {
         if (auth.currentUser) {
             auth.updateProgress(combat.unlockedLevel, combat.p1.wpm, winner === 1);
             this._updateUserHeader();
+        }
+
+        // ── NEW v28: Save personal best WPM for this level ────────────────────
+        if (combat.mode === 'arcade' && winner === 1 && combat.p1.wpm > 0) {
+            const lvl     = combat.currentLevel;
+            const key     = `tf_best_wpm_lvl_${lvl}`;
+            const oldBest = parseInt(localStorage.getItem(key)) || 0;
+            if (combat.p1.wpm > oldBest) {
+                localStorage.setItem(key, combat.p1.wpm);
+                if (oldBest > 0) {
+                    this.ui.showToast(
+                        `🏆 New Personal Best! Stage ${lvl}: ${combat.p1.wpm} WPM (was ${oldBest})`,
+                        'success', 4000
+                    );
+                }
+            }
         }
 
         // P2P mode: show lobby for rematch instead of standard game-over screen

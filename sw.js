@@ -1,6 +1,6 @@
-// Typing Fighter - PWA Service Worker v27 (Direct campaign start + R-key guard)
+// Typing Fighter - PWA Service Worker v28 (Critical Hits, Rage Mode, Combo Heal, Personal Best)
 
-const CACHE_NAME = 'typing-fighter-v27';
+const CACHE_NAME = 'typing-fighter-v28';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',

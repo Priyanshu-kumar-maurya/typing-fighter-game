@@ -733,6 +733,31 @@ body {
     animation: pulse 0.5s infinite alternate;
 }
 
+/* v28: Fire combo badge (10+ combo) */
+.combo-badge.combo-on-fire {
+    background: linear-gradient(90deg, #ff4400, #ff8800, #ffe600);
+    box-shadow: 0 0 20px #ff6600, 0 0 40px #ff4400;
+    animation: firePulse 0.3s infinite alternate;
+    color: #fff;
+}
+
+@keyframes firePulse {
+    0%   { transform: scale(1.0); box-shadow: 0 0 16px #ff4400; }
+    100% { transform: scale(1.12); box-shadow: 0 0 32px #ff8800, 0 0 64px #ff4400; }
+}
+
+/* v28: Rage mode — pulsing red glow on typing card when HP < 30% */
+.typing-word-card.rage-mode-active {
+    border-color: #ff2222 !important;
+    box-shadow: 0 0 20px rgba(255, 30, 30, 0.6), 0 0 40px rgba(255, 30, 30, 0.3);
+    animation: ragePulse 0.6s infinite alternate;
+}
+
+@keyframes ragePulse {
+    0%   { box-shadow: 0 0 12px rgba(255, 30, 30, 0.5); }
+    100% { box-shadow: 0 0 28px rgba(255, 30, 30, 0.9), 0 0 56px rgba(255, 30, 30, 0.4); }
+}
+
 @keyframes pulse {
     0% { transform: scale(1); }
     100% { transform: scale(1.1); }
@@ -1483,6 +1508,17 @@ canvas {
 .status-cleared { background: #00ff88; color: #000; }
 .status-unlocked { background: var(--neon-cyan); color: #000; }
 .status-locked { background: rgba(255, 255, 255, 0.1); color: #a0aec0; }
+
+/* v28: Personal best WPM badge on cleared campaign levels */
+.level-best-wpm {
+    display: block;
+    font-size: 0.6rem;
+    font-family: var(--font-heading);
+    font-weight: 800;
+    color: #ffe600;
+    margin-top: 3px;
+    letter-spacing: 0.5px;
+}
 
 .bot-card {
     background: rgba(255, 255, 255, 0.03);

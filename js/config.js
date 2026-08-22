@@ -8,7 +8,17 @@ const CONFIG = {
         SUPER_METER_MAX: 100,
         SUPER_METER_PER_WORD: 25,
         DEFAULT_WPM_TARGET: 15,
-        P2P_PEER_PREFIX: 'tf_room_'
+        P2P_PEER_PREFIX: 'tf_room_',
+
+        // v28 — New mechanics
+        /** Type a word faster than this (ms) → Critical Hit (2× damage) */
+        CRITICAL_MS: 1000,
+        /** HP below this fraction (0–1) → Rage Mode (1.5× damage) */
+        RAGE_HP_RATIO: 0.30,
+        /** Heal player every N consecutive words typed */
+        COMBO_HEAL_EVERY: 8,
+        /** HP recovered per heal event */
+        COMBO_HEAL_AMOUNT: 3
     },
 
     // 25 PROGRESSIVE CAMPAIGN BOSS STAGES (15 WPM to 120 WPM)

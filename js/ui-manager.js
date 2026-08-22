@@ -112,16 +112,29 @@ class UIManager {
         this._setText(`${prefix}SuperText`, 'innerText',
             stats.superActive ? 'SUPER READY!' : `SUPER: ${stats.superMeter}%`);
 
-        // Combo badge — only shown for player 1
+        // ── Combo badge — only shown for player 1 ────────────────────────────
         if (prefix === 'p1') {
             const badge = this._el('p1ComboBadge');
             if (badge) {
                 if (stats.combo >= 2) {
-                    badge.innerText = `COMBO x${stats.combo}`;
+                    // v28: Fire effect at 10+ combo
+                    const isOnFire = stats.combo >= 10;
+                    badge.innerText = isOnFire
+                        ? `🔥 COMBO x${stats.combo} ON FIRE!`
+                        : `COMBO x${stats.combo}`;
+                    badge.classList.toggle('combo-on-fire', isOnFire);
                     badge.classList.remove('hidden');
                 } else {
                     badge.classList.add('hidden');
+                    badge.classList.remove('combo-on-fire');
                 }
+            }
+
+            // v28: Rage mode indicator — pulsing red border on word display
+            const wordCard = document.querySelector('.typing-word-card');
+            if (wordCard) {
+                const isRage = stats.hp > 0 && (stats.hp / stats.maxHp) < 0.30;
+                wordCard.classList.toggle('rage-mode-active', isRage);
             }
         }
     }
@@ -165,6 +178,14 @@ class UIManager {
             const isUnlocked = lvl.level <= unlockedLevel;
             const isCleared  = lvl.level <  unlockedLevel;
 
+            // ── NEW v28: Personal best WPM from localStorage ──────────────────
+            const bestWpm = isCleared
+                ? (parseInt(localStorage.getItem(`tf_best_wpm_lvl_${lvl.level}`)) || 0)
+                : 0;
+            const bestBadge = bestWpm > 0
+                ? `<span class="level-best-wpm">🏆 Best: ${bestWpm} WPM</span>`
+                : '';
+
             let badge = `<span class="level-status-badge status-locked">${ICONS.lock} LOCKED</span>`;
             if (isCleared)       badge = `<span class="level-status-badge status-cleared">${ICONS.star} CLEARED</span>`;
             else if (isUnlocked) badge = `<span class="level-status-badge status-unlocked">${ICONS.unlocked} UNLOCKED</span>`;
@@ -177,6 +198,7 @@ class UIManager {
                 <h4>${this._esc(lvl.name)}</h4>
                 <div class="level-wpm">${lvl.baseWPM} WPM | ${lvl.maxHp} HP</div>
                 ${badge}
+                ${bestBadge}
             `;
             if (isUnlocked) card.onclick = () => onLevelClick(lvl.level);
             grid.appendChild(card);

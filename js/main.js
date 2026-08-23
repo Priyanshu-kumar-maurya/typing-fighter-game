@@ -711,21 +711,66 @@ class GameApp {
     }
 
     /**
-     * Simulate buying a coin package.
-     * In production: integrate Razorpay / Stripe / Google Play Billing here.
+     * Initiate payment for a coin package.
+     * Opens the Payment Gateway modal with Razorpay, UPI QR / App, and Sandbox options.
      * @param {string} id - Package ID from CONFIG.COIN_SHOP
      */
     buyCoinPackage(id) {
         const pkg = CONFIG.COIN_SHOP.find(p => p.id === id);
         if (!pkg) return;
 
-        // Payment Gateway placeholder — show intent to user
-        this.ui.showToast(
-            `💳 Payment gateway coming soon! (${pkg.label} — ${pkg.price} for ${pkg.coins} 🪙)`,
-            'info', 4000
-        );
-        // TODO: Integrate Razorpay: window.Razorpay({...}).open()
-        // After successful payment callback: upgrades.addCoins(pkg.coins); this._updateCoinDisplay();
+        if (typeof payment !== 'undefined') {
+            payment.initiatePayment(pkg);
+        } else {
+            this.ui.showToast(`Package: ${pkg.label} (${pkg.price})`, 'info', 2500);
+        }
+    }
+
+    closePaymentModal() {
+        this.ui.hideModal('modalPayment');
+        this.openShopModal();
+    }
+
+    closeReceiptModal() {
+        this.ui.hideModal('modalReceipt');
+        this.openShopModal();
+    }
+
+    switchPaymentTab(tab) {
+        if (typeof payment !== 'undefined') {
+            payment.switchTab(tab);
+        }
+    }
+
+    payWithRazorpay() {
+        if (typeof payment !== 'undefined') {
+            payment.payWithRazorpay();
+        }
+    }
+
+    payWithUPIApp() {
+        if (typeof payment !== 'undefined') {
+            payment.openUPIAppIntent();
+        }
+    }
+
+    copyMerchantUPI() {
+        if (typeof payment !== 'undefined') {
+            payment.copyUPIId();
+        }
+    }
+
+    confirmManualUPI() {
+        if (typeof payment !== 'undefined') {
+            const utr = document.getElementById('payUtrInput')?.value || '';
+            payment.confirmUPIPayment(utr);
+        }
+    }
+
+    payWithSandbox() {
+        if (typeof payment !== 'undefined') {
+            payment.payWithSandbox();
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════════════════

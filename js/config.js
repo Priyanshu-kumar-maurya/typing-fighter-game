@@ -64,11 +64,20 @@ const CONFIG = {
 
     // ── COIN SHOP PACKAGES ────────────────────────────────────────────────────
     COIN_SHOP: [
-        { id: 'coins_500',  coins: 500,  price: '₹49',  label: 'Starter Pack',  icon: '💰', bonus: '' },
-        { id: 'coins_1200', coins: 1200, price: '₹99',  label: 'Pro Pack',      icon: '💎', bonus: '+200 BONUS' },
-        { id: 'coins_3000', coins: 3000, price: '₹199', label: 'Elite Pack',    icon: '👑', bonus: '+600 BONUS' },
-        { id: 'coins_7500', coins: 7500, price: '₹399', label: 'God Pack',      icon: '⚡', bonus: '+1500 BONUS' }
+        { id: 'coins_500',  coins: 500,  price: '₹49',  amountInRupees: 49,  label: 'Starter Pack',  icon: '💰', bonus: '' },
+        { id: 'coins_1200', coins: 1200, price: '₹99',  amountInRupees: 99,  label: 'Pro Pack',      icon: '💎', bonus: '+200 BONUS' },
+        { id: 'coins_3000', coins: 3000, price: '₹199', amountInRupees: 199, label: 'Elite Pack',    icon: '👑', bonus: '+600 BONUS' },
+        { id: 'coins_7500', coins: 7500, price: '₹399', amountInRupees: 399, label: 'God Pack',      icon: '⚡', bonus: '+1500 BONUS' }
     ],
+
+    // ── PAYMENT GATEWAY CONFIGURATION ─────────────────────────────────────────
+    PAYMENT: {
+        MERCHANT_NAME: 'Typing Fighter Arena',
+        MERCHANT_UPI_ID: 'priyanshukumar@upi', // UPI ID for direct QR / UPI Intent payments
+        RAZORPAY_KEY_ID: 'rzp_test_TYPINGFIGHTER', // Razorpay Key ID (Replace with your live/test key)
+        CURRENCY: 'INR',
+        THEME_COLOR: '#00f0ff'
+    },
 
     // 25 PROGRESSIVE CAMPAIGN BOSS STAGES (15 WPM to 120 WPM)
     CAMPAIGN_LEVELS: [

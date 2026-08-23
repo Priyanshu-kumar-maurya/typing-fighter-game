@@ -2511,3 +2511,350 @@ canvas {
     }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   v31 — PAYMENT GATEWAY & DIGITAL RECEIPT STYLES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── PAYMENT CARD MODAL ─────────────────────────────────────────────────── */
+.payment-card {
+    max-width: 620px !important;
+    width: 95vw !important;
+    padding: 24px !important;
+    max-height: 90dvh;
+    overflow-y: auto;
+    border: 1.5px solid rgba(0, 240, 255, 0.4) !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 240, 255, 0.2) !important;
+}
+
+.payment-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+.payment-modal-header h2 {
+    margin: 0;
+    font-size: 1.3rem;
+}
+.pay-secure-tag {
+    font-family: var(--font-heading);
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: #00ff88;
+    background: rgba(0, 255, 136, 0.12);
+    border: 1px solid rgba(0, 255, 136, 0.4);
+    padding: 3px 8px;
+    border-radius: 6px;
+}
+
+/* ── PACKAGE SUMMARY BOX ────────────────────────────────────────────────── */
+.payment-summary-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 16px;
+    gap: 12px;
+}
+.summary-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.summary-icon {
+    font-size: 2.2rem;
+}
+.summary-info h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-family: var(--font-heading);
+    color: #fff;
+}
+.summary-coins {
+    font-family: var(--font-heading);
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: #ffe600;
+}
+.summary-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+.summary-price-label {
+    font-size: 0.65rem;
+    font-family: var(--font-heading);
+    color: #718096;
+    font-weight: 800;
+}
+.summary-price-val {
+    font-family: var(--font-heading);
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: var(--neon-cyan);
+    text-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+}
+
+/* ── PAYMENT TABS ───────────────────────────────────────────────────────── */
+.payment-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 10px;
+    overflow-x: auto;
+}
+.pay-tab-btn {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    color: #a0aec0;
+    padding: 8px 14px;
+    font-family: var(--font-heading);
+    font-size: 0.78rem;
+    font-weight: 800;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+}
+.pay-tab-btn.active, .pay-tab-btn:hover {
+    background: rgba(0, 240, 255, 0.15);
+    border-color: var(--neon-cyan);
+    color: var(--neon-cyan);
+}
+
+/* ── TAB 1: UPI & QR CODE CONTENT ───────────────────────────────────────── */
+.pay-guide-text {
+    font-size: 0.8rem;
+    color: #a0aec0;
+    margin-bottom: 12px;
+    line-height: 1.4;
+}
+.upi-qr-wrapper {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 16px;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 14px;
+}
+.upi-qr-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #fff;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+.upi-qr-img {
+    width: 170px;
+    height: 170px;
+    object-fit: contain;
+    border-radius: 4px;
+}
+.qr-scan-hint {
+    font-family: var(--font-heading);
+    font-size: 0.55rem;
+    font-weight: 900;
+    color: #000;
+    margin-top: 6px;
+    text-align: center;
+}
+.upi-mobile-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.upi-id-copy-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    padding: 6px 10px;
+}
+.upi-id-label {
+    font-size: 0.7rem;
+    color: #718096;
+    font-weight: 700;
+}
+.upi-id-val {
+    font-family: monospace;
+    font-size: 0.82rem;
+    color: #ffe600;
+    font-weight: 700;
+}
+.utr-confirmation-box {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 4px;
+}
+.utr-confirmation-box label {
+    font-size: 0.72rem;
+    color: #a0aec0;
+    font-family: var(--font-heading);
+}
+.utr-input-group {
+    display: flex;
+    gap: 6px;
+}
+.utr-input {
+    padding: 8px 10px !important;
+    font-size: 0.85rem !important;
+}
+
+/* ── TAB 2: RAZORPAY SECTION ────────────────────────────────────────────── */
+.rzp-info-box {
+    background: rgba(0, 240, 255, 0.06);
+    border: 1px solid rgba(0, 240, 255, 0.3);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.rzp-badge {
+    font-family: var(--font-heading);
+    font-size: 0.75rem;
+    font-weight: 900;
+    color: var(--neon-cyan);
+    letter-spacing: 1px;
+}
+.rzp-features-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.8rem;
+    color: #cbd5e0;
+    margin-top: 4px;
+}
+
+/* ── TAB 3: SANDBOX SECTION ─────────────────────────────────────────────── */
+.sandbox-info-box {
+    background: rgba(255, 230, 0, 0.08);
+    border: 1px solid rgba(255, 230, 0, 0.3);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.sandbox-badge {
+    font-family: var(--font-heading);
+    font-size: 0.75rem;
+    font-weight: 900;
+    color: #ffe600;
+    letter-spacing: 1px;
+}
+
+/* ── DIGITAL RECEIPT MODAL ──────────────────────────────────────────────── */
+.receipt-card {
+    max-width: 480px !important;
+    text-align: center;
+    border: 1.5px solid rgba(0, 255, 136, 0.5) !important;
+    box-shadow: 0 0 35px rgba(0, 255, 136, 0.25) !important;
+    padding: 28px !important;
+}
+.receipt-success-icon {
+    font-size: 3.5rem;
+    animation: pulse 1s infinite alternate;
+}
+.receipt-success-title {
+    font-family: var(--font-heading);
+    font-size: 1.4rem;
+    font-weight: 900;
+    color: #00ff88;
+    margin-bottom: 6px;
+}
+.receipt-coins-badge {
+    font-family: var(--font-heading);
+    font-size: 1.2rem;
+    font-weight: 900;
+    color: #ffe600;
+    background: rgba(255, 230, 0, 0.12);
+    border: 1px solid rgba(255, 230, 0, 0.4);
+    display: inline-block;
+    padding: 6px 18px;
+    border-radius: 20px;
+    margin-bottom: 18px;
+}
+.receipt-table {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 20px;
+    text-align: left;
+}
+.receipt-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.82rem;
+}
+.receipt-label {
+    color: #718096;
+    font-weight: 700;
+}
+.receipt-val {
+    color: #fff;
+    font-weight: 800;
+}
+.code-font {
+    font-family: monospace;
+    color: var(--neon-cyan);
+}
+.gold-text {
+    color: #ffe600;
+    font-size: 1rem;
+    font-family: var(--font-heading);
+}
+.receipt-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* ── RESPONSIVE MOBILE PAYMENT MODAL ────────────────────────────────────── */
+@media (max-width: 600px) {
+    .upi-qr-wrapper {
+        grid-template-columns: 1fr;
+        justify-items: center;
+    }
+    .upi-qr-box {
+        width: 100%;
+        max-width: 220px;
+    }
+    .payment-summary-box {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .summary-right {
+        align-items: flex-start;
+        width: 100%;
+        border-top: 1px solid rgba(255,255,255,0.1);
+        padding-top: 8px;
+    }
+    .payment-tabs {
+        flex-wrap: nowrap;
+    }
+    .pay-tab-btn {
+        padding: 6px 10px;
+        font-size: 0.72rem;
+    }
+}
+

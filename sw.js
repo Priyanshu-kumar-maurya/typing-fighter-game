@@ -1,6 +1,6 @@
-// Typing Fighter - PWA Service Worker v30 (Home Dashboard & Hero Play System)
+// Typing Fighter - PWA Service Worker v31 (Integrated Payment Gateway: UPI, QR, Razorpay & Sandbox)
 
-const CACHE_NAME = 'typing-fighter-v30';
+const CACHE_NAME = 'typing-fighter-v31';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -10,6 +10,7 @@ const ASSETS_TO_CACHE = [
     './js/icons.js',
     './js/config.js',
     './js/upgrades.js',
+    './js/payment.js',
     './js/auth.js',
     './js/audio.js',
     './js/renderer.js',

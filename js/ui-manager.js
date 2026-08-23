@@ -33,7 +33,8 @@ class UIManager {
         this._modalIds = [
             'modalStart', 'modalP2P', 'modalP2PLobby', 'modalCampaign',
             'modalContentChoice', 'modalCustomScript', 'modalPause',
-            'modalAuth', 'modalGameOver', 'modalShop'
+            'modalAuth', 'modalGameOver', 'modalShop',
+            'modalPayment', 'modalReceipt'
         ];
     }
 
@@ -467,5 +468,49 @@ class UIManager {
                 pkgGrid.appendChild(div);
             });
         }
+    }
+
+    /**
+     * Populate the Payment Gateway modal with dynamic package details and QR code.
+     * @param {Object} pkg - The package being purchased
+     * @param {PaymentManager} pm - PaymentManager instance
+     */
+    renderPaymentModal(pkg, pm) {
+        this._setText('paySummaryIcon', 'innerText', pkg.icon || '💰');
+        this._setText('paySummaryName', 'innerText', pkg.label || 'Coin Recharge');
+        this._setText('paySummaryCoins', 'innerText', `🪙 ${pkg.coins.toLocaleString()} Coins ${pkg.bonus ? '(' + pkg.bonus + ')' : ''}`);
+        this._setText('paySummaryPrice', 'innerText', `₹${pkg.amountInRupees || 49}`);
+
+        this._setText('payRzpAmountText', 'innerText', `PAY ₹${pkg.amountInRupees || 49} WITH RAZORPAY`);
+
+        // Set Dynamic UPI QR Image
+        const qrImg = this._el('payUpiQrImage');
+        if (qrImg) {
+            qrImg.src = pm.qrCodeUrl;
+        }
+
+        // Set Merchant UPI ID text
+        const upiId = CONFIG.PAYMENT.MERCHANT_UPI_ID || 'priyanshukumar@upi';
+        this._setText('payMerchantUpiIdText', 'innerText', upiId);
+
+        // Reset UTR input
+        const utrInput = this._el('payUtrInput');
+        if (utrInput) utrInput.value = '';
+
+        // Default to UPI tab
+        pm.switchTab('upi');
+    }
+
+    /**
+     * Populate the Digital Receipt modal upon successful payment.
+     * @param {Object} txn - Transaction object
+     */
+    renderReceiptModal(txn) {
+        this._setText('receiptTxnId', 'innerText', txn.id);
+        this._setText('receiptPackage', 'innerText', txn.packageName);
+        this._setText('receiptCoins', 'innerText', `🪙 +${txn.coins.toLocaleString()} Coins`);
+        this._setText('receiptAmount', 'innerText', `₹${txn.amount}`);
+        this._setText('receiptMethod', 'innerText', txn.method);
+        this._setText('receiptDate', 'innerText', txn.date);
     }
 }

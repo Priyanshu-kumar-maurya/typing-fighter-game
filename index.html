@@ -37,6 +37,9 @@
     <!-- PeerJS WebRTC P2P Library -->
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
+    <!-- Razorpay Payment Gateway SDK -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -389,7 +392,149 @@
                 <div id="shopTabCoins" class="shop-tab-content hidden">
                     <p class="shop-info-text">💡 Earn coins free by winning Campaign levels! Buy extra coins to upgrade faster.</p>
                     <div id="coinPackagesGrid" class="coin-packages-grid"></div>
-                    <p class="shop-payment-note">🔒 Secure payments via Razorpay (coming soon). Your upgrades are stored locally.</p>
+                    <p class="shop-payment-note">🔒 100% Secure Payments via UPI, QR Code, Cards & Razorpay.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================== -->
+        <!-- v31: PAYMENT GATEWAY MODAL (UPI, QR Code, Razorpay & Sandbox)  -->
+        <!-- ============================================================== -->
+        <div id="modalPayment" class="modal-overlay hidden">
+            <div class="modal-card payment-card">
+                <button class="btn-close-modal" title="Close" onclick="game.closePaymentModal()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+
+                <div class="payment-modal-header">
+                    <h2>⚡ SECURE COIN CHECKOUT</h2>
+                    <span class="pay-secure-tag">🔒 256-BIT ENCRYPTED</span>
+                </div>
+
+                <!-- Package Summary Box -->
+                <div class="payment-summary-box">
+                    <div class="summary-left">
+                        <span id="paySummaryIcon" class="summary-icon">💰</span>
+                        <div class="summary-info">
+                            <h3 id="paySummaryName">Starter Pack</h3>
+                            <span id="paySummaryCoins" class="summary-coins">🪙 500 Coins</span>
+                        </div>
+                    </div>
+                    <div class="summary-right">
+                        <span class="summary-price-label">TOTAL AMOUNT</span>
+                        <span id="paySummaryPrice" class="summary-price-val">₹49</span>
+                    </div>
+                </div>
+
+                <!-- Payment Channel Tabs -->
+                <div class="payment-tabs">
+                    <button id="payTabBtnUPI" class="pay-tab-btn active" onclick="game.switchPaymentTab('upi')">
+                        ⚡ UPI & QR CODE
+                    </button>
+                    <button id="payTabBtnRazorpay" class="pay-tab-btn" onclick="game.switchPaymentTab('razorpay')">
+                        💳 RAZORPAY / CARDS
+                    </button>
+                    <button id="payTabBtnSandbox" class="pay-tab-btn" onclick="game.switchPaymentTab('sandbox')">
+                        🧪 DEMO TEST PAY
+                    </button>
+                </div>
+
+                <!-- TAB 1: DIRECT UPI & QR CODE -->
+                <div id="paySectionUPI" class="pay-channel-content">
+                    <p class="pay-guide-text">Scan this QR code with <strong>Google Pay, PhonePe, Paytm, BHIM</strong> or click an app below:</p>
+
+                    <div class="upi-qr-wrapper">
+                        <div class="upi-qr-box">
+                            <img id="payUpiQrImage" class="upi-qr-img" src="" alt="UPI QR Code">
+                            <span class="qr-scan-hint">📷 SCAN TO PAY VIA ANY UPI APP</span>
+                        </div>
+
+                        <div class="upi-mobile-actions">
+                            <button class="btn btn-neon btn-small full-width" onclick="game.payWithUPIApp()">
+                                📱 PAY DIRECTLY ON UPI APP
+                            </button>
+
+                            <div class="upi-id-copy-box">
+                                <span class="upi-id-label">UPI ID:</span>
+                                <code id="payMerchantUpiIdText" class="upi-id-val">priyanshukumar@upi</code>
+                                <button class="btn btn-secondary btn-small" onclick="game.copyMerchantUPI()" title="Copy UPI ID">COPY 📋</button>
+                            </div>
+
+                            <div class="utr-confirmation-box">
+                                <label for="payUtrInput">Enter 12-Digit UTR / Ref No. (Optional):</label>
+                                <div class="utr-input-group">
+                                    <input type="text" id="payUtrInput" class="auth-input utr-input" placeholder="e.g. 408271928371" maxlength="16">
+                                    <button class="btn btn-gold btn-small" onclick="game.confirmManualUPI()">CONFIRM COINS ⚡</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: RAZORPAY CHECKOUT -->
+                <div id="paySectionRazorpay" class="pay-channel-content hidden">
+                    <div class="rzp-info-box">
+                        <div class="rzp-badge">RAZORPAY STANDARD CHECKOUT</div>
+                        <p>Pay securely using Credit/Debit Cards, NetBanking, UPI, Cred, or Mobile Wallets.</p>
+                        <ul class="rzp-features-list">
+                            <li>✓ Visa, Mastercard, RuPay, Maestro</li>
+                            <li>✓ All Major Indian Banks NetBanking</li>
+                            <li>✓ Instant Automatic Coin Fulfillment</li>
+                        </ul>
+                    </div>
+
+                    <button class="btn btn-neon btn-large full-width mt-3" onclick="game.payWithRazorpay()">
+                        <span id="payRzpAmountText">PAY WITH RAZORPAY</span> 🔒
+                    </button>
+                </div>
+
+                <!-- TAB 3: SANDBOX DEMO TEST PAY -->
+                <div id="paySectionSandbox" class="pay-channel-content hidden">
+                    <div class="sandbox-info-box">
+                        <div class="sandbox-badge">🧪 DEVELOPER SANDBOX MODE</div>
+                        <p>Simulate instant payment success without spending real money. Use this to test coin credits and character skill upgrades!</p>
+                    </div>
+
+                    <button class="btn btn-yellow btn-large full-width mt-3" onclick="game.payWithSandbox()">
+                        ⚡ 1-CLICK INSTANT TEST COINS (FREE)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================== -->
+        <!-- v31: DIGITAL PAYMENT RECEIPT MODAL                             -->
+        <!-- ============================================================== -->
+        <div id="modalReceipt" class="modal-overlay hidden">
+            <div class="modal-card receipt-card">
+                <div class="receipt-success-icon">🎉</div>
+                <h2 class="receipt-success-title">PAYMENT SUCCESSFUL!</h2>
+                <p id="receiptCoins" class="receipt-coins-badge">🪙 +500 Coins Credited</p>
+
+                <div class="receipt-table">
+                    <div class="receipt-row">
+                        <span class="receipt-label">Transaction ID:</span>
+                        <span id="receiptTxnId" class="receipt-val code-font">TF_TXN_0000</span>
+                    </div>
+                    <div class="receipt-row">
+                        <span class="receipt-label">Package:</span>
+                        <span id="receiptPackage" class="receipt-val">Starter Pack</span>
+                    </div>
+                    <div class="receipt-row">
+                        <span class="receipt-label">Amount Paid:</span>
+                        <span id="receiptAmount" class="receipt-val gold-text">₹49</span>
+                    </div>
+                    <div class="receipt-row">
+                        <span class="receipt-label">Payment Method:</span>
+                        <span id="receiptMethod" class="receipt-val">UPI / Razorpay</span>
+                    </div>
+                    <div class="receipt-row">
+                        <span class="receipt-label">Date & Time:</span>
+                        <span id="receiptDate" class="receipt-val">Today</span>
+                    </div>
+                </div>
+
+                <div class="receipt-actions">
+                    <button class="btn btn-gold btn-large" onclick="game.closeReceiptModal()">🪙 OPEN SHOP & UPGRADE</button>
+                    <button class="btn btn-neon btn-large" onclick="game.openModeSelect()">⚔️ PLAY BATTLE NOW</button>
                 </div>
             </div>
         </div>
@@ -669,18 +814,19 @@
     </script>
 
     <!-- SCRIPTS (load order matters: dependencies before dependents) -->
-    <script src="js/icons.js?v=29"></script>
-    <script src="js/config.js?v=29"></script>
-    <script src="js/upgrades.js?v=29"></script>  <!-- Coin & upgrade system (needs CONFIG) -->
-    <script src="js/auth.js?v=29"></script>
-    <script src="js/audio.js?v=29"></script>
-    <script src="js/renderer.js?v=29"></script>
-    <script src="js/p2p.js?v=29"></script>
-    <script src="js/combat.js?v=29"></script>
+    <script src="js/icons.js?v=31"></script>
+    <script src="js/config.js?v=31"></script>
+    <script src="js/upgrades.js?v=31"></script>  <!-- Coin & upgrade system (needs CONFIG) -->
+    <script src="js/payment.js?v=31"></script>   <!-- Payment Gateway & Coin Recharge Engine -->
+    <script src="js/auth.js?v=31"></script>
+    <script src="js/audio.js?v=31"></script>
+    <script src="js/renderer.js?v=31"></script>
+    <script src="js/p2p.js?v=31"></script>
+    <script src="js/combat.js?v=31"></script>
     <!-- Modular sub-systems (loaded before main orchestrator) -->
-    <script src="js/word-engine.js?v=29"></script>
-    <script src="js/ui-manager.js?v=29"></script>
+    <script src="js/word-engine.js?v=31"></script>
+    <script src="js/ui-manager.js?v=31"></script>
     <!-- Main application controller -->
-    <script src="js/main.js?v=29"></script>
+    <script src="js/main.js?v=31"></script>
 </body>
 </html>

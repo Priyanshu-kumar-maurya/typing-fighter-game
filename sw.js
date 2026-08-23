@@ -1,11 +1,13 @@
-// Typing Fighter - PWA Service Worker v31 (Integrated Payment Gateway: UPI, QR, Razorpay & Sandbox)
+// Typing Fighter - PWA Service Worker v32 (Mobile PWA Offline & Network-First Sync)
 
-const CACHE_NAME = 'typing-fighter-v31';
+const CACHE_NAME = 'typing-fighter-v32';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
     './style.css',
     './favicon.svg',
+    './icon-192.png',
+    './icon-512.png',
     './manifest.json',
     './js/icons.js',
     './js/config.js',
@@ -21,6 +23,7 @@ const ASSETS_TO_CACHE = [
     './js/main.js'
 ];
 
+// ── INSTALL: Cache essential assets & take over immediately ──────────────────
 self.addEventListener('install', (e) => {
     self.skipWaiting();
     e.waitUntil(
@@ -30,13 +33,14 @@ self.addEventListener('install', (e) => {
     );
 });
 
+// ── ACTIVATE: Clean up older caches & claim clients ──────────────────────────
 self.addEventListener('activate', (e) => {
     e.waitUntil(
         caches.keys().then((keys) => {
             return Promise.all(
                 keys.map((key) => {
                     if (key !== CACHE_NAME) {
-                        console.log('[Service Worker] Clearing old cache:', key);
+                        console.log('[Service Worker] Removing old cache version:', key);
                         return caches.delete(key);
                     }
                 })
@@ -45,18 +49,46 @@ self.addEventListener('activate', (e) => {
     );
 });
 
-// Network-first strategy for ALL JS files to guarantee immediate bugfix delivery!
+// ── FETCH: Network-First Strategy with Dynamic Cache Fallback ────────────────
+// Ensures mobile phones and installed PWAs always receive the freshest updates
+// when online, while still working seamlessly 100% offline!
 self.addEventListener('fetch', (e) => {
-    if (e.request.url.includes('/js/')) {
+    // Only handle GET requests
+    if (e.request.method !== 'GET') return;
+
+    // Ignore cross-origin non-game requests (e.g. PeerJS broker, analytics)
+    const url = new URL(e.request.url);
+    const isSameOrigin = url.origin === self.location.origin;
+
+    if (!isSameOrigin) {
         e.respondWith(
             fetch(e.request).catch(() => caches.match(e.request))
         );
         return;
     }
 
+    // Network-First for same-origin app files (HTML, JS, CSS, assets)
     e.respondWith(
-        caches.match(e.request).then((response) => {
-            return response || fetch(e.request);
-        })
+        fetch(e.request)
+            .then((networkResponse) => {
+                // If response is valid, update the cache in the background
+                if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+                    const responseToCache = networkResponse.clone();
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(e.request, responseToCache);
+                    });
+                }
+                return networkResponse;
+            })
+            .catch(() => {
+                // Offline fallback: serve from local cache
+                return caches.match(e.request).then((cachedResponse) => {
+                    if (cachedResponse) return cachedResponse;
+                    // Fallback to root index.html for navigation requests
+                    if (e.request.mode === 'navigate') {
+                        return caches.match('./index.html') || caches.match('./');
+                    }
+                });
+            })
     );
 });

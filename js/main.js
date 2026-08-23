@@ -214,8 +214,10 @@ class GameApp {
             this.typeInput.addEventListener('input', () => {
                 if (!this.isMatchActive || this.isMatchPaused) return;
                 const val = this.typeInput.value;
-                if (val.length > 0) {
-                    this._processTypedKey(val[val.length - 1]);
+                if (val && val.length > 0) {
+                    for (let i = 0; i < val.length; i++) {
+                        this._processTypedKey(val[i]);
+                    }
                     this.typeInput.value = '';
                 }
             });
@@ -462,6 +464,11 @@ class GameApp {
         }
     }
 
+    _setStageBadge(text) {
+        const el = document.getElementById('stageBadge');
+        if (el) el.innerText = text;
+    }
+
     pauseMatch() {
         if (!this.isMatchActive) { this.showMainMenu(); return; }
         this.isMatchPaused = true;
@@ -499,7 +506,7 @@ class GameApp {
             this.renderer.setSkinMode('cyber');
             combat.reset('arcade', lvl);
 
-            document.getElementById('stageBadge').innerText = `STAGE ${lvl}/25`;
+            this._setStageBadge(`STAGE ${lvl}/25`);
             this.ui.setupPlayerPanel(1, auth.currentUser?.name || 'HERO',  ICONS.lightning, '#00f0ff');
             this.ui.setupPlayerPanel(2, combat.bot.name, combat.bot.avatar, combat.bot.color);
 
@@ -529,16 +536,16 @@ class GameApp {
         this.words.customScriptIndex = 0;
 
         if (prevSkin === 'stickman') {
-            document.getElementById('stageBadge').innerText = '⚡ STICKMAN CLASH';
+            this._setStageBadge('⚡ STICKMAN CLASH');
             this.ui.setupPlayerPanel(1, auth.currentUser?.name || 'STICKMAN 1', ICONS.stickman, '#00f0ff');
             this.ui.setupPlayerPanel(2, 'STICKMAN 2', ICONS.stickman, '#ff0055');
         } else if (prevMode === 'local2p') {
-            document.getElementById('stageBadge').innerText = '1v1 LOCAL';
+            this._setStageBadge('1v1 LOCAL');
             this.ui.setupPlayerPanel(1, auth.currentUser?.name || 'PLAYER 1', ICONS.lightning, '#00f0ff');
             this.ui.setupPlayerPanel(2, 'PLAYER 2', ICONS.fire, '#ff0055');
         } else {
             // P2P or fallback
-            document.getElementById('stageBadge').innerText = 'P2P ONLINE';
+            this._setStageBadge('P2P ONLINE');
             this.ui.setupPlayerPanel(1, auth.currentUser?.name || 'HERO (YOU)', ICONS.lightning, '#00f0ff');
             this.ui.setupPlayerPanel(2, 'FRIEND (ONLINE)', ICONS.globe, '#ff0055');
         }
@@ -804,7 +811,7 @@ class GameApp {
         this.renderer.setSkinMode('cyber');
         combat.reset('arcade', levelNum);
 
-        document.getElementById('stageBadge').innerText = `STAGE ${levelNum}/25`;
+        this._setStageBadge(`STAGE ${levelNum}/25`);
         this.ui.setupPlayerPanel(1, auth.currentUser.name,  ICONS.lightning, '#00f0ff');
         this.ui.setupPlayerPanel(2, combat.bot.name, combat.bot.avatar, combat.bot.color);
 
@@ -820,7 +827,7 @@ class GameApp {
             this.renderer.setSkinMode('cyber');
             combat.reset('local2p');
 
-            document.getElementById('stageBadge').innerText = '1v1 LOCAL';
+            this._setStageBadge('1v1 LOCAL');
             this.ui.setupPlayerPanel(1, auth.currentUser?.name || 'PLAYER 1', ICONS.lightning, '#00f0ff');
             this.ui.setupPlayerPanel(2, 'PLAYER 2', ICONS.fire, '#ff0055');
             this._startMatch();
@@ -840,7 +847,7 @@ class GameApp {
             this.renderer.setSkinMode('stickman');
             combat.reset('local2p');
 
-            document.getElementById('stageBadge').innerText = '⚡ STICKMAN CLASH';
+            this._setStageBadge('⚡ STICKMAN CLASH');
             this.ui.setupPlayerPanel(1, auth.currentUser?.name || 'STICKMAN 1', ICONS.stickman, '#00f0ff');
             this.ui.setupPlayerPanel(2, 'STICKMAN 2', ICONS.stickman, '#ff0055');
             this._startMatch();
@@ -860,6 +867,24 @@ class GameApp {
         this.typeInput.focus();
         this.typeInput.click();
         document.querySelector('.typing-word-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    /**
+     * Trigger PWA installation prompt when user clicks Install button on phone.
+     */
+    promptPWAInstall() {
+        if (typeof deferredPWAInstallPrompt !== 'undefined' && deferredPWAInstallPrompt) {
+            deferredPWAInstallPrompt.prompt();
+            deferredPWAInstallPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult && choiceResult.outcome === 'accepted') {
+                    this.ui.showToast('Installing Typing Fighter...', 'success', 3000);
+                }
+                deferredPWAInstallPrompt = null;
+                document.getElementById('btnPWAInstall')?.classList.add('hidden');
+            });
+        } else {
+            this.ui.showToast('To install: Tap browser menu (⋮ or Share) -> "Add to Home screen" / "Install App"', 'info', 5000);
+        }
     }
 
     toggleFighterSkin(forceSkin = null) {

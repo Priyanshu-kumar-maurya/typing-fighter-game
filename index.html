@@ -14,6 +14,12 @@
 
     <!-- PWA Manifest & Favicon -->
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Typing Fighter">
     <link rel="manifest" href="manifest.json">
 
     <!-- Open Graph / Facebook / WhatsApp Social Cards -->
@@ -74,6 +80,8 @@
             </div>
 
             <div class="header-controls">
+                <!-- PWA Install Button (Shown on mobile devices when installable) -->
+                <button id="btnPWAInstall" class="icon-btn install-pwa-btn hidden" title="Install App on Phone" onclick="game.promptPWAInstall()">📲 INSTALL</button>
                 <!-- Dashboard Home Button -->
                 <button id="btnNavDashboard" class="icon-btn nav-dashboard-btn" title="Back to Dashboard" onclick="game.showDashboard()">🏠 DASHBOARD</button>
                 <!-- v29: Coin balance — click to open shop -->
@@ -271,8 +279,8 @@
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M8 16h8"/></svg> TAP TO TYPE / OPEN KEYBOARD
                     </button>
 
-                    <!-- Hidden input for typing focus -->
-                    <input type="text" id="typeInput" class="hidden-input" autocomplete="off" spellcheck="false" autofocus>
+                    <!-- Hidden input for typing focus (configured for mobile soft keyboards) -->
+                    <input type="text" id="typeInput" class="hidden-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="text" autofocus>
                 </div>
             </div>
         </main>
@@ -800,12 +808,43 @@
 
     </div>
 
-    <!-- PWA Service Worker Registration -->
+    <!-- PWA Service Worker Registration & Install Prompt Handler -->
     <script>
+        // Track PWA install prompt
+        let deferredPWAInstallPrompt = null;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPWAInstallPrompt = e;
+            const btn = document.getElementById('btnPWAInstall');
+            if (btn) btn.classList.remove('hidden');
+        });
+
+        window.addEventListener('appinstalled', () => {
+            deferredPWAInstallPrompt = null;
+            const btn = document.getElementById('btnPWAInstall');
+            if (btn) btn.classList.add('hidden');
+            if (typeof game !== 'undefined' && game.ui) {
+                game.ui.showToast('🎉 Typing Fighter installed successfully on your phone!', 'success', 4000);
+            }
+        });
+
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js').then(reg => {
-                    console.log('[PWA] Service Worker registered successfully:', reg.scope);
+                navigator.serviceWorker.register('sw.js?v=32').then(reg => {
+                    console.log('[PWA] Service Worker registered:', reg.scope);
+
+                    // Auto-update SW when new version is deployed
+                    reg.onupdatefound = () => {
+                        const installing = reg.installing;
+                        if (!installing) return;
+                        installing.onstatechange = () => {
+                            if (installing.state === 'installed' && navigator.serviceWorker.controller) {
+                                console.log('[PWA] New version ready. Reloading for fresh experience...');
+                                window.location.reload();
+                            }
+                        };
+                    };
                 }).catch(err => {
                     console.warn('[PWA] Service Worker registration failed:', err);
                 });

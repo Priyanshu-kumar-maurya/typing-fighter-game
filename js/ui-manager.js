@@ -34,7 +34,7 @@ class UIManager {
             'modalStart', 'modalP2P', 'modalP2PLobby', 'modalCampaign',
             'modalContentChoice', 'modalCustomScript', 'modalPause',
             'modalAuth', 'modalGameOver', 'modalShop',
-            'modalPayment', 'modalReceipt'
+            'modalPayment', 'modalReceipt', 'modalIOSInstall'
         ];
     }
 

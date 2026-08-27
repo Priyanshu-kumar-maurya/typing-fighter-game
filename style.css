@@ -3011,3 +3011,80 @@ canvas {
     }
 }
 
+/* ── iOS PWA INSTALL GUIDE MODAL ────────────────────────────────────────── */
+.ios-install-card {
+    max-width: 480px !important;
+    padding: 28px 22px !important;
+    text-align: center;
+    border: 1.5px solid rgba(0, 240, 255, 0.5) !important;
+    box-shadow: 0 0 40px rgba(0, 240, 255, 0.25) !important;
+}
+
+.ios-modal-header {
+    margin-bottom: 18px;
+}
+
+.ios-app-icon {
+    font-size: 2.8rem;
+    display: inline-block;
+    margin-bottom: 8px;
+    filter: drop-shadow(0 0 12px #00f0ff);
+}
+
+.ios-modal-header h2 {
+    font-family: var(--font-heading);
+    font-size: 1.25rem;
+    color: #00f0ff;
+    margin-bottom: 6px;
+}
+
+.ios-steps-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    text-align: left;
+    margin-bottom: 22px;
+}
+
+.ios-step-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 12px 14px;
+}
+
+.ios-step-num {
+    width: 30px;
+    height: 30px;
+    background: linear-gradient(135deg, #00f0ff, #0088ff);
+    color: #000;
+    font-family: var(--font-heading);
+    font-weight: 900;
+    font-size: 0.85rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.ios-step-desc {
+    font-size: 0.85rem;
+    color: #e0e6ed;
+    line-height: 1.4;
+}
+
+.ios-icon-tag {
+    display: inline-block;
+    background: rgba(0, 240, 255, 0.15);
+    border: 1px solid #00f0ff;
+    color: #00f0ff;
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-weight: 800;
+    font-size: 0.9rem;
+}
+

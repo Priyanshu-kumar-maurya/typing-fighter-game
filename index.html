@@ -818,6 +818,41 @@
             </div>
         </div>
 
+        <!-- iOS PWA INSTALL GUIDE MODAL -->
+        <div id="modalIOSInstall" class="modal-overlay hidden">
+            <div class="modal-card ios-install-card">
+                <button class="btn-close-modal" title="Close" onclick="game.ui.hideModal('modalIOSInstall')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                <div class="ios-modal-header">
+                    <span class="ios-app-icon">🥊</span>
+                    <h2>Install on iPhone / iPad</h2>
+                    <p class="subtitle">Install Typing Fighter (&lt; 0.5 MB) for full-screen & offline play!</p>
+                </div>
+                <div class="ios-steps-list">
+                    <div class="ios-step-item">
+                        <div class="ios-step-num">1</div>
+                        <div class="ios-step-desc">
+                            Safari ke bottom menu bar me <strong>Share button</strong> (<span class="ios-icon-tag">⎋</span>) par tap karein.
+                        </div>
+                    </div>
+                    <div class="ios-step-item">
+                        <div class="ios-step-num">2</div>
+                        <div class="ios-step-desc">
+                            Thoda scroll karke <strong>"Add to Home Screen"</strong> (<span class="ios-icon-tag">➕</span>) select karein.
+                        </div>
+                    </div>
+                    <div class="ios-step-item">
+                        <div class="ios-step-num">3</div>
+                        <div class="ios-step-desc">
+                            Top right corner me <strong>"Add"</strong> par tap karein!
+                        </div>
+                    </div>
+                </div>
+                <div class="ios-modal-footer">
+                    <button class="btn btn-neon btn-large" style="width: 100%;" onclick="game.ui.hideModal('modalIOSInstall')">GOT IT, I'LL ADD IT! 👍</button>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <!-- PWA Service Worker Registration & Install Prompt Handler -->

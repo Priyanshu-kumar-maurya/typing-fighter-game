@@ -907,7 +907,7 @@ class GameApp {
         // iOS Safari detection
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
         if (isIOS) {
-            this.ui.showToast('📱 To Install on iPhone: Tap Share button (⎋) at bottom of Safari -> Scroll & tap "Add to Home Screen" (➕)!', 'info', 6500);
+            this.ui.showModal('modalIOSInstall');
             return;
         }
 

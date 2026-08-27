@@ -1,6 +1,6 @@
-// Typing Fighter - PWA Service Worker v32 (Mobile PWA Offline & Network-First Sync)
+// Typing Fighter - PWA Service Worker v33 (Mobile HP Display & In-Arena Floating Health Bars)
 
-const CACHE_NAME = 'typing-fighter-v32';
+const CACHE_NAME = 'typing-fighter-v33';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',

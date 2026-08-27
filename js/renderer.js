@@ -15,7 +15,8 @@ class ArenaRenderer {
             baseX: 220, baseY: 360, vy: 0, rotation: 0,
             color: '#00f0ff', glow: 'rgba(0, 240, 255, 0.8)',
             state: 'idle', stateTimer: 0,
-            facing: 1, hpPercent: 1.0
+            facing: 1, hpPercent: 1.0,
+            hp: 100, maxHp: 100
         };
 
         this.f2 = {
@@ -23,7 +24,8 @@ class ArenaRenderer {
             baseX: 740, baseY: 360, vy: 0, rotation: 0,
             color: '#ff0055', glow: 'rgba(255, 0, 85, 0.8)',
             state: 'idle', stateTimer: 0,
-            facing: -1, hpPercent: 1.0
+            facing: -1, hpPercent: 1.0,
+            hp: 100, maxHp: 100
         };
 
         this.fighterSkin = 'cyber'; // 'cyber' | 'stickman'
@@ -203,9 +205,11 @@ class ArenaRenderer {
         // 1. Draw Cyber Arena Stage
         this.drawStage();
 
-        // 2. Draw Fighters
+        // 2. Draw Fighters & Floating In-Arena Health Bars
         this.drawFighter(this.f1);
         this.drawFighter(this.f2);
+        this.drawFighterHpBar(this.f1);
+        this.drawFighterHpBar(this.f2);
 
         // 3. Draw Beam Attack if Super State active
         if (this.f1.state === 'attack_super') this.drawSuperBeam(this.f1, this.f2);
@@ -430,6 +434,65 @@ class ArenaRenderer {
             ctx.arc(attackX, attackY, f.state === 'attack_super' ? 16 : 9, 0, Math.PI * 2);
             ctx.fill();
         }
+
+        ctx.restore();
+    }
+
+    /**
+     * Render floating in-arena health bar and numeric HP indicator right above each fighter.
+     * Ensures HP is 100% visible on mobile phones, small screens, and soft keyboards.
+     * @param {Object} f - Fighter state object
+     */
+    drawFighterHpBar(f) {
+        if (!f || typeof f.hpPercent === 'undefined') return;
+        const ctx = this.ctx;
+        ctx.save();
+
+        const barW = 110;
+        const barH = 13;
+        const barX = f.x - barW / 2;
+        // Float comfortably above the fighter's head
+        const barY = Math.min(f.baseY - 120, f.y - 120);
+
+        // 1. Dark glowing pill background
+        ctx.fillStyle = 'rgba(7, 9, 19, 0.88)';
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        if (ctx.roundRect) {
+            ctx.roundRect(barX, barY, barW, barH, 6);
+        } else {
+            ctx.rect(barX, barY, barW, barH);
+        }
+        ctx.fill();
+        ctx.stroke();
+
+        // 2. Health Fill (gradient matching fighter theme)
+        const pct = Math.max(0, Math.min(1, f.hpPercent));
+        const fillW = Math.max(0, barW * pct);
+        if (fillW > 0) {
+            ctx.fillStyle = f.color;
+            ctx.shadowColor = f.glow || f.color;
+            ctx.shadowBlur = 8;
+            ctx.beginPath();
+            if (ctx.roundRect) {
+                ctx.roundRect(barX, barY, fillW, barH, 6);
+            } else {
+                ctx.rect(barX, barY, fillW, barH);
+            }
+            ctx.fill();
+        }
+
+        // 3. Crisp Bold HP Text (e.g. "100 / 100 HP")
+        ctx.shadowBlur = 4;
+        ctx.shadowColor = '#000000';
+        ctx.fillStyle = '#ffffff';
+        ctx.font = "900 10px 'Orbitron', 'Outfit', sans-serif";
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const curHp = typeof f.hp !== 'undefined' ? f.hp : Math.round(100 * pct);
+        const maxHp = f.maxHp || 100;
+        ctx.fillText(`${curHp}/${maxHp} HP`, f.x, barY + barH / 2 + 1);
 
         ctx.restore();
     }

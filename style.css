@@ -351,9 +351,14 @@ body {
     left: 50%;
     transform: translate(-50%, -50%);
     font-size: 0.75rem;
-    font-weight: 800;
+    font-weight: 900;
     font-family: var(--font-heading);
-    text-shadow: 1px 1px 3px #000;
+    color: #ffffff !important;
+    text-shadow: 0 0 4px #000, 1px 1px 3px #000, -1px -1px 3px #000;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 5;
+    letter-spacing: 0.5px;
 }
 
 /* SUPER METERS */
@@ -511,9 +516,22 @@ body {
     /* HUD ON MOBILE */
     .hud {
         display: grid;
-        grid-template-columns: 1fr 80px 1fr;
+        grid-template-columns: 1fr 70px 1fr;
         gap: 6px;
-        padding: 6px 10px;
+        padding: 6px 8px;
+    }
+
+    .hp-bar-outer {
+        height: 22px !important;
+        border-radius: 6px;
+        position: relative;
+    }
+
+    .hp-text {
+        font-size: 0.68rem !important;
+        font-weight: 900 !important;
+        color: #ffffff !important;
+        letter-spacing: 0.5px;
     }
 
     .player-info {
@@ -598,11 +616,52 @@ body {
 
     /* Keyboard open state: canvas further shrinks so typing area doesn't block it */
     body.keyboard-open .canvas-container {
-        max-height: 22dvh !important;
+        max-height: 24dvh !important;
     }
 
+    /* Keyboard open state: KEEP HUD & HP VISIBLE IN SLEEK COMPACT BAR! NEVER HIDE HP! */
     body.keyboard-open .hud {
-        display: none !important;
+        display: grid !important;
+        grid-template-columns: 1fr 40px 1fr !important;
+        gap: 4px !important;
+        padding: 4px 6px !important;
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 100 !important;
+        background: rgba(7, 9, 19, 0.95) !important;
+        border-radius: 8px !important;
+        border: 1px solid rgba(0, 240, 255, 0.3) !important;
+    }
+
+    body.keyboard-open .player-info {
+        display: none !important; /* Hide avatar & WPM details to keep HUD slim */
+    }
+
+    body.keyboard-open .super-bar-outer {
+        display: none !important; /* Hide super meter to save vertical space */
+    }
+
+    body.keyboard-open .stage-badge,
+    body.keyboard-open .match-time,
+    body.keyboard-open .combo-badge {
+        display: none !important; /* Hide non-essential badges */
+    }
+
+    body.keyboard-open .vs-circle {
+        width: 22px !important;
+        height: 22px !important;
+        font-size: 0.6rem !important;
+    }
+
+    body.keyboard-open .hp-bar-outer {
+        height: 20px !important;
+        margin: 0 !important;
+    }
+
+    body.keyboard-open .hp-text {
+        font-size: 0.68rem !important;
+        color: #ffffff !important;
+        text-shadow: 0 0 4px #000, 1px 1px 2px #000 !important;
     }
 
     /* Add bottom padding equal to typing box height so canvas isn't covered */
@@ -1294,6 +1353,17 @@ canvas {
     .hud {
         grid-template-columns: 1fr 70px 1fr;
         gap: 8px;
+    }
+
+    .hp-bar-outer {
+        height: 22px;
+        position: relative;
+    }
+
+    .hp-text {
+        font-size: 0.7rem;
+        font-weight: 900;
+        color: #ffffff !important;
     }
 
     .details h3 {

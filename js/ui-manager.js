@@ -154,10 +154,14 @@ class UIManager {
         this._refreshPlayerHUD('p1', p1);
         this._refreshPlayerHUD('p2', p2);
 
-        // Mirror HP ratio into the renderer for KO sprite animation
+        // Mirror HP ratio and exact numbers into the renderer for canvas HP bars
         if (this.renderer) {
             this.renderer.f1.hpPercent = p1.hp / p1.maxHp;
             this.renderer.f2.hpPercent = p2.hp / p2.maxHp;
+            this.renderer.f1.hp = p1.hp;
+            this.renderer.f1.maxHp = p1.maxHp;
+            this.renderer.f2.hp = p2.hp;
+            this.renderer.f2.maxHp = p2.maxHp;
         }
     }
 

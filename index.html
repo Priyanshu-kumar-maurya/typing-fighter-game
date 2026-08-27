@@ -831,7 +831,7 @@
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=32').then(reg => {
+                navigator.serviceWorker.register('sw.js?v=33').then(reg => {
                     console.log('[PWA] Service Worker registered:', reg.scope);
 
                     // Auto-update SW when new version is deployed
@@ -853,19 +853,19 @@
     </script>
 
     <!-- SCRIPTS (load order matters: dependencies before dependents) -->
-    <script src="js/icons.js?v=31"></script>
-    <script src="js/config.js?v=31"></script>
-    <script src="js/upgrades.js?v=31"></script>  <!-- Coin & upgrade system (needs CONFIG) -->
-    <script src="js/payment.js?v=31"></script>   <!-- Payment Gateway & Coin Recharge Engine -->
-    <script src="js/auth.js?v=31"></script>
-    <script src="js/audio.js?v=31"></script>
-    <script src="js/renderer.js?v=31"></script>
-    <script src="js/p2p.js?v=31"></script>
-    <script src="js/combat.js?v=31"></script>
+    <script src="js/icons.js?v=33"></script>
+    <script src="js/config.js?v=33"></script>
+    <script src="js/upgrades.js?v=33"></script>  <!-- Coin & upgrade system (needs CONFIG) -->
+    <script src="js/payment.js?v=33"></script>   <!-- Payment Gateway & Coin Recharge Engine -->
+    <script src="js/auth.js?v=33"></script>
+    <script src="js/audio.js?v=33"></script>
+    <script src="js/renderer.js?v=33"></script>
+    <script src="js/p2p.js?v=33"></script>
+    <script src="js/combat.js?v=33"></script>
     <!-- Modular sub-systems (loaded before main orchestrator) -->
-    <script src="js/word-engine.js?v=31"></script>
-    <script src="js/ui-manager.js?v=31"></script>
+    <script src="js/word-engine.js?v=33"></script>
+    <script src="js/ui-manager.js?v=33"></script>
     <!-- Main application controller -->
-    <script src="js/main.js?v=31"></script>
+    <script src="js/main.js?v=33"></script>
 </body>
 </html>

@@ -112,6 +112,16 @@ class GameApp {
         document.getElementById('btnOpenP2P')?.addEventListener('click', () => this.openP2PModal());
         document.getElementById('btnOpenArcade')?.addEventListener('click', () => this.openCampaignModal());
 
+        // Offline & Online Network Detection for Phone PWA
+        window.addEventListener('offline', () => {
+            this.ui?.showToast('📶 OFFLINE MODE: 25 Campaign Stages & Stickman work 100% offline!', 'info', 4500);
+            document.body.classList.add('is-offline');
+        });
+        window.addEventListener('online', () => {
+            this.ui?.showToast('🌐 Back Online! Online multiplayer is ready.', 'success', 3000);
+            document.body.classList.remove('is-offline');
+        });
+
         // Auth screen tab switchers
         this._setupAuthTabs();
 
@@ -873,18 +883,36 @@ class GameApp {
      * Trigger PWA installation prompt when user clicks Install button on phone.
      */
     promptPWAInstall() {
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+        if (isStandalone) {
+            this.ui.showToast('✅ Typing Fighter is already installed and ready for 100% offline play!', 'success', 4000);
+            document.getElementById('btnPWAInstall')?.classList.add('hidden');
+            document.getElementById('dashInstallBanner')?.classList.add('hidden');
+            return;
+        }
+
         if (typeof deferredPWAInstallPrompt !== 'undefined' && deferredPWAInstallPrompt) {
             deferredPWAInstallPrompt.prompt();
             deferredPWAInstallPrompt.userChoice.then((choiceResult) => {
                 if (choiceResult && choiceResult.outcome === 'accepted') {
-                    this.ui.showToast('Installing Typing Fighter...', 'success', 3000);
+                    this.ui.showToast('Installing Typing Fighter to your phone...', 'success', 3000);
                 }
                 deferredPWAInstallPrompt = null;
                 document.getElementById('btnPWAInstall')?.classList.add('hidden');
+                document.getElementById('dashInstallBanner')?.classList.add('hidden');
             });
-        } else {
-            this.ui.showToast('To install: Tap browser menu (⋮ or Share) -> "Add to Home screen" / "Install App"', 'info', 5000);
+            return;
         }
+
+        // iOS Safari detection
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if (isIOS) {
+            this.ui.showToast('📱 To Install on iPhone: Tap Share button (⎋) at bottom of Safari -> Scroll & tap "Add to Home Screen" (➕)!', 'info', 6500);
+            return;
+        }
+
+        // Generic Android Chrome guidance
+        this.ui.showToast('📲 To install: Tap browser menu (⋮ 3 dots) -> Tap "Install App" or "Add to Home screen"!', 'info', 5500);
     }
 
     toggleFighterSkin(forceSkin = null) {
@@ -1380,6 +1408,10 @@ class GameApp {
     }
 
     openP2PModal() {
+        if (!navigator.onLine) {
+            this.ui.showToast('⚠️ Online P2P requires internet. 25 Stages & Stickman Clash work 100% offline!', 'error', 4500);
+            return;
+        }
         this.ui.closeAllModals();
         this.ui.showModal('modalP2P');
     }

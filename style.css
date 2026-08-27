@@ -2338,6 +2338,73 @@ canvas {
     transform: translateX(4px);
 }
 
+/* ── PROMINENT PWA INSTALL BANNER (< 0.5 MB & OFFLINE PLAY) ─────────────── */
+.dash-install-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(135deg, rgba(0, 240, 255, 0.12), rgba(0, 255, 136, 0.08));
+    border: 1.5px solid rgba(0, 240, 255, 0.4);
+    border-radius: 16px;
+    padding: 14px 22px;
+    margin-top: 18px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 20px rgba(0, 240, 255, 0.15);
+}
+
+.dash-install-banner:hover {
+    transform: translateY(-2px);
+    border-color: #00ff88;
+    background: linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(0, 255, 136, 0.15));
+    box-shadow: 0 6px 25px rgba(0, 255, 136, 0.3);
+}
+
+.install-banner-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    text-align: left;
+}
+
+.install-badge-icon {
+    font-size: 2rem;
+    filter: drop-shadow(0 0 8px #00f0ff);
+}
+
+.install-badge-texts {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.install-badge-title {
+    font-family: var(--font-heading);
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #00f0ff;
+    letter-spacing: 1px;
+}
+
+.install-badge-sub {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+@media (max-width: 600px) {
+    .dash-install-banner {
+        flex-direction: column;
+        gap: 12px;
+        text-align: center;
+        padding: 12px 14px;
+    }
+    .install-banner-left {
+        flex-direction: column;
+        text-align: center;
+        gap: 8px;
+    }
+}
+
 /* ── DASHBOARD GRID ─────────────────────────────────────────────────────── */
 .dashboard-grid {
     display: grid;

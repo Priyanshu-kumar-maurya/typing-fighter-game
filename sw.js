@@ -1,6 +1,6 @@
-// Typing Fighter - PWA Service Worker v33 (Mobile HP Display & In-Arena Floating Health Bars)
+// Typing Fighter - PWA Service Worker v34 (Ultra-Fast 0.4MB Instant Load & 100% Offline Mode)
 
-const CACHE_NAME = 'typing-fighter-v33';
+const CACHE_NAME = 'typing-fighter-v34';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -23,24 +23,25 @@ const ASSETS_TO_CACHE = [
     './js/main.js'
 ];
 
-// ── INSTALL: Cache essential assets & take over immediately ──────────────────
+// ── INSTALL: Cache essential assets & skip waiting for instant activation ──
 self.addEventListener('install', (e) => {
     self.skipWaiting();
     e.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
+            console.log('[Service Worker] Pre-caching all app files for offline play...');
             return cache.addAll(ASSETS_TO_CACHE);
         })
     );
 });
 
-// ── ACTIVATE: Clean up older caches & claim clients ──────────────────────────
+// ── ACTIVATE: Clean up older caches & take immediate control of clients ─────
 self.addEventListener('activate', (e) => {
     e.waitUntil(
         caches.keys().then((keys) => {
             return Promise.all(
                 keys.map((key) => {
                     if (key !== CACHE_NAME) {
-                        console.log('[Service Worker] Removing old cache version:', key);
+                        console.log('[Service Worker] Deleting old cache version:', key);
                         return caches.delete(key);
                     }
                 })
@@ -49,29 +50,44 @@ self.addEventListener('activate', (e) => {
     );
 });
 
-// ── FETCH: Network-First Strategy with Dynamic Cache Fallback ────────────────
-// Ensures mobile phones and installed PWAs always receive the freshest updates
-// when online, while still working seamlessly 100% offline!
+// ── FETCH: Network-First with Instant Offline Fallback (ignoreSearch enabled) ─
 self.addEventListener('fetch', (e) => {
-    // Only handle GET requests
     if (e.request.method !== 'GET') return;
 
-    // Ignore cross-origin non-game requests (e.g. PeerJS broker, analytics)
     const url = new URL(e.request.url);
     const isSameOrigin = url.origin === self.location.origin;
 
+    // Handle cross-origin external CDNs (PeerJS, Razorpay, Google Fonts)
     if (!isSameOrigin) {
         e.respondWith(
-            fetch(e.request).catch(() => caches.match(e.request))
+            fetch(e.request)
+                .then((response) => {
+                    if (response && response.status === 200) {
+                        const copy = response.clone();
+                        caches.open(CACHE_NAME).then((cache) => cache.put(e.request, copy));
+                    }
+                    return response;
+                })
+                .catch(() => {
+                    return caches.match(e.request, { ignoreSearch: true }).then((cached) => {
+                        if (cached) return cached;
+                        // For external scripts when offline, return safe empty response so execution doesn't halt
+                        if (url.pathname.endsWith('.js')) {
+                            return new Response('/* Offline fallback for external script */', {
+                                headers: { 'Content-Type': 'application/javascript' }
+                            });
+                        }
+                        return new Response('', { status: 200 });
+                    });
+                })
         );
         return;
     }
 
-    // Network-First for same-origin app files (HTML, JS, CSS, assets)
+    // Same-origin game files (Network-First -> Auto-Cache -> Offline Fallback)
     e.respondWith(
         fetch(e.request)
             .then((networkResponse) => {
-                // If response is valid, update the cache in the background
                 if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
                     const responseToCache = networkResponse.clone();
                     caches.open(CACHE_NAME).then((cache) => {
@@ -81,12 +97,14 @@ self.addEventListener('fetch', (e) => {
                 return networkResponse;
             })
             .catch(() => {
-                // Offline fallback: serve from local cache
-                return caches.match(e.request).then((cachedResponse) => {
+                // OFFLINE FALLBACK: match cached assets ignoring version query params (?v=34)
+                return caches.match(e.request, { ignoreSearch: true }).then((cachedResponse) => {
                     if (cachedResponse) return cachedResponse;
-                    // Fallback to root index.html for navigation requests
+
+                    // Fallback to index.html for page navigation
                     if (e.request.mode === 'navigate') {
-                        return caches.match('./index.html') || caches.match('./');
+                        return caches.match('./index.html', { ignoreSearch: true }) ||
+                               caches.match('./', { ignoreSearch: true });
                     }
                 });
             })

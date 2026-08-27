@@ -1,32 +1,63 @@
 {
-  "name": "Typing Fighter - Real-Time 1v1 Type Clash Arena",
+  "id": "typing-fighter-app",
+  "name": "Typing Fighter - 1v1 Type Clash Arena",
   "short_name": "TypingFighter",
-  "description": "Speed Up Your Typing Skills in Real-Time 1v1 Fighting Battles!",
+  "description": "Speed up typing skills in real-time 1v1 battles! 25 Stages, Stickman mode, and offline play.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "background_color": "#070913",
   "theme_color": "#00f0ff",
   "orientation": "any",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ],
-  "categories": ["games", "education", "action"]
+  "shortcuts": [
+    {
+      "name": "Play Campaign (25 Stages)",
+      "short_name": "Campaign",
+      "description": "Battle 25 AI Bosses offline",
+      "url": "./index.html?mode=campaign",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Stickman Clash",
+      "short_name": "Stickman",
+      "description": "Play Stickman martial arts battle",
+      "url": "./index.html?mode=stickman",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "categories": ["games", "action", "education"]
 }

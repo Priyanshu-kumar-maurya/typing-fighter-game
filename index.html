@@ -13,10 +13,11 @@
     <meta name="theme-color" content="#00f0ff">
 
     <!-- PWA Manifest & Favicon -->
-    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="icon" type="image/png" sizes="64x64" href="favicon.png">
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
-    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="apple-touch-icon-precomposed" href="apple-touch-icon.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Typing Fighter">
@@ -886,7 +887,7 @@
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=34').then(reg => {
+                navigator.serviceWorker.register('sw.js?v=36').then(reg => {
                     console.log('[PWA] Service Worker registered:', reg.scope);
 
                     // Auto-update SW when new version is deployed
@@ -908,19 +909,19 @@
     </script>
 
     <!-- SCRIPTS (load order matters: dependencies before dependents) -->
-    <script src="js/icons.js?v=34"></script>
-    <script src="js/config.js?v=34"></script>
-    <script src="js/upgrades.js?v=34"></script>  <!-- Coin & upgrade system (needs CONFIG) -->
-    <script src="js/payment.js?v=34"></script>   <!-- Payment Gateway & Coin Recharge Engine -->
-    <script src="js/auth.js?v=34"></script>
-    <script src="js/audio.js?v=34"></script>
-    <script src="js/renderer.js?v=34"></script>
-    <script src="js/p2p.js?v=34"></script>
-    <script src="js/combat.js?v=34"></script>
+    <script src="js/icons.js?v=36"></script>
+    <script src="js/config.js?v=36"></script>
+    <script src="js/upgrades.js?v=36"></script>  <!-- Coin & upgrade system (needs CONFIG) -->
+    <script src="js/payment.js?v=36"></script>   <!-- Payment Gateway & Coin Recharge Engine -->
+    <script src="js/auth.js?v=36"></script>
+    <script src="js/audio.js?v=36"></script>
+    <script src="js/renderer.js?v=36"></script>
+    <script src="js/p2p.js?v=36"></script>
+    <script src="js/combat.js?v=36"></script>
     <!-- Modular sub-systems (loaded before main orchestrator) -->
-    <script src="js/word-engine.js?v=34"></script>
-    <script src="js/ui-manager.js?v=34"></script>
+    <script src="js/word-engine.js?v=36"></script>
+    <script src="js/ui-manager.js?v=36"></script>
     <!-- Main application controller -->
-    <script src="js/main.js?v=34"></script>
+    <script src="js/main.js?v=36"></script>
 </body>
 </html>

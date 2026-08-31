@@ -1,11 +1,13 @@
-// Typing Fighter - PWA Service Worker v34 (Ultra-Fast 0.4MB Instant Load & 100% Offline Mode)
+// Typing Fighter - PWA Service Worker v36 (Unique Esports Logo & iOS Apple Touch Icon)
 
-const CACHE_NAME = 'typing-fighter-v34';
+const CACHE_NAME = 'typing-fighter-v36';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
     './style.css',
+    './favicon.png',
     './favicon.svg',
+    './apple-touch-icon.png',
     './icon-192.png',
     './icon-512.png',
     './manifest.json',

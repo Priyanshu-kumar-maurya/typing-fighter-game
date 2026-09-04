@@ -248,6 +248,50 @@ class SoundEngine {
 
         noise.start();
     }
+
+    // Emoji Reaction Pop Sound (Bubbly rising pitch)
+    playEmojiPop() {
+        if (this.muted || !this.ctx) return;
+        this.resume();
+
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(450, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(900, this.ctx.currentTime + 0.1);
+
+        gain.gain.setValueAtTime(0.18, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.12);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.12);
+    }
+
+    // Chat Message Notification Chime (Double bell chime)
+    playChatMessage() {
+        if (this.muted || !this.ctx) return;
+        this.resume();
+
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(587.33, this.ctx.currentTime); // D5
+        osc.frequency.setValueAtTime(880, this.ctx.currentTime + 0.08); // A5
+
+        gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.22);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.22);
+    }
 }
 
 const audio = new SoundEngine();

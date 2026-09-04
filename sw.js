@@ -1,6 +1,6 @@
-// Typing Fighter - PWA Service Worker v36 (Unique Esports Logo & iOS Apple Touch Icon)
+// Typing Fighter - PWA Service Worker v37 (Live In-Game Chat, Emoji Reactions & Comic Speech Bubbles)
 
-const CACHE_NAME = 'typing-fighter-v36';
+const CACHE_NAME = 'typing-fighter-v37';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',

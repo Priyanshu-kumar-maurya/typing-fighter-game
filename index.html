@@ -295,6 +295,48 @@
                     <!-- Hidden input for typing focus (configured for mobile soft keyboards) -->
                     <input type="text" id="typeInput" class="hidden-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="text" autofocus>
                 </div>
+
+                <!-- IN-GAME QUICK EMOJI REACTION DOCK -->
+                <div id="emojiReactionDock" class="emoji-reaction-dock">
+                    <button class="emoji-btn" onclick="game.sendEmoji('🔥')" title="Fire (1)">🔥</button>
+                    <button class="emoji-btn" onclick="game.sendEmoji('🥊')" title="Punch (2)">🥊</button>
+                    <button class="emoji-btn" onclick="game.sendEmoji('⚡')" title="Lightning (3)">⚡</button>
+                    <button class="emoji-btn" onclick="game.sendEmoji('😂')" title="Laugh (4)">😂</button>
+                    <button class="emoji-btn" onclick="game.sendEmoji('💀')" title="Skull (5)">💀</button>
+                    <button class="emoji-btn" onclick="game.sendEmoji('👑')" title="Crown (6)">👑</button>
+                    <button class="emoji-btn" onclick="game.sendEmoji('🦾')" title="Cyber (7)">🦾</button>
+                    <button class="emoji-btn" onclick="game.sendEmoji('🤬')" title="Rage (8)">🤬</button>
+                    <button class="emoji-btn btn-chat-toggle" onclick="game.toggleInGameChat()" title="Open Chat & Quick Phrases (C)">💬</button>
+                </div>
+
+                <!-- IN-GAME EXPANDABLE CHAT & QUICK PHRASES DRAWER -->
+                <div id="inGameChatDrawer" class="in-game-chat-drawer hidden">
+                    <div class="chat-drawer-header">
+                        <span class="chat-drawer-title">💬 BATTLE CHAT</span>
+                        <button class="btn-close-chat" onclick="game.toggleInGameChat()">✕</button>
+                    </div>
+
+                    <!-- QUICK PHRASES (1-Tap Fast Message) -->
+                    <div class="quick-phrases-bar">
+                        <button class="quick-phrase-btn" onclick="game.sendQuickChat('Good Game! 🤝')">🤝 GG!</button>
+                        <button class="quick-phrase-btn" onclick="game.sendQuickChat('Too Slow! ⚡')">⚡ Too Slow!</button>
+                        <button class="quick-phrase-btn" onclick="game.sendQuickChat('Insane Combo! 🔥')">🔥 Combo!</button>
+                        <button class="quick-phrase-btn" onclick="game.sendQuickChat('Watch this Super! 🚀')">🚀 Super!</button>
+                        <button class="quick-phrase-btn" onclick="game.sendQuickChat('Rematch? 🥊')">🥊 Rematch?</button>
+                        <button class="quick-phrase-btn" onclick="game.sendQuickChat('Nice Try! 😎')">😎 Nice Try!</button>
+                    </div>
+
+                    <!-- LIVE CHAT MESSAGE FEED -->
+                    <div id="chatMessageFeed" class="chat-message-feed">
+                        <div class="chat-system-msg">💬 Battle chat active! Send quick emojis or messages.</div>
+                    </div>
+
+                    <!-- CHAT INPUT & SEND -->
+                    <form class="chat-input-form" onsubmit="event.preventDefault(); game.sendCustomChat();">
+                        <input type="text" id="inGameChatInput" class="chat-text-input" placeholder="Type message (max 40 chars)..." maxlength="40" autocomplete="off">
+                        <button type="submit" class="btn btn-neon btn-send-chat">➤</button>
+                    </form>
+                </div>
             </div>
         </main>
 
@@ -804,6 +846,20 @@
                         <span id="p2pCountdownNum">3</span>
                     </div>
 
+                    <!-- LOBBY QUICK TAUNT & EMOJI BAR -->
+                    <div class="lobby-emoji-bar">
+                        <span class="lobby-emoji-label">Send Reaction:</span>
+                        <div class="lobby-emoji-buttons">
+                            <button class="emoji-btn" onclick="game.sendEmoji('🔥')" title="Fire">🔥</button>
+                            <button class="emoji-btn" onclick="game.sendEmoji('🥊')" title="Punch">🥊</button>
+                            <button class="emoji-btn" onclick="game.sendEmoji('⚡')" title="Lightning">⚡</button>
+                            <button class="emoji-btn" onclick="game.sendEmoji('😂')" title="Laugh">😂</button>
+                            <button class="emoji-btn" onclick="game.sendEmoji('💀')" title="Skull">💀</button>
+                            <button class="emoji-btn" onclick="game.sendEmoji('👑')" title="Crown">👑</button>
+                            <button class="emoji-btn" onclick="game.sendEmoji('🦾')" title="Cyber">🦾</button>
+                        </div>
+                    </div>
+
                     <!-- READY BUTTON (main CTA) -->
                     <button id="btnP2PReady" class="btn p2p-ready-btn" onclick="game.toggleP2PReady()">
                         ⚡ CLICK TO READY UP
@@ -887,7 +943,7 @@
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=36').then(reg => {
+                navigator.serviceWorker.register('sw.js?v=37').then(reg => {
                     console.log('[PWA] Service Worker registered:', reg.scope);
 
                     // Auto-update SW when new version is deployed
@@ -909,19 +965,19 @@
     </script>
 
     <!-- SCRIPTS (load order matters: dependencies before dependents) -->
-    <script src="js/icons.js?v=36"></script>
-    <script src="js/config.js?v=36"></script>
-    <script src="js/upgrades.js?v=36"></script>  <!-- Coin & upgrade system (needs CONFIG) -->
-    <script src="js/payment.js?v=36"></script>   <!-- Payment Gateway & Coin Recharge Engine -->
-    <script src="js/auth.js?v=36"></script>
-    <script src="js/audio.js?v=36"></script>
-    <script src="js/renderer.js?v=36"></script>
-    <script src="js/p2p.js?v=36"></script>
-    <script src="js/combat.js?v=36"></script>
+    <script src="js/icons.js?v=37"></script>
+    <script src="js/config.js?v=37"></script>
+    <script src="js/upgrades.js?v=37"></script>  <!-- Coin & upgrade system (needs CONFIG) -->
+    <script src="js/payment.js?v=37"></script>   <!-- Payment Gateway & Coin Recharge Engine -->
+    <script src="js/auth.js?v=37"></script>
+    <script src="js/audio.js?v=37"></script>
+    <script src="js/renderer.js?v=37"></script>
+    <script src="js/p2p.js?v=37"></script>
+    <script src="js/combat.js?v=37"></script>
     <!-- Modular sub-systems (loaded before main orchestrator) -->
-    <script src="js/word-engine.js?v=36"></script>
-    <script src="js/ui-manager.js?v=36"></script>
+    <script src="js/word-engine.js?v=37"></script>
+    <script src="js/ui-manager.js?v=37"></script>
     <!-- Main application controller -->
-    <script src="js/main.js?v=36"></script>
+    <script src="js/main.js?v=37"></script>
 </body>
 </html>

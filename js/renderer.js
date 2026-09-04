@@ -30,6 +30,8 @@ class ArenaRenderer {
 
         this.fighterSkin = 'cyber'; // 'cyber' | 'stickman'
         this.animFrame = 0;
+        this.floatingEmojis = [];
+        this.chatBubbles = [];
         this.resize();
         window.addEventListener('resize', () => this.resize());
     }
@@ -193,6 +195,23 @@ class ArenaRenderer {
         });
         this.floatingTexts = this.floatingTexts.filter(ft => ft.alpha > 0);
 
+        // Update Floating Animated Emojis
+        this.floatingEmojis.forEach(fe => {
+            fe.y += fe.vy;
+            fe.vy *= 0.96;
+            fe.scale = Math.min(fe.maxScale, fe.scale + 0.12);
+            fe.life -= 0.018;
+            fe.alpha = Math.max(0, Math.min(1, fe.life * 1.5));
+        });
+        this.floatingEmojis = this.floatingEmojis.filter(fe => fe.life > 0);
+
+        // Update In-Arena Chat Speech Bubbles
+        this.chatBubbles.forEach(cb => {
+            cb.life -= 0.007;
+            cb.alpha = Math.max(0, Math.min(1, cb.life * 4));
+        });
+        this.chatBubbles = this.chatBubbles.filter(cb => cb.life > 0);
+
         return { shakeX, shakeY };
     }
 
@@ -239,6 +258,12 @@ class ArenaRenderer {
             ctx.fillText(ft.text, ft.x, ft.y);
             ctx.restore();
         });
+
+        // 6. Render Floating Chat Speech Bubbles
+        this.drawChatBubbles();
+
+        // 7. Render Floating Animated Emojis
+        this.drawFloatingEmojis();
 
         ctx.restore();
     }
@@ -495,6 +520,118 @@ class ArenaRenderer {
         ctx.fillText(`${curHp}/${maxHp} HP`, f.x, barY + barH / 2 + 1);
 
         ctx.restore();
+    }
+
+    /**
+     * Spawn an animated floating emoji reaction above a fighter
+     * @param {1|2} playerIndex
+     * @param {string} emoji
+     */
+    triggerEmoji(playerIndex, emoji) {
+        const targetFighter = playerIndex === 1 ? this.f1 : this.f2;
+        const x = targetFighter.x + (Math.random() - 0.5) * 20;
+        const y = Math.min(targetFighter.baseY - 145, targetFighter.y - 145);
+
+        this.floatingEmojis.push({
+            x, y,
+            vy: -2.8,
+            emoji: emoji || '🔥',
+            scale: 0.3,
+            maxScale: 1.5,
+            life: 1.0,
+            alpha: 1.0
+        });
+
+        // Sparkling burst particles in fighter's neon color
+        this.spawnImpactParticles(x, y, targetFighter.color, 8);
+    }
+
+    /**
+     * Show a comic-style cyberpunk speech bubble above a fighter
+     * @param {1|2} playerIndex
+     * @param {string} text
+     */
+    triggerChatBubble(playerIndex, text) {
+        const targetFighter = playerIndex === 1 ? this.f1 : this.f2;
+        this.chatBubbles = this.chatBubbles.filter(b => b.playerIndex !== playerIndex);
+
+        this.chatBubbles.push({
+            playerIndex,
+            text: (text || '').substring(0, 35),
+            life: 1.0,
+            alpha: 1.0,
+            color: targetFighter.color
+        });
+    }
+
+    drawFloatingEmojis() {
+        const ctx = this.ctx;
+        this.floatingEmojis.forEach(fe => {
+            ctx.save();
+            ctx.globalAlpha = fe.alpha;
+            ctx.translate(fe.x, fe.y);
+            ctx.scale(fe.scale, fe.scale);
+            ctx.font = '32px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.shadowBlur = 12;
+            ctx.shadowColor = 'rgba(255, 230, 0, 0.8)';
+            ctx.fillText(fe.emoji, 0, 0);
+            ctx.restore();
+        });
+    }
+
+    drawChatBubbles() {
+        const ctx = this.ctx;
+        this.chatBubbles.forEach(cb => {
+            const f = cb.playerIndex === 1 ? this.f1 : this.f2;
+            ctx.save();
+            ctx.globalAlpha = cb.alpha;
+
+            ctx.font = "800 13px 'Outfit', -apple-system, sans-serif";
+            const textMetrics = ctx.measureText(cb.text);
+            const padX = 14;
+            const padY = 8;
+            const bubbleW = textMetrics.width + padX * 2;
+            const bubbleH = 28;
+            const bubbleX = f.x - bubbleW / 2;
+            const bubbleY = Math.min(f.baseY - 175, f.y - 175);
+
+            // Speech bubble background
+            ctx.fillStyle = 'rgba(7, 9, 19, 0.94)';
+            ctx.strokeStyle = cb.color;
+            ctx.lineWidth = 1.8;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = cb.color;
+
+            ctx.beginPath();
+            if (ctx.roundRect) {
+                ctx.roundRect(bubbleX, bubbleY, bubbleW, bubbleH, 10);
+            } else {
+                ctx.rect(bubbleX, bubbleY, bubbleW, bubbleH);
+            }
+            ctx.fill();
+            ctx.stroke();
+
+            // Pointer tail to fighter
+            ctx.beginPath();
+            ctx.moveTo(f.x - 6, bubbleY + bubbleH);
+            ctx.lineTo(f.x, bubbleY + bubbleH + 7);
+            ctx.lineTo(f.x + 6, bubbleY + bubbleH);
+            ctx.closePath();
+            ctx.fillStyle = 'rgba(7, 9, 19, 0.94)';
+            ctx.fill();
+            ctx.stroke();
+
+            // Speech Text
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(cb.text, f.x, bubbleY + bubbleH / 2 + 1);
+
+            ctx.restore();
+        });
     }
 
     drawFighter(f) {

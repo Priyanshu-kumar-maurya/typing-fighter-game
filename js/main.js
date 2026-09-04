@@ -1136,6 +1136,14 @@ class GameApp {
                     this.ui.showToast('Friend sent custom typing text!', 'info', 3500);
                     break;
                 }
+
+                case 'EMOJI_REACTION':
+                    this.handleOpponentEmoji(payload.emoji);
+                    break;
+
+                case 'CHAT_MESSAGE':
+                    this.handleOpponentChatMessage(payload.text, payload.sender);
+                    break;
             }
         };
 
@@ -1506,6 +1514,169 @@ class GameApp {
             this.pendingGameStart = null;
             start();
         }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // IX. LIVE IN-GAME CHAT & EMOJI REACTION SYSTEM
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Send an animated emoji reaction in battle or lobby
+     * @param {string} emoji
+     */
+    sendEmoji(emoji) {
+        if (!emoji) return;
+
+        // 1. Render animated emoji over Fighter 1
+        this.renderer?.triggerEmoji(1, emoji);
+        audio.playEmojiPop();
+
+        // 2. Add to chat history feed
+        const myName = auth?.currentUser?.name || 'YOU';
+        this.addChatMessage(myName, emoji, 'p1');
+
+        // 3. Network or AI Reaction
+        if (p2p && p2p.isConnected) {
+            p2p.sendEmojiReaction(emoji);
+        } else if (this.isMatchActive && !this.isMatchPaused) {
+            // Smart interactive AI reaction after short delay
+            setTimeout(() => {
+                if (!this.isMatchActive) return;
+                const aiReactionMap = {
+                    '🔥': ['💀', '🥊', '🦾', '⚡'],
+                    '🥊': ['🔥', '⚡', '👑', '🦾'],
+                    '⚡': ['🔥', '😂', '💀', '🦾'],
+                    '😂': ['🤬', '💀', '🥊', '⚡'],
+                    '💀': ['😂', '👑', '🔥', '🥊'],
+                    '👑': ['🥊', '⚡', '🤬', '🦾'],
+                    '🦾': ['🔥', '👑', '⚡', '🥊'],
+                    '🤬': ['😂', '💀', '👑', '🥊']
+                };
+                const pool = aiReactionMap[emoji] || ['🔥', '🥊', '⚡', '👑', '😂'];
+                const aiEmoji = pool[Math.floor(Math.random() * pool.length)];
+
+                this.renderer?.triggerEmoji(2, aiEmoji);
+                audio.playEmojiPop();
+                this.addChatMessage('AI OPPONENT', aiEmoji, 'ai');
+            }, 600 + Math.random() * 600);
+        }
+    }
+
+    /**
+     * Send a quick chat preset message
+     * @param {string} text
+     */
+    sendQuickChat(text) {
+        if (!text) return;
+        const clean = text.trim().substring(0, 40);
+
+        // 1. Render speech bubble over Fighter 1
+        this.renderer?.triggerChatBubble(1, clean);
+        audio.playChatMessage();
+
+        // 2. Add to chat message feed
+        const myName = auth?.currentUser?.name || 'YOU';
+        this.addChatMessage(myName, clean, 'p1');
+
+        // 3. Send over P2P network if connected
+        if (p2p && p2p.isConnected) {
+            p2p.sendChatMessage(clean, myName);
+        } else if (this.isMatchActive && !this.isMatchPaused) {
+            // Interactive AI response after 900ms
+            setTimeout(() => {
+                if (!this.isMatchActive) return;
+                const aiReplies = [
+                    "Bring it on! 🥊",
+                    "Let's see your typing speed! ⚡",
+                    "Not bad, human! 😎",
+                    "Prepare for my super! 🚀",
+                    "Good game! 🤝",
+                    "I am the Typing Master! 👑",
+                    "Nice combo! 🔥"
+                ];
+                const aiText = aiReplies[Math.floor(Math.random() * aiReplies.length)];
+                this.renderer?.triggerChatBubble(2, aiText);
+                audio.playChatMessage();
+                this.addChatMessage('AI BOSS', aiText, 'ai');
+            }, 900);
+        }
+
+        // Auto refocus on typing box so flow is uninterrupted
+        if (this.isMatchActive && !this.isMatchPaused) {
+            this.typeInput?.focus();
+        }
+    }
+
+    /**
+     * Send custom user-typed chat message
+     */
+    sendCustomChat() {
+        const input = document.getElementById('inGameChatInput');
+        if (!input) return;
+        const text = input.value.trim();
+        if (text.length > 0) {
+            this.sendQuickChat(text);
+            input.value = '';
+        }
+    }
+
+    /**
+     * Toggle the in-game chat and quick phrases drawer
+     */
+    toggleInGameChat() {
+        const drawer = document.getElementById('inGameChatDrawer');
+        if (!drawer) return;
+        const isHidden = drawer.classList.toggle('hidden');
+        if (!isHidden) {
+            document.getElementById('inGameChatInput')?.focus();
+        } else if (this.isMatchActive && !this.isMatchPaused) {
+            this.typeInput?.focus();
+        }
+    }
+
+    /**
+     * Add a message entry into the in-game chat feed
+     */
+    addChatMessage(sender, text, type = 'p1') {
+        const feed = document.getElementById('chatMessageFeed');
+        if (!feed) return;
+
+        const item = document.createElement('div');
+        item.className = 'chat-feed-item';
+
+        const safeSender = this.escapeHtml(sender);
+        const safeText = this.escapeHtml(text);
+
+        item.innerHTML = `
+            <span class="chat-sender ${type}">${safeSender}:</span>
+            <span class="chat-bubble-text">${safeText}</span>
+        `;
+
+        feed.appendChild(item);
+        feed.scrollTop = feed.scrollHeight;
+
+        // Limit feed to last 25 messages
+        while (feed.children.length > 25) {
+            feed.removeChild(feed.children[0]);
+        }
+    }
+
+    /**
+     * Handle incoming emoji reaction from P2P opponent
+     */
+    handleOpponentEmoji(emoji) {
+        this.renderer?.triggerEmoji(2, emoji);
+        audio.playEmojiPop();
+        this.addChatMessage('FRIEND', emoji, 'p2');
+    }
+
+    /**
+     * Handle incoming chat message from P2P opponent
+     */
+    handleOpponentChatMessage(text, sender) {
+        this.renderer?.triggerChatBubble(2, text);
+        audio.playChatMessage();
+        this.addChatMessage(sender || 'FRIEND', text, 'p2');
     }
 
     // ═══════════════════════════════════════════════════════════════════════════

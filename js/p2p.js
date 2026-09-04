@@ -45,7 +45,8 @@ class P2PNetwork {
         /** Allowlist of valid incoming message types — unknown types are silently dropped */
         this._validMsgTypes = new Set([
             'KEYSTROKE', 'ATTACK_COMPLETED', 'P2P_READY', 'P2P_UNREADY',
-            'P2P_CUSTOM_TEXT', 'P2P_GAME_OVER', 'ROOM_FULL'
+            'P2P_CUSTOM_TEXT', 'P2P_GAME_OVER', 'ROOM_FULL',
+            'CHAT_MESSAGE', 'EMOJI_REACTION'
         ]);
 
         /** Minimum milliseconds between ATTACK_COMPLETED messages from one opponent */
@@ -387,6 +388,33 @@ class P2PNetwork {
                 return;
             }
 
+            // ── Live In-Game Chat Messages ─────────────────────────────────────────
+            if (msgType === 'CHAT_MESSAGE') {
+                if (this.onMessageCallback) {
+                    const text = String(rawMsg.payload?.text || '').substring(0, 60);
+                    const sender = String(rawMsg.payload?.sender || 'Opponent').substring(0, 20);
+                    this.onMessageCallback({
+                        type: 'CHAT_MESSAGE',
+                        senderIsHost: Boolean(rawMsg.senderIsHost),
+                        payload: { text, sender }
+                    });
+                }
+                return;
+            }
+
+            // ── Live In-Game Emoji Reactions / Taunts ──────────────────────────────
+            if (msgType === 'EMOJI_REACTION') {
+                if (this.onMessageCallback) {
+                    const emoji = String(rawMsg.payload?.emoji || '🔥').substring(0, 8);
+                    this.onMessageCallback({
+                        type: 'EMOJI_REACTION',
+                        senderIsHost: Boolean(rawMsg.senderIsHost),
+                        payload: { emoji }
+                    });
+                }
+                return;
+            }
+
             // ── GAME messages (strict sanitization + rate-limiting) ───────────────
             const now = Date.now();
 
@@ -447,6 +475,19 @@ class P2PNetwork {
                 console.warn("[P2P Send Error]", e.message);
             }
         }
+    }
+
+    sendChatMessage(text, senderName) {
+        return this.send('CHAT_MESSAGE', {
+            text: (text || '').substring(0, 60),
+            sender: senderName || 'Player'
+        });
+    }
+
+    sendEmojiReaction(emoji) {
+        return this.send('EMOJI_REACTION', {
+            emoji: (emoji || '🔥').substring(0, 8)
+        });
     }
 
     disconnect() {

@@ -294,6 +294,8 @@
 
                     <!-- Hidden input for typing focus (configured for mobile soft keyboards) -->
                     <input type="text" id="typeInput" class="hidden-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="text" autofocus>
+                    <!-- Audio element for P2P WebRTC live voice chat -->
+                    <audio id="remoteVoiceAudio" autoplay playsinline style="display:none;"></audio>
                 </div>
 
                 <!-- IN-GAME QUICK EMOJI REACTION DOCK -->
@@ -943,7 +945,7 @@
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=37').then(reg => {
+                navigator.serviceWorker.register('sw.js?v=38').then(reg => {
                     console.log('[PWA] Service Worker registered:', reg.scope);
 
                     // Auto-update SW when new version is deployed
@@ -965,19 +967,19 @@
     </script>
 
     <!-- SCRIPTS (load order matters: dependencies before dependents) -->
-    <script src="js/icons.js?v=37"></script>
-    <script src="js/config.js?v=37"></script>
-    <script src="js/upgrades.js?v=37"></script>  <!-- Coin & upgrade system (needs CONFIG) -->
-    <script src="js/payment.js?v=37"></script>   <!-- Payment Gateway & Coin Recharge Engine -->
-    <script src="js/auth.js?v=37"></script>
-    <script src="js/audio.js?v=37"></script>
-    <script src="js/renderer.js?v=37"></script>
-    <script src="js/p2p.js?v=37"></script>
-    <script src="js/combat.js?v=37"></script>
+    <script src="js/icons.js?v=38"></script>
+    <script src="js/config.js?v=38"></script>
+    <script src="js/upgrades.js?v=38"></script>  <!-- Coin & upgrade system (needs CONFIG) -->
+    <script src="js/payment.js?v=38"></script>   <!-- Payment Gateway & Coin Recharge Engine -->
+    <script src="js/auth.js?v=38"></script>
+    <script src="js/audio.js?v=38"></script>
+    <script src="js/renderer.js?v=38"></script>
+    <script src="js/p2p.js?v=38"></script>
+    <script src="js/combat.js?v=38"></script>
     <!-- Modular sub-systems (loaded before main orchestrator) -->
-    <script src="js/word-engine.js?v=37"></script>
-    <script src="js/ui-manager.js?v=37"></script>
+    <script src="js/word-engine.js?v=38"></script>
+    <script src="js/ui-manager.js?v=38"></script>
     <!-- Main application controller -->
-    <script src="js/main.js?v=37"></script>
+    <script src="js/main.js?v=38"></script>
 </body>
 </html>

@@ -1,6 +1,6 @@
-// Typing Fighter - PWA Service Worker v37 (Live In-Game Chat, Emoji Reactions & Comic Speech Bubbles)
+// Typing Fighter - PWA Service Worker v38 (Critical Bug Fixes & Stability Optimization)
 
-const CACHE_NAME = 'typing-fighter-v37';
+const CACHE_NAME = 'typing-fighter-v38';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',

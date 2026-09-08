@@ -75,6 +75,7 @@ class AuthManager {
     loginAsGuest(name, age) {
         const cleanName = name.trim().substring(0, 15) || "Guest Warrior";
         const parsedAge = parseInt(age) || 18;
+        const savedLvl  = parseInt(localStorage.getItem('tf_unlocked_level')) || 1;
 
         this.currentUser = {
             id: 'guest_' + Date.now(),
@@ -82,7 +83,7 @@ class AuthManager {
             age: parsedAge,
             type: 'guest',
             mobile: null,
-            unlockedLevel: 1,
+            unlockedLevel: savedLvl,
             highWpm: 0,
             matchesPlayed: 0,
             matchesWon: 0,
@@ -147,6 +148,8 @@ class AuthManager {
             return { success: false, message: "Incorrect password! Please check and try again." };
         }
 
+        const savedStorageLvl = parseInt(localStorage.getItem('tf_unlocked_level')) || 1;
+        user.unlockedLevel = Math.max(user.unlockedLevel || 1, savedStorageLvl);
         this.currentUser = user;
         this.saveSession();
         return { success: true, user: this.currentUser };

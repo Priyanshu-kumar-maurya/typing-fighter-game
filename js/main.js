@@ -172,8 +172,10 @@ class GameApp {
      */
     _setupKeyboardListeners() {
         window.addEventListener('keydown', e => {
-            // Never intercept events already destined for a text field
-            if (e.target?.tagName === 'INPUT' || e.target?.tagName === 'TEXTAREA') return;
+            // Never intercept events destined for user input fields (chat, login, room code, etc.)
+            if (e.target && e.target !== this.typeInput && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
+                return;
+            }
 
             // ANTI-CHEAT: Reject programmatic / synthetic key events
             if (e.isTrusted === false) {
@@ -183,7 +185,7 @@ class GameApp {
 
             const key = e.key.toUpperCase();
 
-            // ── Global shortcuts (always active) ──────────────────────────────
+            // ── Global shortcuts (always active even during active typing) ──
             if (key === 'M') { this.toggleSound(); return; }
 
             if (e.key === 'Escape' || key === 'P') {
@@ -191,17 +193,21 @@ class GameApp {
                 return;
             }
 
-            // R / Space — only restart when in-match, paused, or on the game-over screen.
-            // Do NOT fire while campaign grid, content-choice, or other menus are open,
-            // as that would wipe pendingGameStart and close the campaign launch flow.
-            if (key === 'R' || e.code === 'Space') {
+            // R / Space — restart match when game-over or paused
+            if (key === 'R' || (e.code === 'Space' && !this.isMatchActive)) {
                 const gameOverOpen = !document.getElementById('modalGameOver')?.classList.contains('hidden');
                 const pauseOpen    = !document.getElementById('modalPause')?.classList.contains('hidden');
                 if (this.isMatchActive || this.isMatchPaused || gameOverOpen || pauseOpen) {
                     this.restartMatch();
+                    return;
                 }
-                return;
             }
+
+            // Prevent spacebar page scroll during gameplay
+            if (e.code === 'Space') e.preventDefault();
+
+            // When typeInput is focused, the 'input' event processes the character to prevent double-typing on mobile/IME
+            if (e.target === this.typeInput) return;
 
             if (!this.isMatchActive || this.isMatchPaused) return;
 
@@ -209,9 +215,6 @@ class GameApp {
             const now = Date.now();
             if (now - this.lastKeystrokeTime < this.minKeystrokeDeltaMs) return;
             this.lastKeystrokeTime = now;
-
-            // Prevent spacebar page scroll during gameplay
-            if (e.code === 'Space') e.preventDefault();
 
             // Accept printable characters and spacebar
             if (e.key === ' ' || (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey)) {
@@ -453,6 +456,9 @@ class GameApp {
 
         // Switch from Dashboard to Arena view
         this.ui.showArena();
+
+        const matchTimeEl = document.getElementById('matchTime');
+        if (matchTimeEl) matchTimeEl.innerText = '00:00';
 
         if (this.matchTimerInterval) clearInterval(this.matchTimerInterval);
         this.matchTimerInterval = setInterval(() => {
@@ -1056,15 +1062,17 @@ class GameApp {
     /** @private Sync header name/level badge with auth.currentUser */
     _updateUserHeader() {
         if (!auth.currentUser) return;
-        const lvl     = auth.currentUser.unlockedLevel || combat.unlockedLevel || 1;
+        const savedStorageLvl = parseInt(localStorage.getItem('tf_unlocked_level')) || 1;
+        const lvl     = Math.max(auth.currentUser.unlockedLevel || 1, combat.unlockedLevel || 1, savedStorageLvl);
+        auth.currentUser.unlockedLevel = lvl;
+        combat.unlockedLevel = lvl;
+
         const typeTag = auth.currentUser.type === 'registered' ? 'Registered' : 'Guest';
 
         const nameEl = document.getElementById('headerUserName');
         const metaEl = document.getElementById('headerUserMeta');
         if (nameEl) nameEl.innerText = auth.currentUser.name;
         if (metaEl) metaEl.innerText = `${typeTag} | Age: ${auth.currentUser.age || 18} | Stage ${lvl}`;
-
-        combat.unlockedLevel = lvl;
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -1394,6 +1402,7 @@ class GameApp {
         combat.stopAI();
         if (this.matchTimerInterval) clearInterval(this.matchTimerInterval);
         this.ui.closeAllModals();
+        document.getElementById('inGameChatDrawer')?.classList.add('hidden');
         this._updateCoinDisplay();
         if (auth.currentUser) this._updateUserHeader();
         this.ui.showDashboard(combat, upgrades, auth, this.activeSkin);

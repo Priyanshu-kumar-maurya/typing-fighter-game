@@ -39,6 +39,7 @@ class CombatEngine {
         this.currentWord = "";
         this.onGameOverCallback = null;
         this.lastDefeatReason = "";
+        this.isGameOver = false;
     }
 
     getValidatedUnlockedLevel() {
@@ -52,6 +53,7 @@ class CombatEngine {
         this.currentLevel = Math.max(1, Math.min(levelNum, CONFIG.CAMPAIGN_LEVELS.length));
         this.bot = CONFIG.CAMPAIGN_LEVELS[this.currentLevel - 1] || CONFIG.CAMPAIGN_LEVELS[0];
         this.lastDefeatReason = "";
+        this.isGameOver = false;
 
         // ── v29: Vitality upgrade adds bonus Max HP ───────────────────────────
         const bonusHp = (typeof upgrades !== 'undefined') ? upgrades.extraMaxHp : 0;
@@ -235,7 +237,9 @@ class CombatEngine {
     }
 
     checkGameOver() {
+        if (this.isGameOver) return true;
         if (this.p1.hp <= 0 || this.p2.hp <= 0) {
+            this.isGameOver = true;
             this.stopAI();
 
             let winner = 1;

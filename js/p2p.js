@@ -110,10 +110,10 @@ class P2PNetwork {
             console.warn("[P2P] Already connecting — ignoring duplicate call.");
             return;
         }
-        this._connectingLock = true;
 
         // Full cleanup before starting fresh
         this.disconnect();
+        this._connectingLock = true;
 
         const cleanCode = this.sanitizeInput(code).toUpperCase();
         if (cleanCode.length < 2) {

@@ -113,13 +113,15 @@ class WordEngine {
             const ch   = this.currentWord[i];
             const span = document.createElement('span');
 
+            let stateClass = 'char-untyped';
+            if (i < this.typedCharIndex) stateClass = 'char-correct';
+            else if (i === this.typedCharIndex) stateClass = 'char-current';
+
             if (ch === ' ') {
-                span.className = 'char-space';
+                span.className = `char-space ${stateClass}`;
             } else {
                 span.innerText = ch;
-                if (i < this.typedCharIndex)     span.className = 'char-correct';
-                else if (i === this.typedCharIndex) span.className = 'char-current';
-                else                              span.className = 'char-untyped';
+                span.className = stateClass;
             }
 
             container.appendChild(span);

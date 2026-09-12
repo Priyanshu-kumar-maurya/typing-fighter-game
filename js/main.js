@@ -821,6 +821,17 @@ class GameApp {
             return;
         }
 
+        // Auto-select Arena Theme based on Stage Tier
+        let stageTheme = 'cyber_city';
+        if (levelNum >= 21) {
+            stageTheme = 'lava_inferno';
+        } else if (levelNum >= 15) {
+            stageTheme = 'shaolin_temple';
+        } else if (levelNum >= 8) {
+            stageTheme = 'synthwave_retro';
+        }
+        this.selectArenaTheme(stageTheme, false);
+
         // Direct start — no intermediate modal, no closure needed
         this.activeSkin = 'cyber';
         this.ui.closeAllModals();
@@ -858,6 +869,7 @@ class GameApp {
      */
     startStickmanMode() {
         this.activeSkin = 'stickman';
+        this.selectArenaTheme('shaolin_temple', false);
         this.pendingGameStart = () => {
             this.ui.closeAllModals();
             this.renderer.setSkinMode('stickman');
@@ -943,6 +955,36 @@ class GameApp {
             next === 'stickman' ? '⚡ STICKMAN Fighter Activated!' : 'CYBER Fighter Activated!',
             'success'
         );
+    }
+
+    /**
+     * Select or switch the Battle Arena Theme.
+     * @param {string} theme - 'cyber_city' | 'shaolin_temple' | 'lava_inferno' | 'synthwave_retro'
+     * @param {boolean} showToast - whether to show toast notification
+     */
+    selectArenaTheme(theme, showToast = true) {
+        if (!CONFIG.ARENA_THEMES || !CONFIG.ARENA_THEMES[theme]) return;
+        if (this.renderer) {
+            this.renderer.setArenaTheme(theme);
+        }
+
+        this._updateArenaSelectorUI();
+
+        const meta = CONFIG.ARENA_THEMES[theme];
+        if (showToast) {
+            this.ui.showToast(`${meta.icon} Arena: ${meta.name} (${meta.tag})`, 'success', 2500);
+        }
+    }
+
+    /** Sync active state across dashboard and pause menu arena buttons */
+    _updateArenaSelectorUI() {
+        const currentTheme = this.renderer?.arenaTheme || localStorage.getItem('tf_arena_theme') || 'cyber_city';
+        document.querySelectorAll('.arena-theme-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.getAttribute('data-theme') === currentTheme);
+        });
+        document.querySelectorAll('.pause-arena-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.getAttribute('data-pause-theme') === currentTheme);
+        });
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -1406,6 +1448,7 @@ class GameApp {
         this._updateCoinDisplay();
         if (auth.currentUser) this._updateUserHeader();
         this.ui.showDashboard(combat, upgrades, auth, this.activeSkin);
+        this._updateArenaSelectorUI();
     }
 
     /**

@@ -2529,6 +2529,19 @@ canvas {
     color: var(--neon-magenta);
     background: rgba(255, 0, 85, 0.12);
 }
+.dash-arena-card {
+    border-color: rgba(0, 240, 255, 0.25);
+    cursor: default;
+}
+.dash-arena-card:hover {
+    border-color: var(--neon-cyan);
+    box-shadow: 0 8px 25px rgba(0, 240, 255, 0.25);
+}
+.dash-arena-card .dash-card-badge {
+    border-color: var(--neon-cyan);
+    color: var(--neon-cyan);
+    background: rgba(0, 240, 255, 0.12);
+}
 
 /* ── FIGHTER PROFILE CARD BODY ──────────────────────────────────────────── */
 .dash-player-card {
@@ -3371,4 +3384,147 @@ canvas {
         width: calc(100vw - 16px);
     }
 }
+
+/* ── BATTLE ARENA SELECTOR (DASHBOARD & PAUSE) ─────────────────────────── */
+.arena-selector-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-top: 10px;
+    width: 100%;
+}
+
+.arena-theme-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1.5px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    padding: 8px 10px;
+    color: #e2e8f0;
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.2, 0.9, 0.3, 1);
+    text-align: left;
+}
+
+.arena-theme-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+}
+
+.arena-theme-btn.active {
+    background: rgba(0, 240, 255, 0.12);
+    border-color: var(--neon-cyan);
+    color: #ffffff;
+    box-shadow: 0 0 12px rgba(0, 240, 255, 0.35);
+}
+
+.arena-theme-btn[data-theme="shaolin_temple"].active {
+    background: rgba(255, 153, 0, 0.15);
+    border-color: #ff9900;
+    box-shadow: 0 0 12px rgba(255, 153, 0, 0.35);
+}
+
+.arena-theme-btn[data-theme="lava_inferno"].active {
+    background: rgba(255, 51, 0, 0.15);
+    border-color: #ff3300;
+    box-shadow: 0 0 12px rgba(255, 51, 0, 0.35);
+}
+
+.arena-theme-btn[data-theme="synthwave_retro"].active {
+    background: rgba(255, 0, 170, 0.15);
+    border-color: #ff00aa;
+    box-shadow: 0 0 12px rgba(255, 0, 170, 0.35);
+}
+
+.arena-theme-icon {
+    font-size: 1.15rem;
+    flex-shrink: 0;
+}
+
+.arena-theme-name {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── PAUSE MENU ARENA THEME SELECTOR ───────────────────────────────────── */
+.pause-arena-box {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 10px 14px;
+    margin: 8px 0 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.pause-arena-label {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: rgba(255, 255, 255, 0.6);
+    letter-spacing: 1px;
+}
+
+.pause-arena-buttons {
+    display: flex;
+    gap: 6px;
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.pause-arena-btn {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1.5px solid rgba(255, 255, 255, 0.14);
+    border-radius: 8px;
+    padding: 6px 10px;
+    color: #cbd5e1;
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.pause-arena-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+.pause-arena-btn.active {
+    border-color: var(--neon-cyan);
+    background: rgba(0, 240, 255, 0.15);
+    color: #ffffff;
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+}
+
+.pause-arena-btn[data-pause-theme="shaolin_temple"].active {
+    border-color: #ff9900;
+    background: rgba(255, 153, 0, 0.15);
+    box-shadow: 0 0 10px rgba(255, 153, 0, 0.4);
+}
+
+.pause-arena-btn[data-pause-theme="lava_inferno"].active {
+    border-color: #ff3300;
+    background: rgba(255, 51, 0, 0.15);
+    box-shadow: 0 0 10px rgba(255, 51, 0, 0.4);
+}
+
+.pause-arena-btn[data-pause-theme="synthwave_retro"].active {
+    border-color: #ff00aa;
+    background: rgba(255, 0, 170, 0.15);
+    box-shadow: 0 0 10px rgba(255, 0, 170, 0.4);
+}
+
 

@@ -1,6 +1,6 @@
-// Typing Fighter - PWA Service Worker v38 (Critical Bug Fixes & Stability Optimization)
+// Typing Fighter - PWA Service Worker v39 (4 Dynamic Battle Arenas & Ambient Particle Physics)
 
-const CACHE_NAME = 'typing-fighter-v38';
+const CACHE_NAME = 'typing-fighter-v39';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',

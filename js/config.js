@@ -21,6 +21,42 @@ const CONFIG = {
         COMBO_HEAL_AMOUNT: 3
     },
 
+    // ── BATTLE ARENA THEMES ───────────────────────────────────────────────────
+    ARENA_THEMES: {
+        cyber_city: {
+            id: 'cyber_city',
+            name: 'Cyber City',
+            icon: '🏙️',
+            color: '#00f0ff',
+            tag: 'NEON METROPOLIS',
+            floorColor: 'rgba(0, 240, 255, 0.15)'
+        },
+        shaolin_temple: {
+            id: 'shaolin_temple',
+            name: 'Shaolin Temple',
+            icon: '⛩️',
+            color: '#ff9900',
+            tag: 'MOONLIT DOJO',
+            floorColor: 'rgba(255, 153, 0, 0.2)'
+        },
+        lava_inferno: {
+            id: 'lava_inferno',
+            name: 'Lava Inferno',
+            icon: '🌋',
+            color: '#ff3300',
+            tag: 'VOLCANIC CRAGS',
+            floorColor: 'rgba(255, 51, 0, 0.25)'
+        },
+        synthwave_retro: {
+            id: 'synthwave_retro',
+            name: 'Retro Synthwave',
+            icon: '🌅',
+            color: '#ff00aa',
+            tag: '80s OUTRUN SUNSET',
+            floorColor: 'rgba(255, 0, 170, 0.2)'
+        }
+    },
+
     // ── CHARACTER UPGRADE TREES ───────────────────────────────────────────────
     // Each upgrade has: name, icon, desc, maxLevel, costs[] (one per level)
     UPGRADES: {

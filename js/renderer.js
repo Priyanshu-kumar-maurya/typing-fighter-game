@@ -29,9 +29,12 @@ class ArenaRenderer {
         };
 
         this.fighterSkin = 'cyber'; // 'cyber' | 'stickman'
+        this.arenaTheme = localStorage.getItem('tf_arena_theme') || 'cyber_city';
         this.animFrame = 0;
         this.floatingEmojis = [];
         this.chatBubbles = [];
+        this.ambientParticles = [];
+        this.initAmbientParticles();
         this.resize();
         window.addEventListener('resize', () => this.resize());
     }
@@ -212,6 +215,9 @@ class ArenaRenderer {
         });
         this.chatBubbles = this.chatBubbles.filter(cb => cb.life > 0);
 
+        // Update Atmospheric Ambient Particles
+        this.updateAmbientParticles();
+
         return { shakeX, shakeY };
     }
 
@@ -268,12 +274,183 @@ class ArenaRenderer {
         ctx.restore();
     }
 
+    initAmbientParticles() {
+        this.ambientParticles = [];
+        const count = 36;
+        const w = 960;
+        const h = 480;
+        for (let i = 0; i < count; i++) {
+            this.ambientParticles.push(this.createAmbientParticle(w, h, true));
+        }
+    }
+
+    createAmbientParticle(w = 960, h = 480, randomizeY = false) {
+        const theme = this.arenaTheme || 'cyber_city';
+        const startY = randomizeY ? Math.random() * h : (theme === 'lava_inferno' ? h + 10 : -10);
+        const startX = Math.random() * w;
+
+        if (theme === 'shaolin_temple') {
+            return {
+                x: startX,
+                y: startY,
+                vx: Math.random() * 1.1 + 0.5,
+                vy: Math.random() * 0.9 + 0.6,
+                size: Math.random() * 5 + 4,
+                rot: Math.random() * Math.PI * 2,
+                rotSpeed: (Math.random() - 0.5) * 0.05,
+                color: Math.random() > 0.4 ? '#ffb7c5' : '#ff7799',
+                alpha: Math.random() * 0.55 + 0.35,
+                type: 'sakura'
+            };
+        } else if (theme === 'lava_inferno') {
+            return {
+                x: startX,
+                y: startY,
+                vx: (Math.random() - 0.5) * 1.6,
+                vy: -(Math.random() * 2.2 + 1.2),
+                size: Math.random() * 3.5 + 1.5,
+                color: Math.random() > 0.6 ? '#ffbb00' : (Math.random() > 0.4 ? '#ff5500' : '#ff2200'),
+                alpha: Math.random() * 0.7 + 0.3,
+                type: 'ember'
+            };
+        } else if (theme === 'synthwave_retro') {
+            return {
+                x: startX,
+                y: Math.random() * 350,
+                vx: (Math.random() - 0.5) * 0.2,
+                vy: (Math.random() - 0.5) * 0.2,
+                size: Math.random() * 2.5 + 1,
+                color: Math.random() > 0.5 ? '#00f0ff' : '#ff00aa',
+                alpha: Math.random() * 0.8 + 0.2,
+                pulse: Math.random() * Math.PI * 2,
+                pulseSpeed: Math.random() * 0.06 + 0.03,
+                type: 'star'
+            };
+        } else {
+            // cyber_city: digital data specks
+            return {
+                x: startX,
+                y: startY,
+                vx: (Math.random() - 0.5) * 0.9,
+                vy: (Math.random() - 0.5) * 0.9,
+                size: Math.random() * 2.5 + 1.2,
+                color: Math.random() > 0.5 ? '#00f0ff' : '#a855f7',
+                alpha: Math.random() * 0.65 + 0.25,
+                type: 'speck'
+            };
+        }
+    }
+
+    updateAmbientParticles() {
+        const w = this.canvas ? this.canvas.width : 960;
+        const h = this.canvas ? this.canvas.height : 480;
+
+        this.ambientParticles.forEach(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+
+            if (p.type === 'sakura') {
+                p.rot += p.rotSpeed;
+                p.x += Math.sin(this.animFrame * 0.04 + p.y * 0.02) * 0.5;
+                if (p.y > h + 15 || p.x > w + 20) {
+                    Object.assign(p, this.createAmbientParticle(w, h, false));
+                    p.y = -10;
+                    p.x = Math.random() * w;
+                }
+            } else if (p.type === 'ember') {
+                p.x += Math.sin(this.animFrame * 0.05 + p.y * 0.05) * 0.6;
+                p.alpha += (Math.random() - 0.5) * 0.08;
+                p.alpha = Math.max(0.15, Math.min(0.95, p.alpha));
+                if (p.y < 0) {
+                    Object.assign(p, this.createAmbientParticle(w, h, false));
+                    p.y = h + 10;
+                    p.x = Math.random() * w;
+                }
+            } else if (p.type === 'star') {
+                p.pulse += p.pulseSpeed;
+                p.alpha = 0.35 + Math.sin(p.pulse) * 0.45;
+                if (p.x < 0) p.x = w;
+                if (p.x > w) p.x = 0;
+            } else {
+                if (p.x < 0) p.x = w;
+                if (p.x > w) p.x = 0;
+                if (p.y < 0) p.y = h;
+                if (p.y > h) p.y = 0;
+            }
+        });
+    }
+
+    setArenaTheme(theme) {
+        if (!CONFIG.ARENA_THEMES || !CONFIG.ARENA_THEMES[theme]) theme = 'cyber_city';
+        this.arenaTheme = theme;
+        try {
+            localStorage.setItem('tf_arena_theme', theme);
+        } catch (e) {}
+        this.initAmbientParticles();
+    }
+
     drawStage() {
         const ctx = this.ctx;
         const w = this.canvas.width;
         const h = this.canvas.height;
+        const floorY = 380;
 
-        // Background Gradient
+        const theme = this.arenaTheme || 'cyber_city';
+        if (theme === 'shaolin_temple') {
+            this.drawStageShaolinTemple(ctx, w, h, floorY);
+        } else if (theme === 'lava_inferno') {
+            this.drawStageLavaInferno(ctx, w, h, floorY);
+        } else if (theme === 'synthwave_retro') {
+            this.drawStageSynthwaveRetro(ctx, w, h, floorY);
+        } else {
+            this.drawStageCyberCity(ctx, w, h, floorY);
+        }
+
+        // Draw atmospheric ambient particles (sakura / embers / stars / specks)
+        this.drawAmbientParticles(ctx);
+    }
+
+    drawAmbientParticles(ctx) {
+        this.ambientParticles.forEach(p => {
+            ctx.save();
+            ctx.globalAlpha = Math.max(0, Math.min(1, p.alpha));
+
+            if (p.type === 'sakura') {
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.rot);
+                ctx.fillStyle = p.color;
+                ctx.shadowBlur = 5;
+                ctx.shadowColor = 'rgba(255, 183, 197, 0.6)';
+                ctx.beginPath();
+                ctx.ellipse(0, 0, p.size, p.size * 0.55, 0, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (p.type === 'ember') {
+                ctx.fillStyle = p.color;
+                ctx.shadowBlur = 9;
+                ctx.shadowColor = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (p.type === 'star') {
+                ctx.fillStyle = p.color;
+                ctx.shadowBlur = 7;
+                ctx.shadowColor = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                ctx.fillStyle = p.color;
+                ctx.shadowBlur = 5;
+                ctx.shadowColor = p.color;
+                ctx.fillRect(p.x, p.y, p.size, p.size);
+            }
+            ctx.restore();
+        });
+    }
+
+    // ── THEME 1: CYBER CITY (Default Neon Metropolis) ───────────────────────
+    drawStageCyberCity(ctx, w, h, floorY) {
+        // Sky Gradient
         const bgGrad = ctx.createLinearGradient(0, 0, 0, h);
         bgGrad.addColorStop(0, '#0a0a1a');
         bgGrad.addColorStop(0.7, '#12122b');
@@ -281,11 +458,28 @@ class ArenaRenderer {
         ctx.fillStyle = bgGrad;
         ctx.fillRect(0, 0, w, h);
 
-        // Cyber Grid Lines on Floor
         ctx.save();
-        ctx.strokeStyle = 'rgba(0, 240, 255, 0.15)';
+        // Background Neon City Skyline Silhouettes
+        ctx.fillStyle = 'rgba(18, 22, 45, 0.75)';
+        const buildings = [
+            { x: 40, w: 70, h: 220 }, { x: 130, w: 100, h: 270 },
+            { x: 250, w: 80, h: 180 }, { x: 620, w: 90, h: 250 },
+            { x: 730, w: 110, h: 280 }, { x: 860, w: 65, h: 190 }
+        ];
+        buildings.forEach(b => {
+            ctx.fillRect(b.x, floorY - b.h, b.w, b.h);
+            ctx.fillStyle = (b.x % 3 === 0) ? 'rgba(0, 240, 255, 0.25)' : 'rgba(255, 0, 85, 0.25)';
+            for (let wy = floorY - b.h + 20; wy < floorY - 30; wy += 30) {
+                for (let wx = b.x + 10; wx < b.x + b.w - 10; wx += 20) {
+                    ctx.fillRect(wx, wy, 8, 12);
+                }
+            }
+            ctx.fillStyle = 'rgba(18, 22, 45, 0.75)';
+        });
+
+        // Floor Grid Lines
+        ctx.strokeStyle = 'rgba(0, 240, 255, 0.16)';
         ctx.lineWidth = 1;
-        const floorY = 380;
         ctx.beginPath();
         for (let x = 0; x <= w; x += 40) {
             ctx.moveTo(x, floorY);
@@ -299,7 +493,7 @@ class ArenaRenderer {
 
         // Neon Floor Boundary Line
         ctx.strokeStyle = '#00f0ff';
-        ctx.shadowBlur = 15;
+        ctx.shadowBlur = 16;
         ctx.shadowColor = '#00f0ff';
         ctx.lineWidth = 3;
         ctx.beginPath();
@@ -307,24 +501,367 @@ class ArenaRenderer {
         ctx.lineTo(w, floorY);
         ctx.stroke();
 
-        // Background Neon City Skyline Silhouettes
-        ctx.fillStyle = 'rgba(18, 22, 45, 0.7)';
-        const buildings = [
-            { x: 50, w: 70, h: 220 }, { x: 140, w: 100, h: 270 },
-            { x: 260, w: 80, h: 180 }, { x: 620, w: 90, h: 250 },
-            { x: 730, w: 110, h: 280 }, { x: 860, w: 60, h: 190 }
+        ctx.restore();
+    }
+
+    // ── THEME 2: SHAOLIN TEMPLE (Moonlit Pagoda Dojo) ───────────────────────
+    drawStageShaolinTemple(ctx, w, h, floorY) {
+        // Night Sky Gradient
+        const skyGrad = ctx.createLinearGradient(0, 0, 0, floorY);
+        skyGrad.addColorStop(0, '#060515');
+        skyGrad.addColorStop(0.5, '#120b26');
+        skyGrad.addColorStop(1, '#0e172a');
+        ctx.fillStyle = skyGrad;
+        ctx.fillRect(0, 0, w, floorY);
+
+        ctx.save();
+        // Distant Misty Mountains
+        ctx.fillStyle = 'rgba(14, 15, 36, 0.85)';
+        ctx.beginPath();
+        ctx.moveTo(0, floorY);
+        ctx.lineTo(0, floorY - 120);
+        ctx.quadraticCurveTo(w * 0.2, floorY - 210, w * 0.45, floorY - 140);
+        ctx.quadraticCurveTo(w * 0.7, floorY - 240, w, floorY - 150);
+        ctx.lineTo(w, floorY);
+        ctx.closePath();
+        ctx.fill();
+
+        // Giant Luminous Full Moon
+        const moonX = w * 0.76;
+        const moonY = 120;
+        const moonR = 64;
+
+        // Outer Moon Glow
+        const moonGlow = ctx.createRadialGradient(moonX, moonY, moonR * 0.6, moonX, moonY, moonR * 2.2);
+        moonGlow.addColorStop(0, 'rgba(255, 248, 220, 0.35)');
+        moonGlow.addColorStop(0.5, 'rgba(255, 220, 140, 0.12)');
+        moonGlow.addColorStop(1, 'rgba(255, 220, 140, 0)');
+        ctx.fillStyle = moonGlow;
+        ctx.beginPath();
+        ctx.arc(moonX, moonY, moonR * 2.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Moon Disk
+        const moonDisk = ctx.createRadialGradient(moonX - 18, moonY - 18, 5, moonX, moonY, moonR);
+        moonDisk.addColorStop(0, '#ffffff');
+        moonDisk.addColorStop(0.7, '#fff3cc');
+        moonDisk.addColorStop(1, '#fed47e');
+        ctx.fillStyle = moonDisk;
+        ctx.shadowBlur = 24;
+        ctx.shadowColor = 'rgba(255, 230, 160, 0.9)';
+        ctx.beginPath();
+        ctx.arc(moonX, moonY, moonR, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Moon Craters
+        ctx.fillStyle = 'rgba(215, 185, 130, 0.22)';
+        ctx.shadowBlur = 0;
+        const craters = [
+            { x: moonX - 22, y: moonY - 15, r: 10 },
+            { x: moonX + 15, y: moonY + 12, r: 14 },
+            { x: moonX + 26, y: moonY - 18, r: 8 },
+            { x: moonX - 10, y: moonY + 24, r: 9 }
         ];
-        buildings.forEach(b => {
-            ctx.fillRect(b.x, floorY - b.h, b.w, b.h);
-            // Window glow
-            ctx.fillStyle = (b.x % 3 === 0) ? 'rgba(0, 240, 255, 0.2)' : 'rgba(255, 0, 85, 0.2)';
-            for (let wy = floorY - b.h + 20; wy < floorY - 30; wy += 30) {
-                for (let wx = b.x + 10; wx < b.x + b.w - 10; wx += 20) {
-                    ctx.fillRect(wx, wy, 8, 12);
-                }
-            }
-            ctx.fillStyle = 'rgba(18, 22, 45, 0.7)';
+        craters.forEach(c => {
+            ctx.beginPath();
+            ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
+            ctx.fill();
         });
+
+        // Pagoda Silhouettes on Sides
+        const drawPagoda = (px, py, scale) => {
+            ctx.fillStyle = '#0b0c1c';
+            // Pillars
+            ctx.fillRect(px - 32 * scale, py - 180 * scale, 8 * scale, 180 * scale);
+            ctx.fillRect(px + 24 * scale, py - 180 * scale, 8 * scale, 180 * scale);
+
+            // Tiered curved eaves
+            const tiers = [
+                { y: py - 180 * scale, w: 85 * scale, h: 22 * scale },
+                { y: py - 120 * scale, w: 105 * scale, h: 24 * scale },
+                { y: py - 60 * scale,  w: 125 * scale, h: 26 * scale }
+            ];
+            tiers.forEach(t => {
+                ctx.beginPath();
+                ctx.moveTo(px - t.w, t.y);
+                ctx.quadraticCurveTo(px, t.y - t.h, px + t.w, t.y);
+                ctx.lineTo(px + t.w - 12 * scale, t.y + 12 * scale);
+                ctx.quadraticCurveTo(px, t.y + 2 * scale, px - t.w + 12 * scale, t.y + 12 * scale);
+                ctx.closePath();
+                ctx.fill();
+
+                // Hanging Lantern on Pagoda Corner
+                const sway = Math.sin(this.animFrame * 0.05 + px) * 4;
+                const lx = px + t.w - 8 * scale;
+                const ly = t.y + 16 * scale;
+                ctx.save();
+                ctx.translate(lx, ly);
+                ctx.rotate(sway * Math.PI / 180);
+                // String
+                ctx.strokeStyle = '#ff9900';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(0, 10);
+                ctx.stroke();
+                // Glowing Lantern Body
+                ctx.fillStyle = '#ff3300';
+                ctx.shadowBlur = 12;
+                ctx.shadowColor = '#ff9900';
+                ctx.beginPath();
+                ctx.ellipse(0, 16, 6 * scale, 9 * scale, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+        };
+
+        drawPagoda(110, floorY, 1.0);
+        drawPagoda(850, floorY, 0.95);
+
+        // Dojo Polished Wooden Plank Floor
+        const floorGrad = ctx.createLinearGradient(0, floorY, 0, h);
+        floorGrad.addColorStop(0, '#1c110a');
+        floorGrad.addColorStop(0.6, '#130a05');
+        floorGrad.addColorStop(1, '#080402');
+        ctx.fillStyle = floorGrad;
+        ctx.fillRect(0, floorY, w, h - floorY);
+
+        // Wooden Plank Seams
+        ctx.strokeStyle = 'rgba(255, 170, 70, 0.18)';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        for (let x = 0; x <= w; x += 60) {
+            ctx.moveTo(x, floorY);
+            ctx.lineTo(w / 2 + (x - w / 2) * 1.5, h);
+        }
+        for (let y = floorY + 18; y <= h; y += 22) {
+            ctx.moveTo(0, y);
+            ctx.lineTo(w, y);
+        }
+        ctx.stroke();
+
+        // Golden Dojo Boundary Line
+        ctx.strokeStyle = '#ff9900';
+        ctx.shadowBlur = 16;
+        ctx.shadowColor = '#ff9900';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(0, floorY);
+        ctx.lineTo(w, floorY);
+        ctx.stroke();
+
+        ctx.restore();
+    }
+
+    // ── THEME 3: LAVA INFERNO (Volcanic Fiery Crags) ─────────────────────────
+    drawStageLavaInferno(ctx, w, h, floorY) {
+        // Volcanic Cavern Sky Gradient
+        const skyGrad = ctx.createLinearGradient(0, 0, 0, floorY);
+        skyGrad.addColorStop(0, '#0c0202');
+        skyGrad.addColorStop(0.5, '#260606');
+        skyGrad.addColorStop(1, '#1a0303');
+        ctx.fillStyle = skyGrad;
+        ctx.fillRect(0, 0, w, floorY);
+
+        ctx.save();
+        // Stalactites hanging from ceiling
+        ctx.fillStyle = '#100303';
+        const stalactites = [
+            { x: 70, w: 40, h: 90 }, { x: 190, w: 30, h: 65 },
+            { x: 380, w: 50, h: 80 }, { x: 570, w: 35, h: 70 },
+            { x: 780, w: 45, h: 95 }, { x: 890, w: 30, h: 60 }
+        ];
+        stalactites.forEach(st => {
+            ctx.beginPath();
+            ctx.moveTo(st.x - st.w / 2, 0);
+            ctx.lineTo(st.x, st.h);
+            ctx.lineTo(st.x + st.w / 2, 0);
+            ctx.closePath();
+            ctx.fill();
+        });
+
+        // Distant Jagged Volcanic Peaks with Magma Veins
+        ctx.fillStyle = '#140404';
+        ctx.beginPath();
+        ctx.moveTo(0, floorY);
+        const peaks = [
+            { x: 80, y: floorY - 170 }, { x: 210, y: floorY - 110 },
+            { x: 360, y: floorY - 210 }, { x: 510, y: floorY - 130 },
+            { x: 670, y: floorY - 230 }, { x: 820, y: floorY - 120 },
+            { x: 960, y: floorY - 180 }
+        ];
+        peaks.forEach(p => ctx.lineTo(p.x, p.y));
+        ctx.lineTo(w, floorY);
+        ctx.closePath();
+        ctx.fill();
+
+        // Molten Fissures on Volcano Peaks
+        ctx.strokeStyle = 'rgba(255, 68, 0, 0.6)';
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#ff4400';
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        peaks.forEach((p, idx) => {
+            if (idx % 2 === 0) {
+                ctx.moveTo(p.x, p.y + 10);
+                ctx.lineTo(p.x - 12, p.y + 70);
+                ctx.lineTo(p.x + 8, p.y + 120);
+            }
+        });
+        ctx.stroke();
+
+        // Molten Magma Reservoir Beneath Floor
+        const magmaGrad = ctx.createLinearGradient(0, floorY, 0, h);
+        magmaGrad.addColorStop(0, '#1c0404');
+        magmaGrad.addColorStop(0.4, '#2d0606');
+        magmaGrad.addColorStop(1, '#4a0c02');
+        ctx.fillStyle = magmaGrad;
+        ctx.fillRect(0, floorY, w, h - floorY);
+
+        // Glowing Magma Cracks on Floor
+        ctx.strokeStyle = '#ff5500';
+        ctx.shadowBlur = 14;
+        ctx.shadowColor = '#ff3300';
+        ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        // Horizontal glowing veins
+        for (let y = floorY + 20; y < h; y += 28) {
+            ctx.moveTo(0, y);
+            for (let x = 40; x < w; x += 70) {
+                ctx.lineTo(x, y + ((x % 3 === 0) ? 6 : -6));
+            }
+            ctx.lineTo(w, y);
+        }
+        // Vertical jagged branches
+        for (let x = 80; x < w; x += 130) {
+            ctx.moveTo(x, floorY);
+            ctx.lineTo(x + 15, floorY + 35);
+            ctx.lineTo(x - 10, floorY + 70);
+            ctx.lineTo(x + 20, h);
+        }
+        ctx.stroke();
+
+        // Scorching Burning Floor Boundary Line
+        const pulse = Math.sin(this.animFrame * 0.08) * 4;
+        ctx.strokeStyle = '#ff3300';
+        ctx.shadowBlur = 18 + pulse;
+        ctx.shadowColor = '#ff2200';
+        ctx.lineWidth = 3.5;
+        ctx.beginPath();
+        ctx.moveTo(0, floorY);
+        ctx.lineTo(w, floorY);
+        ctx.stroke();
+
+        ctx.restore();
+    }
+
+    // ── THEME 4: RETRO SYNTHWAVE (80s Outrun Neon Sunset) ───────────────────
+    drawStageSynthwaveRetro(ctx, w, h, floorY) {
+        // Classic 80s Sunset Gradient
+        const skyGrad = ctx.createLinearGradient(0, 0, 0, floorY);
+        skyGrad.addColorStop(0, '#090014');
+        skyGrad.addColorStop(0.35, '#2a0438');
+        skyGrad.addColorStop(0.65, '#6a0a4a');
+        skyGrad.addColorStop(0.88, '#b81c5c');
+        skyGrad.addColorStop(1, '#ff4d6d');
+        ctx.fillStyle = skyGrad;
+        ctx.fillRect(0, 0, w, floorY);
+
+        ctx.save();
+        // Giant Retro Horizon Sun
+        const sunX = w * 0.5;
+        const sunY = floorY;
+        const sunR = 100;
+
+        // Sun Gradient (Yellow to Hot Pink)
+        const sunGrad = ctx.createLinearGradient(sunX, sunY - sunR, sunX, sunY);
+        sunGrad.addColorStop(0, '#fff44f');
+        sunGrad.addColorStop(0.45, '#ff8300');
+        sunGrad.addColorStop(0.85, '#ff007f');
+        sunGrad.addColorStop(1, '#9b00e8');
+
+        ctx.fillStyle = sunGrad;
+        ctx.shadowBlur = 28;
+        ctx.shadowColor = '#ff007f';
+        ctx.beginPath();
+        ctx.arc(sunX, sunY, sunR, Math.PI, 0, false);
+        ctx.fill();
+
+        // Sun Horizontal Slice Cutouts (Iconic Synthwave Look)
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#10001d';
+        const slices = [
+            { y: sunY - 45, h: 3 },
+            { y: sunY - 33, h: 5 },
+            { y: sunY - 20, h: 7 },
+            { y: sunY - 8,  h: 9 }
+        ];
+        slices.forEach(s => {
+            ctx.fillRect(sunX - sunR - 10, s.y, (sunR + 10) * 2, s.h);
+        });
+
+        // Distant Wireframe Neon Mountains
+        const drawMountainRidge = (color, strokeColor, baseY, heightScale) => {
+            ctx.fillStyle = color;
+            ctx.strokeStyle = strokeColor;
+            ctx.lineWidth = 1.8;
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = strokeColor;
+            ctx.beginPath();
+            ctx.moveTo(0, floorY);
+            const mPoints = [
+                { x: 0, y: baseY },
+                { x: 90, y: baseY - 80 * heightScale },
+                { x: 180, y: baseY - 30 * heightScale },
+                { x: 290, y: baseY - 120 * heightScale },
+                { x: 390, y: baseY - 50 * heightScale },
+                { x: sunX, y: baseY - 10 * heightScale }, // Dip near sun
+                { x: 570, y: baseY - 50 * heightScale },
+                { x: 670, y: baseY - 120 * heightScale },
+                { x: 780, y: baseY - 30 * heightScale },
+                { x: 870, y: baseY - 80 * heightScale },
+                { x: w, y: baseY }
+            ];
+            mPoints.forEach(pt => ctx.lineTo(pt.x, pt.y));
+            ctx.lineTo(w, floorY);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+        };
+
+        drawMountainRidge('rgba(22, 0, 36, 0.9)', '#00f0ff', floorY, 0.75);
+
+        // 3D Perspective Outrun Floor Grid
+        const floorGrad = ctx.createLinearGradient(0, floorY, 0, h);
+        floorGrad.addColorStop(0, '#0c0018');
+        floorGrad.addColorStop(1, '#020005');
+        ctx.fillStyle = floorGrad;
+        ctx.fillRect(0, floorY, w, h - floorY);
+
+        ctx.strokeStyle = 'rgba(255, 0, 170, 0.28)';
+        ctx.lineWidth = 1.3;
+        ctx.beginPath();
+        // Perspective radiating lines converging to sun horizon center
+        for (let x = -200; x <= w + 200; x += 55) {
+            ctx.moveTo(sunX + (x - sunX) * 0.15, floorY);
+            ctx.lineTo(x, h);
+        }
+        // Horizontal grid lines scrolling perspective
+        for (let y = floorY + 12; y <= h; y += 18) {
+            ctx.moveTo(0, y);
+            ctx.lineTo(w, y);
+        }
+        ctx.stroke();
+
+        // Neon Magenta Floor Boundary Line
+        ctx.strokeStyle = '#ff00bb';
+        ctx.shadowBlur = 18;
+        ctx.shadowColor = '#ff00bb';
+        ctx.lineWidth = 3.5;
+        ctx.beginPath();
+        ctx.moveTo(0, floorY);
+        ctx.lineTo(w, floorY);
+        ctx.stroke();
 
         ctx.restore();
     }

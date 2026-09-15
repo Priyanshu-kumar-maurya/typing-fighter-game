@@ -131,6 +131,9 @@ class GameApp {
         // P2P network event callbacks
         this._setupP2PCallbacks();
 
+        // Start battle skill cooldown ticker
+        this._startSkillCooldownTicker();
+
         // Start canvas render loop (60 FPS)
         const loop = () => {
             this.renderer.render();
@@ -205,6 +208,16 @@ class GameApp {
 
             // Prevent spacebar page scroll during gameplay
             if (e.code === 'Space') e.preventDefault();
+
+            // ── Battle Skills Keyboard Shortcuts (1: Freeze, 2: Shield, 3: 2x Boost, 4: Heal) ──
+            if (this.isMatchActive && !this.isMatchPaused && ['1', '2', '3', '4'].includes(e.key)) {
+                const expected = this.words?.currentWord ? this.words.currentWord[this.words.typedCharIndex] : null;
+                if (expected !== e.key) {
+                    const skillMap = { '1': 'freeze', '2': 'shield', '3': 'double_dmg', '4': 'medkit' };
+                    this.useSkill(skillMap[e.key]);
+                    return;
+                }
+            }
 
             // When typeInput is focused, the 'input' event processes the character to prevent double-typing on mobile/IME
             if (e.target === this.typeInput) return;
@@ -384,6 +397,14 @@ class GameApp {
             // Extra orange sparks at the attacker to show the burst
             this.renderer.spawnHitSparks(attacker.x, attacker.y - 40, '#ff8800', 'heavy');
             this.renderer.spawnHitSparks(defender.x, defender.y - 60, '#ff8800', 'heavy');
+
+        } else if (attack.isDoubleDmg) {
+            this.renderer.setDoubleDamageActive(false);
+            dmgText  = `💥 2X HIT! -${attack.damage}`;
+            dmgColor = '#ff3300';
+            dmgSize  = 32;
+            this.renderer.spawnHitSparks(defender.x, defender.y - 60, '#ff3300', 'super');
+            this.renderer.triggerShake(8, 12);
 
         } else if (attack.isRage) {
             dmgText  = `🔥 RAGE! -${attack.damage}`;
@@ -588,6 +609,26 @@ class GameApp {
      * @param {{ attackType: string, damage: number, botName: string }} aiHit
      */
     _handleAIAttack(aiHit) {
+        if (aiHit.isFrozen) {
+            this.renderer.addFloatingText(
+                this.renderer.f2.x, this.renderer.f2.y - 70,
+                '❄️ FROZEN!', '#00f0ff', 24
+            );
+            return;
+        }
+
+        if (aiHit.shieldBlocked) {
+            this.renderer.triggerAttack(2, aiHit.attackType);
+            this.renderer.setShieldCharges(1, combat.skills?.shield?.charges || 0);
+            this.renderer.addFloatingText(
+                this.renderer.f1.x, this.renderer.f1.y - 70,
+                '🛡️ BLOCKED!', '#00f0ff', 26
+            );
+            audio.playShield();
+            this.ui.updateHUD(combat.p1, combat.p2);
+            return;
+        }
+
         this.renderer.triggerAttack(2, aiHit.attackType);
         this.renderer.addFloatingText(
             this.renderer.f1.x, this.renderer.f1.y - 70,
@@ -988,6 +1029,140 @@ class GameApp {
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
+    // BATTLE POWER-UPS & SUPER SKILLS
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Activate a battle skill by ID ('freeze' | 'shield' | 'double_dmg' | 'medkit').
+     * @param {'freeze'|'shield'|'double_dmg'|'medkit'} skillId
+     */
+    useSkill(skillId) {
+        if (!this.isMatchActive || this.isMatchPaused) {
+            this.ui.showToast('Start a match first to use skills!', 'info', 2000);
+            return;
+        }
+
+        const res = combat.useSkill(skillId);
+        if (!res.success) {
+            if (res.reason === 'cooldown') {
+                this.ui.showToast(`⏳ ${combat.skills[skillId].name} on cooldown (${res.remaining}s remaining)`, 'warning', 1800);
+            }
+            return;
+        }
+
+        if (skillId === 'freeze') {
+            audio.playFreeze();
+            this.renderer.setFreezeActive(true);
+            this.renderer.addFloatingText(this.renderer.f2.x, this.renderer.f2.y - 70, '❄️ TIME FREEZE!', '#00f0ff', 24);
+            this.ui.showToast('⏱️ TIME FREEZE ACTIVATED! Opponent attacks frozen for 4s!', 'info', 3000);
+            setTimeout(() => {
+                this.renderer.setFreezeActive(false);
+            }, 4000);
+        } else if (skillId === 'shield') {
+            audio.playShield();
+            this.renderer.setShieldCharges(1, 2);
+            this.renderer.addFloatingText(this.renderer.f1.x, this.renderer.f1.y - 70, '🛡️ SHIELD (2x)', '#00f0ff', 22);
+            this.ui.showToast('🛡️ CYBER SHIELD ARMED! Next 2 attacks will be blocked!', 'success', 3000);
+        } else if (skillId === 'double_dmg') {
+            audio.playDoubleDamage();
+            this.renderer.setDoubleDamageActive(true);
+            this.renderer.addFloatingText(this.renderer.f1.x, this.renderer.f1.y - 70, '🔥 2X ARMED', '#ff3300', 22);
+            this.ui.showToast('💥 2X DAMAGE BOOST ARMED! Next word deals DOUBLE damage!', 'warning', 3000);
+        } else if (skillId === 'medkit') {
+            audio.playHeal();
+            this.renderer.spawnHealBurst(this.renderer.f1.x, this.renderer.f1.y);
+            this.renderer.addFloatingText(this.renderer.f1.x, this.renderer.f1.y - 70, `+${res.healed} HP 💚`, '#00ff88', 26);
+            this.ui.showToast(`💚 HEALED! Restored +${res.healed} HP!`, 'success', 2500);
+            this.ui.updateHUD(combat.p1, combat.p2);
+        }
+
+        // Broadcast to P2P opponent if in multiplayer
+        if (p2p.isConnected) {
+            p2p.send('BATTLE_SKILL', { skillId });
+        }
+
+        this.typeInput?.focus();
+    }
+
+    /**
+     * Handle incoming skill used by P2P opponent.
+     * @param {'freeze'|'shield'|'double_dmg'|'medkit'} skillId
+     */
+    handleOpponentSkill(skillId) {
+        if (!this.isMatchActive) return;
+
+        if (skillId === 'freeze') {
+            audio.playFreeze();
+            this.renderer.setFreezeActive(true);
+            this.renderer.addFloatingText(this.renderer.f1.x, this.renderer.f1.y - 70, '❄️ FROZEN!', '#00f0ff', 26);
+            this.ui.showToast('❄️ OPPONENT USED TIME FREEZE! You are frozen for 3s!', 'error', 3000);
+            if (this.typeInput) {
+                const prevDisabled = this.typeInput.disabled;
+                this.typeInput.disabled = true;
+                setTimeout(() => {
+                    this.typeInput.disabled = prevDisabled;
+                    this.renderer.setFreezeActive(false);
+                    this.typeInput.focus();
+                }, 3000);
+            }
+        } else if (skillId === 'shield') {
+            audio.playShield();
+            this.renderer.setShieldCharges(2, 2);
+            this.renderer.addFloatingText(this.renderer.f2.x, this.renderer.f2.y - 70, '🛡️ SHIELD (2x)', '#00f0ff', 22);
+            this.ui.showToast('🛡️ Opponent activated Cyber Shield!', 'info', 2500);
+        } else if (skillId === 'double_dmg') {
+            audio.playDoubleDamage();
+            this.renderer.addFloatingText(this.renderer.f2.x, this.renderer.f2.y - 70, '🔥 2X ARMED', '#ff3300', 22);
+            this.ui.showToast('⚠️ Watch out! Opponent activated 2X Damage Boost!', 'warning', 3000);
+        } else if (skillId === 'medkit') {
+            audio.playHeal();
+            combat.p2.hp = Math.min(combat.p2.maxHp, combat.p2.hp + 35);
+            this.renderer.spawnHealBurst(this.renderer.f2.x, this.renderer.f2.y);
+            this.renderer.addFloatingText(this.renderer.f2.x, this.renderer.f2.y - 70, '+35 HP 💚', '#00ff88', 24);
+            this.ui.updateHUD(combat.p1, combat.p2);
+        }
+    }
+
+    /**
+     * Ticker loop updating skill cooldown overlays, countdown texts, and ready states.
+     * @private
+     */
+    _startSkillCooldownTicker() {
+        setInterval(() => {
+            if (!combat.skills) return;
+            const now = Date.now();
+            const skillsMap = [
+                { id: 'freeze', btn: 'skillFreeze', cd: 'cdFreeze' },
+                { id: 'shield', btn: 'skillShield', cd: 'cdShield' },
+                { id: 'double_dmg', btn: 'skillDoubleDmg', cd: 'cdDoubleDmg' },
+                { id: 'medkit', btn: 'skillMedkit', cd: 'cdMedkit' }
+            ];
+
+            skillsMap.forEach(({ id, btn, cd }) => {
+                const s = combat.skills[id];
+                const btnEl = document.getElementById(btn);
+                const cdEl = document.getElementById(cd);
+                if (!s || !btnEl || !cdEl) return;
+
+                const elapsed = (now - s.lastUsed) / 1000;
+                if (s.lastUsed > 0 && elapsed < s.cooldown) {
+                    const remaining = Math.ceil(s.cooldown - elapsed);
+                    const pct = Math.max(0, Math.min(100, Math.round(((s.cooldown - elapsed) / s.cooldown) * 100)));
+                    btnEl.classList.add('on-cooldown');
+                    btnEl.classList.remove('ready');
+                    cdEl.innerText = `${remaining}s`;
+                    cdEl.style.height = `${pct}%`;
+                } else {
+                    btnEl.classList.remove('on-cooldown');
+                    btnEl.classList.add('ready');
+                    cdEl.innerText = '';
+                    cdEl.style.height = '0%';
+                }
+            });
+        }, 150);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
     // VI. SOUND & HUD CONTROLS
     // ═══════════════════════════════════════════════════════════════════════════
 
@@ -1149,6 +1324,19 @@ class GameApp {
                     // Guard: only process during an active, unpaused match
                     if (!this.isMatchActive || this.isMatchPaused) return;
 
+                    // Check if Player 1 Cyber Shield is active
+                    if (combat.skills && combat.skills.shield && combat.skills.shield.charges > 0) {
+                        combat.skills.shield.charges--;
+                        this.renderer.setShieldCharges(1, combat.skills.shield.charges);
+                        this.renderer.triggerAttack(2, 'light');
+                        audio.playShield();
+                        this.renderer.addFloatingText(
+                            this.renderer.f1.x, this.renderer.f1.y - 70,
+                            '🛡️ BLOCKED!', '#00f0ff', 26
+                        );
+                        break;
+                    }
+
                     // Damage is already hard-capped at 50 in p2p.js; double-check here
                     const validDamage = Math.min(payload.damage || 0, 50);
                     combat.p1.hp = Math.max(0, combat.p1.hp - validDamage);
@@ -1162,6 +1350,10 @@ class GameApp {
                     combat.checkGameOver();
                     break;
                 }
+
+                case 'BATTLE_SKILL':
+                    this.handleOpponentSkill(payload.skillId);
+                    break;
 
                 case 'P2P_READY':
                     this.setOpponentReady(true);

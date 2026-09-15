@@ -55,7 +55,7 @@ class PaymentManager {
         this.currentTab = 'upi';
 
         // Generate dynamic UPI Payment URI
-        const upiId   = CONFIG.PAYMENT.MERCHANT_UPI_ID || 'priyanshukumar@upi';
+        const upiId   = CONFIG.PAYMENT.MERCHANT_UPI_ID || 'ky187768@okicici';
         const name    = encodeURIComponent(CONFIG.PAYMENT.MERCHANT_NAME || 'Typing Fighter Arena');
         const note    = encodeURIComponent(`${pkg.label} - ${pkg.coins} Coins`);
         const amount  = pkg.amountInRupees || 49;
@@ -165,7 +165,7 @@ class PaymentManager {
      * Copy UPI ID to clipboard.
      */
     copyUPIId() {
-        const upiId = CONFIG.PAYMENT.MERCHANT_UPI_ID || 'priyanshukumar@upi';
+        const upiId = CONFIG.PAYMENT.MERCHANT_UPI_ID || 'ky187768@okicici';
         navigator.clipboard.writeText(upiId).then(() => {
             game.ui.showToast(`✅ UPI ID copied: ${upiId}`, 'success', 2500);
         }).catch(() => {

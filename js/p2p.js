@@ -46,7 +46,7 @@ class P2PNetwork {
         this._validMsgTypes = new Set([
             'KEYSTROKE', 'ATTACK_COMPLETED', 'P2P_READY', 'P2P_UNREADY',
             'P2P_CUSTOM_TEXT', 'P2P_GAME_OVER', 'ROOM_FULL',
-            'CHAT_MESSAGE', 'EMOJI_REACTION'
+            'CHAT_MESSAGE', 'EMOJI_REACTION', 'BATTLE_SKILL'
         ]);
 
         /** Minimum milliseconds between ATTACK_COMPLETED messages from one opponent */

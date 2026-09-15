@@ -21,6 +21,46 @@ const CONFIG = {
         COMBO_HEAL_AMOUNT: 3
     },
 
+    // ── BATTLE POWER-UPS & SUPER SKILLS ───────────────────────────────────────
+    BATTLE_SKILLS: {
+        freeze: {
+            id: 'freeze',
+            name: 'Time Freeze',
+            icon: '⏱️',
+            key: '1',
+            cooldown: 25, // seconds
+            duration: 4, // 4s freeze duration
+            desc: 'Freezes opponent attacks & typing for 4s!'
+        },
+        shield: {
+            id: 'shield',
+            name: 'Cyber Shield',
+            icon: '🛡️',
+            key: '2',
+            cooldown: 20, // seconds
+            charges: 2, // blocks next 2 attacks
+            desc: 'Absorbs & completely blocks next 2 incoming attacks!'
+        },
+        double_dmg: {
+            id: 'double_dmg',
+            name: '2X Boost',
+            icon: '💥',
+            key: '3',
+            cooldown: 18, // seconds
+            multiplier: 2.0,
+            desc: 'Doubles the damage of your next completed word!'
+        },
+        medkit: {
+            id: 'medkit',
+            name: 'Instant Heal',
+            icon: '💚',
+            key: '4',
+            cooldown: 28, // seconds
+            healAmount: 35,
+            desc: 'Instantly restores +35 HP!'
+        }
+    },
+
     // ── BATTLE ARENA THEMES ───────────────────────────────────────────────────
     ARENA_THEMES: {
         cyber_city: {
@@ -109,7 +149,7 @@ const CONFIG = {
     // ── PAYMENT GATEWAY CONFIGURATION ─────────────────────────────────────────
     PAYMENT: {
         MERCHANT_NAME: 'Typing Fighter Arena',
-        MERCHANT_UPI_ID: 'priyanshukumar@upi', // UPI ID for direct QR / UPI Intent payments
+        MERCHANT_UPI_ID: 'ky187768@okicici', // UPI ID for direct QR / UPI Intent payments
         RAZORPAY_KEY_ID: 'rzp_test_TYPINGFIGHTER', // Razorpay Key ID (Replace with your live/test key)
         CURRENCY: 'INR',
         THEME_COLOR: '#00f0ff'

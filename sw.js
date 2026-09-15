@@ -1,6 +1,6 @@
-// Typing Fighter - PWA Service Worker v39 (4 Dynamic Battle Arenas & Ambient Particle Physics)
+// Typing Fighter - PWA Service Worker v40 (Battle Skills, Super Abilities & Updated UPI Gateway)
 
-const CACHE_NAME = 'typing-fighter-v39';
+const CACHE_NAME = 'typing-fighter-v40';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',

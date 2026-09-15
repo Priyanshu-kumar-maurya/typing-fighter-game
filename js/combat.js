@@ -77,6 +77,81 @@ class CombatEngine {
         this.startTime = Date.now();
         this.wordStartTime = Date.now();
         if (this.aiTimer) clearInterval(this.aiTimer);
+        this.initSkills();
+    }
+
+    initSkills() {
+        const bs = CONFIG.BATTLE_SKILLS || {};
+        this.skills = {
+            freeze: {
+                id: 'freeze',
+                name: bs.freeze?.name || 'Time Freeze',
+                icon: bs.freeze?.icon || '⏱️',
+                cooldown: bs.freeze?.cooldown || 25,
+                duration: bs.freeze?.duration || 4,
+                lastUsed: 0,
+                activeUntil: 0
+            },
+            shield: {
+                id: 'shield',
+                name: bs.shield?.name || 'Cyber Shield',
+                icon: bs.shield?.icon || '🛡️',
+                cooldown: bs.shield?.cooldown || 20,
+                charges: 0,
+                lastUsed: 0
+            },
+            double_dmg: {
+                id: 'double_dmg',
+                name: bs.double_dmg?.name || '2X Boost',
+                icon: bs.double_dmg?.icon || '💥',
+                cooldown: bs.double_dmg?.cooldown || 18,
+                activeWords: 0,
+                lastUsed: 0
+            },
+            medkit: {
+                id: 'medkit',
+                name: bs.medkit?.name || 'Instant Heal',
+                icon: bs.medkit?.icon || '💚',
+                cooldown: bs.medkit?.cooldown || 28,
+                healAmount: bs.medkit?.healAmount || 35,
+                lastUsed: 0
+            }
+        };
+    }
+
+    isOpponentFrozen() {
+        return this.skills && this.skills.freeze && Date.now() < this.skills.freeze.activeUntil;
+    }
+
+    useSkill(skillId) {
+        if (!this.skills || !this.skills[skillId]) return { success: false, reason: 'unknown' };
+        const skill = this.skills[skillId];
+        const now = Date.now();
+        const elapsed = (now - skill.lastUsed) / 1000;
+        if (skill.lastUsed > 0 && elapsed < skill.cooldown) {
+            const remaining = Math.ceil(skill.cooldown - elapsed);
+            return { success: false, reason: 'cooldown', remaining };
+        }
+
+        skill.lastUsed = now;
+
+        if (skillId === 'freeze') {
+            skill.activeUntil = now + (skill.duration * 1000);
+            return { success: true, skillId, skill, duration: skill.duration };
+        } else if (skillId === 'shield') {
+            skill.charges = 2;
+            return { success: true, skillId, skill, charges: 2 };
+        } else if (skillId === 'double_dmg') {
+            skill.activeWords = 1;
+            return { success: true, skillId, skill, words: 1 };
+        } else if (skillId === 'medkit') {
+            const oldHp = this.p1.hp;
+            this.p1.hp = Math.min(this.p1.maxHp, this.p1.hp + skill.healAmount);
+            const healed = this.p1.hp - oldHp;
+            return { success: true, skillId, skill, healed };
+        }
+
+        return { success: true, skillId, skill };
     }
 
     unlockNextLevel() {
@@ -93,6 +168,19 @@ class CombatEngine {
         this.aiTimer = setInterval(() => {
             if (this.p1.hp <= 0 || this.p2.hp <= 0) return;
 
+            // Check if AI is frozen by Time Freeze skill
+            if (this.isOpponentFrozen()) {
+                if (onAIAttack) {
+                    onAIAttack({
+                        attackType: 'frozen',
+                        damage: 0,
+                        botName: this.bot.name,
+                        isFrozen: true
+                    });
+                }
+                return;
+            }
+
             // Base AI attack
             const isHeavy = Math.random() < (0.25 + (this.currentLevel * 0.02));
             let damage = isHeavy
@@ -103,13 +191,22 @@ class CombatEngine {
             const defMult = (typeof upgrades !== 'undefined') ? upgrades.defenseMultiplier : 1;
             damage = Math.max(1, Math.round(damage * defMult));
 
+            // ── Cyber Shield Block Check ──────────────────────────────────────
+            let isShieldBlocked = false;
+            if (this.skills && this.skills.shield && this.skills.shield.charges > 0) {
+                this.skills.shield.charges--;
+                isShieldBlocked = true;
+                damage = 0;
+            }
+
             this.p1.hp = Math.max(0, this.p1.hp - damage);
 
             if (onAIAttack) {
                 onAIAttack({
                     attackType: isHeavy ? 'heavy' : 'light',
                     damage:     damage,
-                    botName:    this.bot.name
+                    botName:    this.bot.name,
+                    shieldBlocked: isShieldBlocked
                 });
             }
 
@@ -189,8 +286,16 @@ class CombatEngine {
         const isRage = playerNum === 1 && (player.hp / player.maxHp) < rageThresh;
         if (isRage) totalDamage = Math.round(totalDamage * 1.5);
 
+        // ── 2X Boost Skill Multiplier ─────────────────────────────────────────
+        let isDoubleDmg = false;
+        if (playerNum === 1 && this.skills && this.skills.double_dmg && this.skills.double_dmg.activeWords > 0) {
+            this.skills.double_dmg.activeWords--;
+            totalDamage = Math.round(totalDamage * 2);
+            isDoubleDmg = true;
+        }
+
         // Security cap
-        totalDamage = Math.min(totalDamage, 60);
+        totalDamage = Math.min(totalDamage, 100);
 
         // ── Apply damage ──────────────────────────────────────────────────────
         opponent.hp = Math.max(0, opponent.hp - totalDamage);
@@ -227,6 +332,7 @@ class CombatEngine {
             isSuper:    isSuper,
             isCritical: isCritical,
             isRage:     isRage,
+            isDoubleDmg: isDoubleDmg,
             healed:     healed,
             isHeavy:    word.length >= 7,
             combo:      player.combo

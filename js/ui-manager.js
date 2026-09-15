@@ -494,7 +494,7 @@ class UIManager {
         }
 
         // Set Merchant UPI ID text
-        const upiId = CONFIG.PAYMENT.MERCHANT_UPI_ID || 'priyanshukumar@upi';
+        const upiId = CONFIG.PAYMENT.MERCHANT_UPI_ID || 'ky187768@okicici';
         this._setText('payMerchantUpiIdText', 'innerText', upiId);
 
         // Reset UTR input

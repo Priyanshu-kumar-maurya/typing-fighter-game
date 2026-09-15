@@ -35,6 +35,13 @@ class ArenaRenderer {
         this.chatBubbles = [];
         this.ambientParticles = [];
         this.initAmbientParticles();
+
+        // Battle Skills Visual State
+        this.shieldChargesP1 = 0;
+        this.shieldChargesP2 = 0;
+        this.freezeActive = false;
+        this.doubleDamageActive = false;
+
         this.resize();
         window.addEventListener('resize', () => this.resize());
     }
@@ -235,6 +242,15 @@ class ArenaRenderer {
         this.drawFighter(this.f2);
         this.drawFighterHpBar(this.f1);
         this.drawFighterHpBar(this.f2);
+
+        // 2.5 Draw Battle Skill Overlays (Shield, Freeze, 2X Aura)
+        if (this.shieldChargesP1 > 0) this.drawShieldBarrier(this.f1);
+        if (this.shieldChargesP2 > 0) this.drawShieldBarrier(this.f2);
+        if (this.doubleDamageActive) this.drawDoubleDamageAura(this.f1);
+        if (this.freezeActive) {
+            this.drawFreezeEffect(this.f2);
+            this.drawFrostVignette(this.canvas.width, this.canvas.height);
+        }
 
         // 3. Draw Beam Attack if Super State active
         if (this.f1.state === 'attack_super') this.drawSuperBeam(this.f1, this.f2);
@@ -1308,5 +1324,156 @@ class ArenaRenderer {
         ctx.stroke();
 
         ctx.restore();
+    }
+
+    // ── BATTLE SKILLS VISUAL RENDERING ────────────────────────────────────────
+
+    setShieldCharges(playerNum, charges) {
+        if (playerNum === 1) this.shieldChargesP1 = charges;
+        else this.shieldChargesP2 = charges;
+    }
+
+    setFreezeActive(active) {
+        this.freezeActive = !!active;
+    }
+
+    setDoubleDamageActive(active) {
+        this.doubleDamageActive = !!active;
+    }
+
+    drawShieldBarrier(f) {
+        const ctx = this.ctx;
+        ctx.save();
+        ctx.translate(f.x, f.y - 45);
+        const pulse = Math.sin(this.animFrame * 0.15) * 4;
+        const radX = 42 + pulse;
+        const radY = 56 + pulse;
+
+        // Shield Outer Holographic Glow
+        ctx.strokeStyle = 'rgba(0, 240, 255, 0.85)';
+        ctx.shadowBlur = 22;
+        ctx.shadowColor = '#00f0ff';
+        ctx.lineWidth = 2.5;
+
+        ctx.beginPath();
+        ctx.ellipse(0, 0, radX, radY, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Inner Shield Shimmer Grid
+        ctx.fillStyle = 'rgba(0, 240, 255, 0.12)';
+        ctx.fill();
+
+        // Rotating Energy Ring
+        ctx.rotate(this.animFrame * 0.04);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(0, 0, radX + 6, 0, Math.PI * 0.6);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(0, 0, radX + 6, Math.PI, Math.PI * 1.6);
+        ctx.stroke();
+
+        ctx.restore();
+    }
+
+    drawFreezeEffect(f) {
+        const ctx = this.ctx;
+        ctx.save();
+        ctx.translate(f.x, f.y - 45);
+
+        // Icy Glow
+        ctx.strokeStyle = 'rgba(160, 230, 255, 0.9)';
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = '#00f0ff';
+        ctx.lineWidth = 3;
+
+        // Ice Crystal Spikes surrounding frozen fighter
+        const spikes = 8;
+        const rInner = 38;
+        const rOuter = 58;
+        ctx.beginPath();
+        for (let i = 0; i < spikes * 2; i++) {
+            const angle = (i * Math.PI) / spikes;
+            const r = (i % 2 === 0) ? rOuter : rInner;
+            const px = Math.cos(angle) * r;
+            const py = Math.sin(angle) * r;
+            if (i === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(160, 230, 255, 0.22)';
+        ctx.fill();
+        ctx.stroke();
+
+        // Ice Crystals Badge on Top
+        ctx.font = '22px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('❄️', 0, -50);
+
+        ctx.restore();
+    }
+
+    drawFrostVignette(w, h) {
+        const ctx = this.ctx;
+        ctx.save();
+        // Frosty screen edge gradient
+        const frost = ctx.createRadialGradient(w / 2, h / 2, h * 0.35, w / 2, h / 2, h * 0.75);
+        frost.addColorStop(0, 'rgba(0, 240, 255, 0)');
+        frost.addColorStop(0.8, 'rgba(140, 220, 255, 0.18)');
+        frost.addColorStop(1, 'rgba(180, 240, 255, 0.45)');
+        ctx.fillStyle = frost;
+        ctx.fillRect(0, 0, w, h);
+        ctx.restore();
+    }
+
+    drawDoubleDamageAura(f) {
+        const ctx = this.ctx;
+        ctx.save();
+        ctx.translate(f.x, f.y);
+
+        const flameCount = 5;
+        ctx.fillStyle = 'rgba(255, 68, 0, 0.45)';
+        ctx.shadowBlur = 18;
+        ctx.shadowColor = '#ff4400';
+
+        // Rising fiery wisps
+        for (let i = 0; i < flameCount; i++) {
+            const offsetX = (i - 2) * 16;
+            const height = 45 + Math.sin(this.animFrame * 0.2 + i) * 15;
+            ctx.beginPath();
+            ctx.ellipse(offsetX, -50, 10, height * 0.5, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Glowing 2X indicator above fighter
+        ctx.fillStyle = '#ffe600';
+        ctx.font = "900 14px 'Outfit', sans-serif";
+        ctx.textAlign = 'center';
+        ctx.shadowColor = '#ff2200';
+        ctx.shadowBlur = 10;
+        ctx.fillText('🔥 2X BOOST ACTIVE!', 0, -110);
+
+        ctx.restore();
+    }
+
+    spawnHealBurst(x, y) {
+        const count = 24;
+        for (let i = 0; i < count; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 5 + 1.5;
+            this.particles.push({
+                x: x + (Math.random() * 30 - 15),
+                y: y - 40 + (Math.random() * 20 - 10),
+                vx: Math.cos(angle) * speed * 0.6,
+                vy: -(Math.random() * 4 + 2), // Float up
+                size: Math.random() * 4 + 3,
+                color: Math.random() > 0.3 ? '#00ff88' : '#70ff00',
+                alpha: 1.0,
+                life: 1.0,
+                decay: Math.random() * 0.03 + 0.02
+            });
+        }
     }
 }

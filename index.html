@@ -306,6 +306,43 @@
                 <!-- TARGET TYPING PROMPT OVERLAY -->
                 <div class="typing-box-container">
                     <div id="superReadyBanner" class="super-ready-banner hidden">SUPER READY! TYPE POWER WORD FOR HYPER DAMAGE!</div>
+
+                    <!-- BATTLE POWER-UPS & SUPER SKILLS ACTION DOCK -->
+                    <div id="battleSkillsDock" class="battle-skills-dock">
+                        <button id="skillFreeze" class="skill-btn ready" onclick="game.useSkill('freeze')" title="Time Freeze (Press 1)">
+                            <span class="skill-icon">⏱️</span>
+                            <div class="skill-text-box">
+                                <span class="skill-name">FREEZE</span>
+                                <span class="skill-key">[1]</span>
+                            </div>
+                            <div class="skill-cd-overlay" id="cdFreeze"></div>
+                        </button>
+                        <button id="skillShield" class="skill-btn ready" onclick="game.useSkill('shield')" title="Cyber Shield (Press 2)">
+                            <span class="skill-icon">🛡️</span>
+                            <div class="skill-text-box">
+                                <span class="skill-name">SHIELD</span>
+                                <span class="skill-key">[2]</span>
+                            </div>
+                            <div class="skill-cd-overlay" id="cdShield"></div>
+                        </button>
+                        <button id="skillDoubleDmg" class="skill-btn ready" onclick="game.useSkill('double_dmg')" title="2X Boost (Press 3)">
+                            <span class="skill-icon">💥</span>
+                            <div class="skill-text-box">
+                                <span class="skill-name">2X BOOST</span>
+                                <span class="skill-key">[3]</span>
+                            </div>
+                            <div class="skill-cd-overlay" id="cdDoubleDmg"></div>
+                        </button>
+                        <button id="skillMedkit" class="skill-btn ready" onclick="game.useSkill('medkit')" title="Instant Heal (Press 4)">
+                            <span class="skill-icon">💚</span>
+                            <div class="skill-text-box">
+                                <span class="skill-name">HEAL</span>
+                                <span class="skill-key">[4]</span>
+                            </div>
+                            <div class="skill-cd-overlay" id="cdMedkit"></div>
+                        </button>
+                    </div>
+
                     <div class="typing-word-card" onclick="game.focusMobileKeyboard()">
                         <div class="prompt-label">TYPE TO ATTACK:</div>
                         <div id="wordDisplay" class="word-display">
@@ -981,7 +1018,7 @@
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=39').then(reg => {
+                navigator.serviceWorker.register('sw.js?v=40').then(reg => {
                     console.log('[PWA] Service Worker registered:', reg.scope);
 
                     // Auto-update SW when new version is deployed
@@ -1003,19 +1040,19 @@
     </script>
 
     <!-- SCRIPTS (load order matters: dependencies before dependents) -->
-    <script src="js/icons.js?v=39"></script>
-    <script src="js/config.js?v=39"></script>
-    <script src="js/upgrades.js?v=39"></script>  <!-- Coin & upgrade system (needs CONFIG) -->
-    <script src="js/payment.js?v=39"></script>   <!-- Payment Gateway & Coin Recharge Engine -->
-    <script src="js/auth.js?v=39"></script>
-    <script src="js/audio.js?v=39"></script>
-    <script src="js/renderer.js?v=39"></script>
-    <script src="js/p2p.js?v=39"></script>
-    <script src="js/combat.js?v=39"></script>
+    <script src="js/icons.js?v=40"></script>
+    <script src="js/config.js?v=40"></script>
+    <script src="js/upgrades.js?v=40"></script>  <!-- Coin & upgrade system (needs CONFIG) -->
+    <script src="js/payment.js?v=40"></script>   <!-- Payment Gateway & Coin Recharge Engine -->
+    <script src="js/auth.js?v=40"></script>
+    <script src="js/audio.js?v=40"></script>
+    <script src="js/renderer.js?v=40"></script>
+    <script src="js/p2p.js?v=40"></script>
+    <script src="js/combat.js?v=40"></script>
     <!-- Modular sub-systems (loaded before main orchestrator) -->
-    <script src="js/word-engine.js?v=39"></script>
-    <script src="js/ui-manager.js?v=39"></script>
+    <script src="js/word-engine.js?v=40"></script>
+    <script src="js/ui-manager.js?v=40"></script>
     <!-- Main application controller -->
-    <script src="js/main.js?v=39"></script>
+    <script src="js/main.js?v=40"></script>
 </body>
 </html>

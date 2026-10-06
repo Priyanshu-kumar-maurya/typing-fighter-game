@@ -1,6 +1,6 @@
-// Typing Fighter - PWA Service Worker v40 (Battle Skills, Super Abilities & Updated UPI Gateway)
+// Typing Fighter - PWA Service Worker v41 (Fix Typing 'P' Pause Bug & Clean Pause Modal)
 
-const CACHE_NAME = 'typing-fighter-v40';
+const CACHE_NAME = 'typing-fighter-v41';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',

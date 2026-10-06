@@ -186,28 +186,35 @@ class GameApp {
                 return;
             }
 
-            const key = e.key.toUpperCase();
-
-            // ── Global shortcuts (always active even during active typing) ──
-            if (key === 'M') { this.toggleSound(); return; }
-
-            if (e.key === 'Escape' || key === 'P') {
-                this.isMatchActive && !this.isMatchPaused ? this.pauseMatch() : this.resumeMatch();
+            // ── Escape key toggles Pause/Resume (strictly Escape only, never letter 'P') ──
+            if (e.key === 'Escape') {
+                if (this.isMatchActive && !this.isMatchPaused) {
+                    this.pauseMatch();
+                } else if (this.isMatchActive && this.isMatchPaused) {
+                    this.resumeMatch();
+                }
                 return;
             }
 
-            // R / Space — restart match when game-over or paused
-            if (key === 'R' || (e.code === 'Space' && !this.isMatchActive)) {
-                const gameOverOpen = !document.getElementById('modalGameOver')?.classList.contains('hidden');
-                const pauseOpen    = !document.getElementById('modalPause')?.classList.contains('hidden');
-                if (this.isMatchActive || this.isMatchPaused || gameOverOpen || pauseOpen) {
+            // ── Restart shortcut (R or Space) ONLY when GameOver or Pause modal is actively open ──
+            const gameOverOpen = !document.getElementById('modalGameOver')?.classList.contains('hidden');
+            const pauseOpen    = !document.getElementById('modalPause')?.classList.contains('hidden');
+            if (gameOverOpen || pauseOpen) {
+                if (e.key.toUpperCase() === 'R' || e.code === 'Space') {
+                    if (e.code === 'Space') e.preventDefault();
                     this.restartMatch();
                     return;
                 }
             }
 
-            // Prevent spacebar page scroll during gameplay
-            if (e.code === 'Space') e.preventDefault();
+            // ── Sound mute shortcut (M) ONLY when not in an active match ──
+            if (!this.isMatchActive && e.key.toUpperCase() === 'M') {
+                this.toggleSound();
+                return;
+            }
+
+            // Prevent spacebar page scroll during active gameplay
+            if (e.code === 'Space' && this.isMatchActive) e.preventDefault();
 
             // ── Battle Skills Keyboard Shortcuts (1: Freeze, 2: Shield, 3: 2x Boost, 4: Heal) ──
             if (this.isMatchActive && !this.isMatchPaused && ['1', '2', '3', '4'].includes(e.key)) {

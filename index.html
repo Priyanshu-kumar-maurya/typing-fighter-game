@@ -476,22 +476,12 @@
         <div id="modalPause" class="modal-overlay hidden">
             <div class="modal-card pause-card">
                 <button class="btn-close-modal" title="Close" onclick="game.resumeMatch()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-                <h2>GAME PAUSED (Press 'P' or 'ESC')</h2>
-                <p class="subtitle">Match is paused. Choose an option below:</p>
-
-                <div class="pause-arena-box">
-                    <span class="pause-arena-label">ARENA THEME:</span>
-                    <div class="pause-arena-buttons">
-                        <button class="pause-arena-btn active" data-pause-theme="cyber_city" onclick="game.selectArenaTheme('cyber_city')" title="Cyber City">🏙️ Cyber</button>
-                        <button class="pause-arena-btn" data-pause-theme="shaolin_temple" onclick="game.selectArenaTheme('shaolin_temple')" title="Shaolin Temple">⛩️ Shaolin</button>
-                        <button class="pause-arena-btn" data-pause-theme="lava_inferno" onclick="game.selectArenaTheme('lava_inferno')" title="Lava Inferno">🌋 Lava</button>
-                        <button class="pause-arena-btn" data-pause-theme="synthwave_retro" onclick="game.selectArenaTheme('synthwave_retro')" title="Retro Synthwave">🌅 Retro</button>
-                    </div>
-                </div>
+                <h2>GAME PAUSED</h2>
+                <p class="subtitle">Match is paused. Press ESC to resume or choose an option:</p>
 
                 <div class="modal-actions vertical-actions">
-                    <button class="btn btn-neon btn-large" onclick="game.resumeMatch()">RESUME FIGHT (P)</button>
-                    <button class="btn btn-magenta btn-large" onclick="game.restartMatch()">RESTART LEVEL (R)</button>
+                    <button class="btn btn-neon btn-large" onclick="game.resumeMatch()">▶️ RESUME FIGHT</button>
+                    <button class="btn btn-magenta btn-large" onclick="game.restartMatch()">🔄 RESTART LEVEL</button>
                     <button class="btn btn-gold btn-large" onclick="game.openShopModal()">🪙 CHARACTER SHOP</button>
                     <button class="btn btn-secondary btn-large" onclick="game.openModeSelect()">CHANGE MODE</button>
                     <button class="btn btn-secondary btn-large" onclick="game.showDashboard()">🏠 QUIT TO DASHBOARD</button>
@@ -1018,7 +1008,7 @@
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=40').then(reg => {
+                navigator.serviceWorker.register('sw.js?v=41').then(reg => {
                     console.log('[PWA] Service Worker registered:', reg.scope);
 
                     // Auto-update SW when new version is deployed
@@ -1040,19 +1030,19 @@
     </script>
 
     <!-- SCRIPTS (load order matters: dependencies before dependents) -->
-    <script src="js/icons.js?v=40"></script>
-    <script src="js/config.js?v=40"></script>
-    <script src="js/upgrades.js?v=40"></script>  <!-- Coin & upgrade system (needs CONFIG) -->
-    <script src="js/payment.js?v=40"></script>   <!-- Payment Gateway & Coin Recharge Engine -->
-    <script src="js/auth.js?v=40"></script>
-    <script src="js/audio.js?v=40"></script>
-    <script src="js/renderer.js?v=40"></script>
-    <script src="js/p2p.js?v=40"></script>
-    <script src="js/combat.js?v=40"></script>
+    <script src="js/icons.js?v=41"></script>
+    <script src="js/config.js?v=41"></script>
+    <script src="js/upgrades.js?v=41"></script>  <!-- Coin & upgrade system (needs CONFIG) -->
+    <script src="js/payment.js?v=41"></script>   <!-- Payment Gateway & Coin Recharge Engine -->
+    <script src="js/auth.js?v=41"></script>
+    <script src="js/audio.js?v=41"></script>
+    <script src="js/renderer.js?v=41"></script>
+    <script src="js/p2p.js?v=41"></script>
+    <script src="js/combat.js?v=41"></script>
     <!-- Modular sub-systems (loaded before main orchestrator) -->
-    <script src="js/word-engine.js?v=40"></script>
-    <script src="js/ui-manager.js?v=40"></script>
+    <script src="js/word-engine.js?v=41"></script>
+    <script src="js/ui-manager.js?v=41"></script>
     <!-- Main application controller -->
-    <script src="js/main.js?v=40"></script>
+    <script src="js/main.js?v=41"></script>
 </body>
 </html>

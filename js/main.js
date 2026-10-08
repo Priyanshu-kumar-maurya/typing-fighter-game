@@ -1308,6 +1308,7 @@ class GameApp {
         // Both players connect → start battle immediately
         p2p.onConnectCallback = () => {
             this.ui.closeAllModals();
+            if (window.chat) window.chat.closeChat();
             this.renderer.setSkinMode('cyber');
             combat.reset('p2p');
 
@@ -1468,6 +1469,78 @@ class GameApp {
                     connectBtn.disabled  = false;
                     connectBtn.innerHTML = '❌ Cancel / Change Code';
                 }
+            }
+        );
+    }
+
+    /**
+     * Share active or generated P2P room code to the public Community Chat.
+     */
+    shareP2PRoomToChat() {
+        const inputEl = document.getElementById('inputUnifiedRoomCode');
+        let code = inputEl?.value.trim().toUpperCase() || '';
+        if (!code || code.length < 2) {
+            code = 'CLASH' + Math.floor(Math.random() * 900 + 10);
+            if (inputEl) inputEl.value = code;
+        }
+
+        if (window.chat) {
+            window.chat.postChallenge(code);
+            this.handleUnifiedP2PConnect();
+            this.ui.showToast(`Room #${code} shared to Global Chat! Waiting for opponent...`, 'success', 4000);
+        }
+    }
+
+    /**
+     * Host a P2P room initiated from the Community Chat.
+     * @param {string} code
+     */
+    hostP2PFromChat(code) {
+        if (!navigator.onLine) {
+            this.ui.showToast('Online P2P requires an internet connection.', 'error');
+            return;
+        }
+        const clean = p2p.sanitizeInput(code).toUpperCase();
+        const inputEl = document.getElementById('inputUnifiedRoomCode');
+        if (inputEl) inputEl.value = clean;
+
+        p2p.connectToRoom(
+            clean,
+            () => {
+                // Connected! Handled by p2p.onConnectCallback
+            },
+            err => {
+                this.ui.showToast(`P2P error: ${err}`, 'error');
+            },
+            waitingCode => {
+                console.log(`[P2P Chat Host] Room ${waitingCode} registered. Waiting for guest...`);
+            }
+        );
+    }
+
+    /**
+     * Accept a 1v1 challenge initiated from the Community Chat.
+     * Directly joins the host's room code and starts the match.
+     * @param {string} code
+     */
+    acceptP2PFromChat(code) {
+        if (!navigator.onLine) {
+            this.ui.showToast('Online P2P requires an internet connection.', 'error');
+            return;
+        }
+        const clean = p2p.sanitizeInput(code).toUpperCase();
+        this.ui.closeAllModals();
+
+        p2p.connectToRoom(
+            clean,
+            () => {
+                // Connected as guest! Handled by p2p.onConnectCallback
+            },
+            err => {
+                this.ui.showToast(`Failed to join challenge room: ${err}`, 'error');
+            },
+            waitingCode => {
+                console.log(`[P2P Guest Fallback] Waiting on ${waitingCode}`);
             }
         );
     }

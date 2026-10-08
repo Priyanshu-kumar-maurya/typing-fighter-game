@@ -1,6 +1,6 @@
-// Typing Fighter - PWA Service Worker v41 (Fix Typing 'P' Pause Bug & Clean Pause Modal)
+// Typing Fighter - PWA Service Worker v42 (Public Community Chat & 1v1 Challenge Engine)
 
-const CACHE_NAME = 'typing-fighter-v41';
+const CACHE_NAME = 'typing-fighter-v42';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -22,6 +22,7 @@ const ASSETS_TO_CACHE = [
     './js/combat.js',
     './js/word-engine.js',
     './js/ui-manager.js',
+    './js/chat.js',
     './js/main.js'
 ];
 

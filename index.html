@@ -81,47 +81,63 @@
             </div>
 
             <div class="header-controls">
-                <!-- PWA Install Button (Shown on mobile devices when installable) -->
-                <button id="btnPWAInstall" class="icon-btn install-pwa-btn hidden" title="Install App on Phone" onclick="game.promptPWAInstall()">📲 INSTALL</button>
+                <!-- Coin balance — opens Character Shop -->
+                <button id="headerCoinBalance" class="icon-btn coin-btn" title="Character Shop & Upgrades" onclick="game.openShopModal()">🪙 0</button>
+                <!-- Global Community Chat Toggle with unread badge -->
+                <button id="btnHeaderChat" class="icon-btn chat-header-btn" title="Global Lobby Chat & Challenges" onclick="chat.toggleChat()">
+                    <span class="chat-header-icon">💬</span>
+                    <span class="chat-header-text">CHAT</span>
+                    <span id="chatUnreadBadge" class="chat-badge hidden">0</span>
+                </button>
+                <!-- Audio Mute/Unmute -->
+                <button id="btnSoundToggle" class="icon-btn" title="Toggle Audio (Shortcut: M)">Sound: ON</button>
                 <!-- Dashboard Home Button -->
                 <button id="btnNavDashboard" class="icon-btn nav-dashboard-btn" title="Back to Dashboard" onclick="game.showDashboard()">🏠 DASHBOARD</button>
-                <!-- v29: Coin balance — click to open shop -->
-                <button id="headerCoinBalance" class="icon-btn coin-btn" title="Character Shop" onclick="game.openShopModal()">🪙 0</button>
-                <button id="btnSoundToggle" class="icon-btn" title="Toggle Audio (Shortcut: M)">Sound: ON</button>
-                <button id="btnMicToggle" class="icon-btn mic-btn" title="Toggle Voice Chat Mic" onclick="game.toggleMic()">Mic: ON</button>
-                <button id="btnSkinToggle" class="icon-btn skin-btn" title="Switch Fighter Skin Mode" onclick="game.toggleFighterSkin()">Fighter: CYBER</button>
-                <button id="btnOpenP2P" class="btn btn-magenta btn-small">ONLINE P2P</button>
-                <button id="btnOpenArcade" class="btn btn-neon btn-small">25 STAGES</button>
-                <button class="icon-btn" title="Pause / Menu" onclick="game.pauseMatch()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg></button>
+                <!-- PWA Install Button (Shown on mobile when installable) -->
+                <button id="btnPWAInstall" class="icon-btn install-pwa-btn hidden" title="Install App on Phone" onclick="game.promptPWAInstall()">📲 APP</button>
+                <!-- Header Pause Icon -->
+                <button id="btnHeaderPause" class="icon-btn pause-header-btn" title="Pause / Menu" onclick="game.pauseMatch()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg></button>
             </div>
         </header>
 
         <!-- ============================================================== -->
-        <!-- v30: HOME DASHBOARD SCREEN (Default View on Startup)          -->
+        <!-- v42: SIMPLIFIED HOME DASHBOARD SCREEN (Zero Confusion Layout)   -->
         <!-- ============================================================== -->
         <section id="dashboardView" class="dashboard-wrapper">
             <!-- HERO BANNER -->
             <div class="dashboard-hero">
                 <div class="hero-badge"><span class="badge-dot"></span> REAL-TIME 1v1 TYPING CLASH ARENA</div>
                 <h1 class="hero-title">TYPING <span class="glow-cyan">FIGHTER</span></h1>
-                <p class="hero-subtitle">Type fast to punch, kick, and unleash super combos! Battle 25 AI Bosses, Stickman Martial Arts, or Friends with Live P2P Voice Chat.</p>
+                <p class="hero-subtitle">Type fast to punch, kick, and unleash super combos! Battle 25 AI Bosses, Stickman Martial Arts, or Real Players Online.</p>
 
-                <!-- BIG PROMINENT PLAY BUTTON -->
-                <div class="hero-action-box">
+                <!-- 2 MAIN HERO ACTIONS: PLAY NOW & GLOBAL CHAT -->
+                <div class="hero-action-box dual-hero-actions">
                     <button id="btnDashboardPlay" class="btn-hero-play" onclick="game.openModeSelect()">
                         <div class="play-btn-glow"></div>
                         <div class="play-btn-content">
                             <span class="play-icon">⚔️</span>
                             <div class="play-texts">
                                 <span class="play-main-text">PLAY NOW</span>
-                                <span class="play-sub-text">CHOOSE GAME MODE & START FIGHTING</span>
+                                <span class="play-sub-text">CHOOSE BATTLE MODE</span>
                             </div>
                             <span class="play-arrow">▶</span>
                         </div>
                     </button>
+
+                    <button id="btnHeroOpenChat" class="btn-hero-chat" onclick="chat.openChat()">
+                        <div class="chat-btn-glow"></div>
+                        <div class="play-btn-content">
+                            <span class="play-icon">💬</span>
+                            <div class="play-texts">
+                                <span class="play-main-text">COMMUNITY CHAT</span>
+                                <span class="play-sub-text">TALK & POST 1v1 CHALLENGE</span>
+                            </div>
+                            <span class="play-arrow">🔥</span>
+                        </div>
+                    </button>
                 </div>
 
-                <!-- PROMINENT INSTALL APP BANNER (< 0.5 MB & 100% OFFLINE PLAY) -->
+                <!-- COMPACT INSTALL APP BANNER (< 0.5 MB & 100% OFFLINE PLAY) -->
                 <div id="dashInstallBanner" class="dash-install-banner" onclick="game.promptPWAInstall()">
                     <div class="install-banner-left">
                         <span class="install-badge-icon">📲</span>
@@ -134,8 +150,49 @@
                 </div>
             </div>
 
-            <!-- DASHBOARD GRID: STATS & QUICK LAUNCH CARDS -->
-            <div class="dashboard-grid">
+            <!-- SECTION 1: 3 SIMPLE BATTLE MODES -->
+            <div class="modes-section-header">
+                <h2 class="section-title">⚔️ CHOOSE YOUR BATTLE MODE</h2>
+                <p class="section-subtitle">Pick an arena below to start fighting immediately!</p>
+            </div>
+
+            <div class="dashboard-grid modes-grid">
+                <!-- MODE 1: 25 CAMPAIGN BOSSES -->
+                <div class="dash-card dash-campaign-card" onclick="game.openCampaignModal()">
+                    <div class="dash-card-badge">25 STAGES</div>
+                    <div class="dash-card-icon">🏆</div>
+                    <h3>VS AI CAMPAIGN</h3>
+                    <p>From 15 WPM to 120 WPM! Beat each boss level-by-level to earn coins & unlock stages.</p>
+                    <div class="dash-card-action">
+                        <button class="btn btn-neon btn-small">PLAY CAMPAIGN ▶</button>
+                    </div>
+                </div>
+
+                <!-- MODE 2: STICKMAN 1v1 -->
+                <div class="dash-card dash-stickman-card" onclick="game.startStickmanMode()">
+                    <div class="dash-card-badge">HOT 1v1</div>
+                    <div class="dash-card-icon">⚡</div>
+                    <h3>STICKMAN 1v1</h3>
+                    <p>Fast martial arts with high knockbacks, aerial combos, and ragdoll combat physics!</p>
+                    <div class="dash-card-action">
+                        <button class="btn btn-yellow btn-small">PLAY STICKMAN ▶</button>
+                    </div>
+                </div>
+
+                <!-- MODE 3: ONLINE P2P & CHAT CHALLENGE -->
+                <div class="dash-card dash-p2p-card" onclick="game.openP2PModal()">
+                    <div class="dash-card-badge">MULTIPLAYER</div>
+                    <div class="dash-card-icon">🌐</div>
+                    <h3>ONLINE P2P & VOICE</h3>
+                    <p>Battle friends online anywhere with live voice chat & zero latency!</p>
+                    <div class="dash-card-action">
+                        <button class="btn btn-magenta btn-small">PLAY ONLINE 🎙️</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 2: FIGHTER PROFILE, SHOP & ARENAS -->
+            <div class="dashboard-grid utility-grid">
                 <!-- FIGHTER PROFILE CARD -->
                 <div class="dash-card dash-player-card">
                     <div class="dash-card-header">
@@ -167,56 +224,23 @@
                     </button>
                 </div>
 
-                <!-- QUICK ACCESS: 25 CAMPAIGN BOSSES -->
-                <div class="dash-card dash-campaign-card" onclick="game.openCampaignModal()">
-                    <div class="dash-card-badge">25 STAGES</div>
-                    <div class="dash-card-icon">🏆</div>
-                    <h3>VS AI CAMPAIGN</h3>
-                    <p>From 15 WPM to 120 WPM! Beat each boss to earn coins & unlock stages.</p>
-                    <div class="dash-card-action">
-                        <button class="btn btn-neon btn-small">PLAY CAMPAIGN ▶</button>
-                    </div>
-                </div>
-
-                <!-- QUICK ACCESS: CHARACTER UPGRADE SHOP -->
+                <!-- CHARACTER UPGRADE SHOP -->
                 <div class="dash-card dash-shop-card" onclick="game.openShopModal()">
                     <div class="dash-card-badge">UPGRADES</div>
                     <div class="dash-card-icon">🛒</div>
                     <h3>CHARACTER SHOP</h3>
-                    <p>Upgrade Power Fist, Iron Shield, Fury Engine, Vital Core & Critical Hits!</p>
+                    <p>Upgrade Power Fist, Iron Shield, Fury Engine & Vital Core with your coins!</p>
                     <div class="dash-card-action">
                         <button class="btn btn-gold btn-small">🪙 OPEN SHOP</button>
                     </div>
                 </div>
 
-                <!-- QUICK ACCESS: STICKMAN 1v1 -->
-                <div class="dash-card dash-stickman-card" onclick="game.startStickmanMode()">
-                    <div class="dash-card-badge">HOT MODE</div>
-                    <div class="dash-card-icon">⚡</div>
-                    <h3>STICKMAN 1v1</h3>
-                    <p>Close combat martial arts with airborne launch and ragdoll physics!</p>
-                    <div class="dash-card-action">
-                        <button class="btn btn-yellow btn-small">PLAY STICKMAN ▶</button>
-                    </div>
-                </div>
-
-                <!-- QUICK ACCESS: ONLINE P2P -->
-                <div class="dash-card dash-p2p-card" onclick="game.openP2PModal()">
-                    <div class="dash-card-badge">MULTIPLAYER</div>
-                    <div class="dash-card-icon">🌐</div>
-                    <h3>ONLINE P2P & VOICE</h3>
-                    <p>Connect with a room code anywhere & battle friends with live audio voice chat!</p>
-                    <div class="dash-card-action">
-                        <button class="btn btn-magenta btn-small">JOIN ROOM 🎙️</button>
-                    </div>
-                </div>
-
-                <!-- QUICK ACCESS: BATTLE ARENA THEMES -->
+                <!-- BATTLE ARENA THEMES -->
                 <div class="dash-card dash-arena-card">
                     <div class="dash-card-badge">4 ARENAS</div>
                     <div class="dash-card-icon">🏟️</div>
                     <h3>BATTLE ARENAS</h3>
-                    <p>Procedural dynamic stages with sakura petals, rising magma embers, or synthwave sunsets:</p>
+                    <p>Choose background theme for your battles:</p>
                     <div class="arena-selector-grid">
                         <button class="arena-theme-btn active" data-theme="cyber_city" onclick="event.stopPropagation(); game.selectArenaTheme('cyber_city')">
                             <span class="arena-theme-icon">🏙️</span>
@@ -238,12 +262,12 @@
                 </div>
             </div>
 
-            <!-- HIGHLIGHTS / CONTROLS FOOTER -->
+            <!-- HIGHLIGHTS BAR -->
             <div class="dashboard-footer-bar">
                 <div class="dash-feature"><span class="feat-icon">💥</span> Critical Hits (&lt; 1s)</div>
                 <div class="dash-feature"><span class="feat-icon">🔥</span> Rage Mode (&lt; 30% HP)</div>
-                <div class="dash-feature"><span class="feat-icon">💚</span> Combo Healing (8x)</div>
-                <div class="dash-feature"><span class="feat-icon">📱</span> Mobile Keyboard Ready</div>
+                <div class="dash-feature"><span class="feat-icon">💬</span> Real-Time Public Chat</div>
+                <div class="dash-feature"><span class="feat-icon">🎙️</span> Live P2P Voice Chat</div>
                 <div class="dash-feature"><span class="feat-icon">🔒</span> Anti-Cheat Protected</div>
             </div>
         </section>
@@ -780,6 +804,10 @@
                         ⚡ CONNECT & START BATTLE
                     </button>
 
+                    <button class="btn btn-magenta full-width mt-2" onclick="game.shareP2PRoomToChat()">
+                        💬 SHARE ROOM TO COMMUNITY CHAT
+                    </button>
+
                     <div id="p2pUnifiedStatus" class="p2p-status" style="margin-top: 12px; font-size: 0.9rem;"></div>
                 </div>
             </div>
@@ -975,6 +1003,78 @@
             </div>
         </div>
 
+        <!-- ============================================================== -->
+        <!-- v42: COMMUNITY LOBBY CHAT & 1v1 CHALLENGES (Decentralized MQTT)-->
+        <!-- ============================================================== -->
+        <div id="modalCommunityChat" class="modal-overlay hidden">
+            <div class="modal-card chat-modal-card">
+                <!-- Chat Modal Header -->
+                <div class="chat-modal-header">
+                    <div class="chat-title-box">
+                        <span class="chat-title-icon">💬</span>
+                        <div>
+                            <h2 class="chat-main-title">GLOBAL FIGHTER LOBBY</h2>
+                            <div class="chat-meta-bar">
+                                <span id="chatStatusBadge" class="chat-status-badge status-online">
+                                    <span class="status-dot"></span> LIVE LOBBY
+                                </span>
+                                <span id="chatOnlineCount" class="chat-online-count">🟢 6 Online</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn-close-modal" title="Close Chat" onclick="chat.closeChat()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                </div>
+
+                <!-- 1-Click 1v1 Challenge Action Bar -->
+                <div class="chat-challenge-banner">
+                    <div class="challenge-banner-info">
+                        <span class="challenge-banner-icon">⚔️</span>
+                        <div>
+                            <strong>WANT A 1v1 FIGHT RIGHT NOW?</strong>
+                            <p>Post a challenge to the lobby with 1 tap — any player can click and fight you!</p>
+                        </div>
+                    </div>
+                    <button id="btnChatPostChallenge" class="btn btn-magenta btn-post-challenge">
+                        ⚔️ POST 1v1 CHALLENGE
+                    </button>
+                </div>
+
+                <!-- Live Message List -->
+                <div id="chatMessageList" class="chat-messages-container">
+                    <!-- Populated dynamically by CommunityChat -->
+                </div>
+
+                <!-- Quick Emojis Bar -->
+                <div class="chat-quick-emojis">
+                    <button class="chat-emoji-btn" data-emoji="🔥">🔥</button>
+                    <button class="chat-emoji-btn" data-emoji="⚔️">⚔️</button>
+                    <button class="chat-emoji-btn" data-emoji="💥">💥</button>
+                    <button class="chat-emoji-btn" data-emoji="👑">👑</button>
+                    <button class="chat-emoji-btn" data-emoji="😂">😂</button>
+                    <button class="chat-emoji-btn" data-emoji="⚡">⚡</button>
+                    <button class="chat-emoji-btn" data-emoji="🚀">🚀</button>
+                    <button class="chat-emoji-btn" data-emoji="🥊">🥊</button>
+                </div>
+
+                <!-- Chat Input Controls -->
+                <div class="chat-input-row">
+                    <input type="text" id="inputChatMessage" class="chat-input-field" placeholder="Type a message or room code... (Press Enter)" maxlength="200" autocomplete="off">
+                    <button id="btnSendChatMessage" class="btn btn-neon btn-send-chat">
+                        SEND ✈️
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- FLOATING BOTTOM-RIGHT CHAT PILL BUTTON -->
+        <button id="floatingChatBtn" class="floating-chat-pill" title="Open Global Lobby Chat" onclick="chat.toggleChat()">
+            <span class="float-chat-icon">💬</span>
+            <span class="float-chat-label">GLOBAL CHAT</span>
+            <span id="floatingChatBadge" class="float-chat-badge hidden">0</span>
+        </button>
+
     </div>
 
     <!-- PWA Service Worker Registration & Install Prompt Handler -->
@@ -1008,7 +1108,7 @@
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=41').then(reg => {
+                navigator.serviceWorker.register('sw.js?v=42').then(reg => {
                     console.log('[PWA] Service Worker registered:', reg.scope);
 
                     // Auto-update SW when new version is deployed
@@ -1030,19 +1130,20 @@
     </script>
 
     <!-- SCRIPTS (load order matters: dependencies before dependents) -->
-    <script src="js/icons.js?v=41"></script>
-    <script src="js/config.js?v=41"></script>
-    <script src="js/upgrades.js?v=41"></script>  <!-- Coin & upgrade system (needs CONFIG) -->
-    <script src="js/payment.js?v=41"></script>   <!-- Payment Gateway & Coin Recharge Engine -->
-    <script src="js/auth.js?v=41"></script>
-    <script src="js/audio.js?v=41"></script>
-    <script src="js/renderer.js?v=41"></script>
-    <script src="js/p2p.js?v=41"></script>
-    <script src="js/combat.js?v=41"></script>
+    <script src="js/icons.js?v=42"></script>
+    <script src="js/config.js?v=42"></script>
+    <script src="js/upgrades.js?v=42"></script>  <!-- Coin & upgrade system (needs CONFIG) -->
+    <script src="js/payment.js?v=42"></script>   <!-- Payment Gateway & Coin Recharge Engine -->
+    <script src="js/auth.js?v=42"></script>
+    <script src="js/audio.js?v=42"></script>
+    <script src="js/renderer.js?v=42"></script>
+    <script src="js/p2p.js?v=42"></script>
+    <script src="js/combat.js?v=42"></script>
     <!-- Modular sub-systems (loaded before main orchestrator) -->
-    <script src="js/word-engine.js?v=41"></script>
-    <script src="js/ui-manager.js?v=41"></script>
+    <script src="js/word-engine.js?v=42"></script>
+    <script src="js/ui-manager.js?v=42"></script>
+    <script src="js/chat.js?v=42"></script>        <!-- Public Lobby Chat & 1v1 Challenge Engine -->
     <!-- Main application controller -->
-    <script src="js/main.js?v=41"></script>
+    <script src="js/main.js?v=42"></script>
 </body>
 </html>

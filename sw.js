@@ -1,6 +1,6 @@
-// Typing Fighter - PWA Service Worker v43 (Public Community Chat & 1v1 Challenge Engine)
+// Typing Fighter - PWA Service Worker v44 (Public Community Chat & 1v1 Challenge Engine)
 
-const CACHE_NAME = 'typing-fighter-v43';
+const CACHE_NAME = 'typing-fighter-v44';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',

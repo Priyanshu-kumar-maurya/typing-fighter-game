@@ -82,6 +82,14 @@ class UIManager {
         const isStickman = skinMode === 'stickman';
         this._setText('dashSkinBadge', 'innerText', isStickman ? 'STICKMAN' : 'CYBER');
         this._setText('dashAvatarIcon', 'innerText', isStickman ? '🥋' : '⚡');
+        document.getElementById('btnSkinSelectCyber')?.classList.toggle('active', !isStickman);
+        document.getElementById('btnSkinSelectStickman')?.classList.toggle('active', isStickman);
+
+        // Dynamic Hero Play CTA: "CONTINUE STAGE X ▶" or "START CAMPAIGN ▶"
+        const playMain = unLocked > 1 ? 'CONTINUE FIGHT' : 'PLAY NOW';
+        const playSub  = unLocked > 1 ? `STAGE ${unLocked} / 25 ▶` : 'START CAMPAIGN ▶';
+        this._setText('heroPlayMainText', 'innerText', playMain);
+        this._setText('heroPlaySubText', 'innerText', playSub);
     }
 
     /** Hide the dashboard and display the combat battle arena */
@@ -282,9 +290,21 @@ class UIManager {
      * @param {number} winner      - 1 = Player 1 won, 2 = Player 2 won
      * @param {Object} combatState - CombatEngine instance
      * @param {string} stageRank   - Pre-computed rank string e.g. "⚡ S-RANK"
+     * @param {number} [earnedCoins=0] - Coins won in this match
      */
-    populateGameOver(winner, combatState, stageRank) {
+    populateGameOver(winner, combatState, stageRank, earnedCoins = 0) {
         const isWin = winner === 1;
+
+        // Celebratory Coins Banner
+        const coinBanner = this._el('winnerCoinsBanner');
+        if (coinBanner) {
+            if (isWin && earnedCoins > 0) {
+                this._setText('winnerCoinsEarned', 'innerText', `+${earnedCoins} COINS EARNED!`);
+                coinBanner.classList.remove('hidden');
+            } else {
+                coinBanner.classList.add('hidden');
+            }
+        }
 
         if (combatState.mode === 'arcade') {
             if (isWin) {
@@ -422,7 +442,8 @@ class UIManager {
                 const nextCost  = isMaxed ? '—' : def.costs[curLvl].toLocaleString();
                 const canAfford = !isMaxed && ups.coins >= def.costs[curLvl];
 
-                // Level indicator dots
+                // Level indicator progress bar
+                const pct = Math.round((curLvl / def.maxLevel) * 100);
                 const dots = Array.from({ length: def.maxLevel }, (_, i) =>
                     `<span class="upg-dot ${i < curLvl ? 'filled' : ''}"></span>`
                 ).join('');
@@ -432,19 +453,24 @@ class UIManager {
                 card.innerHTML = `
                     <div class="upg-icon">${this._esc(def.icon)}</div>
                     <div class="upg-info">
-                        <div class="upg-name">${this._esc(def.name)}</div>
+                        <div class="upg-title-row">
+                            <span class="upg-name">${this._esc(def.name)}</span>
+                            <span class="upg-level-badge ${isMaxed ? 'max' : ''}">Lv ${curLvl}/${def.maxLevel}</span>
+                        </div>
                         <div class="upg-desc">${this._esc(def.desc)}</div>
+                        <div class="upg-progress-track">
+                            <div class="upg-progress-fill ${isMaxed ? 'max' : ''}" style="width: ${pct}%;"></div>
+                        </div>
                         <div class="upg-dots">${dots}</div>
-                        <div class="upg-level">Lv ${curLvl} / ${def.maxLevel}</div>
                     </div>
                     <div class="upg-action">
                         ${isMaxed
-                            ? `<span class="upg-max-badge">MAX ✓</span>`
+                            ? `<span class="upg-max-badge">MAXED ✓</span>`
                             : `<div class="upg-cost">🪙 ${nextCost}</div>
                                <button class="btn btn-neon btn-small upg-btn"
                                        onclick="game.buyUpgrade('${key}')"
                                        ${canAfford ? '' : 'disabled'}>
-                                   ${canAfford ? 'UPGRADE' : 'NO COINS'}
+                                   ${canAfford ? 'UPGRADE ⚡' : 'NEED COINS'}
                                </button>`
                         }
                     </div>

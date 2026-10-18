@@ -47,7 +47,7 @@
     <!-- Razorpay Payment Gateway SDK (deferred for instant offline boot) -->
     <script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
 
-    <link rel="stylesheet" href="style.css?v=43">
+    <link rel="stylesheet" href="style.css?v=44">
 </head>
 <body>
     <!-- TOAST NOTIFICATION CONTAINER -->
@@ -112,13 +112,13 @@
 
                 <!-- 2 MAIN HERO ACTIONS: PLAY NOW & GLOBAL CHAT -->
                 <div class="hero-action-box dual-hero-actions">
-                    <button id="btnDashboardPlay" class="btn-hero-play" onclick="game.openModeSelect()">
+                    <button id="btnDashboardPlay" class="btn-hero-play" onclick="game.handleHeroPlayNow()">
                         <div class="play-btn-glow"></div>
                         <div class="play-btn-content">
                             <span class="play-icon">⚔️</span>
                             <div class="play-texts">
-                                <span class="play-main-text">PLAY NOW</span>
-                                <span class="play-sub-text">CHOOSE BATTLE MODE</span>
+                                <span id="heroPlayMainText" class="play-main-text">PLAY NOW</span>
+                                <span id="heroPlaySubText" class="play-sub-text">STAGE 1 / 25 ▶</span>
                             </div>
                             <span class="play-arrow">▶</span>
                         </div>
@@ -219,9 +219,15 @@
                             </div>
                         </div>
                     </div>
-                    <button class="btn btn-secondary btn-small full-width mt-2" onclick="game.toggleFighterSkin()">
-                        SWITCH SKIN (CYBER / STICKMAN)
-                    </button>
+                    <!-- Interactive 2-Way Skin Toggle Switcher -->
+                    <div class="dash-skin-switcher-row">
+                        <button id="btnSkinSelectCyber" class="dash-skin-pill active" onclick="game.toggleFighterSkin('cyber')">
+                            <span>🥋</span> CYBER FIGHTER
+                        </button>
+                        <button id="btnSkinSelectStickman" class="dash-skin-pill" onclick="game.toggleFighterSkin('stickman')">
+                            <span>⚡</span> STICKMAN MARTIAL
+                        </button>
+                    </div>
                 </div>
 
                 <!-- CHARACTER UPGRADE SHOP -->
@@ -367,8 +373,11 @@
                         </button>
                     </div>
 
-                    <div class="typing-word-card" onclick="game.focusMobileKeyboard()">
-                        <div class="prompt-label">TYPE TO ATTACK:</div>
+                    <div id="typingWordCard" class="typing-word-card is-focused" onclick="game.focusMobileKeyboard()">
+                        <div class="prompt-label">
+                            <span class="focus-dot"></span>
+                            <span id="promptLabelText">TYPE TO ATTACK:</span>
+                        </div>
                         <div id="wordDisplay" class="word-display">
                             <span class="placeholder-text">Click 'START FIGHT' to Begin!</span>
                         </div>
@@ -804,6 +813,15 @@
                         ⚡ CONNECT & START BATTLE
                     </button>
 
+                    <div class="p2p-share-actions-row" style="display: flex; gap: 8px; margin-top: 10px;">
+                        <button class="btn btn-gold flex-1" onclick="game.shareP2PWhatsApp()" title="Share Room Invite on WhatsApp">
+                            📲 WHATSAPP INVITE
+                        </button>
+                        <button class="btn btn-secondary flex-1" onclick="game.copyP2PInviteLink()" title="Copy 1-Click Room Link">
+                            📋 COPY LINK
+                        </button>
+                    </div>
+
                     <button class="btn btn-magenta full-width mt-2" onclick="game.shareP2PRoomToChat()">
                         💬 SHARE ROOM TO COMMUNITY CHAT
                     </button>
@@ -833,6 +851,10 @@
                 <div id="winnerBannerIcon" class="trophy-icon"><svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="#ffe600" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg></div>
                 <h1 id="winnerTitle" class="winner-title">LEVEL 1 CLEARED!</h1>
                 <p id="winnerSubtitle" class="winner-subtitle">Speed Demon Performance!</p>
+                <div id="winnerCoinsBanner" class="winner-coins-banner">
+                    <span class="winner-coins-icon">🪙</span>
+                    <span id="winnerCoinsEarned" class="winner-coins-val">+80 COINS EARNED!</span>
+                </div>
 
                 <div class="stats-grid">
                     <div class="stat-box">
@@ -1130,20 +1152,20 @@
     </script>
 
     <!-- SCRIPTS (load order matters: dependencies before dependents) -->
-    <script src="js/icons.js?v=43"></script>
-    <script src="js/config.js?v=43"></script>
-    <script src="js/upgrades.js?v=43"></script>  <!-- Coin & upgrade system (needs CONFIG) -->
-    <script src="js/payment.js?v=43"></script>   <!-- Payment Gateway & Coin Recharge Engine -->
-    <script src="js/auth.js?v=43"></script>
-    <script src="js/audio.js?v=43"></script>
-    <script src="js/renderer.js?v=43"></script>
-    <script src="js/p2p.js?v=43"></script>
-    <script src="js/combat.js?v=43"></script>
+    <script src="js/icons.js?v=44"></script>
+    <script src="js/config.js?v=44"></script>
+    <script src="js/upgrades.js?v=44"></script>  <!-- Coin & upgrade system (needs CONFIG) -->
+    <script src="js/payment.js?v=44"></script>   <!-- Payment Gateway & Coin Recharge Engine -->
+    <script src="js/auth.js?v=44"></script>
+    <script src="js/audio.js?v=44"></script>
+    <script src="js/renderer.js?v=44"></script>
+    <script src="js/p2p.js?v=44"></script>
+    <script src="js/combat.js?v=44"></script>
     <!-- Modular sub-systems (loaded before main orchestrator) -->
-    <script src="js/word-engine.js?v=43"></script>
-    <script src="js/ui-manager.js?v=43"></script>
-    <script src="js/chat.js?v=43"></script>        <!-- Public Lobby Chat & 1v1 Challenge Engine -->
+    <script src="js/word-engine.js?v=44"></script>
+    <script src="js/ui-manager.js?v=44"></script>
+    <script src="js/chat.js?v=44"></script>        <!-- Public Lobby Chat & 1v1 Challenge Engine -->
     <!-- Main application controller -->
-    <script src="js/main.js?v=43"></script>
+    <script src="js/main.js?v=44"></script>
 </body>
 </html>

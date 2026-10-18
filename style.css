@@ -1078,6 +1078,34 @@ canvas {
     color: #a0aec0;
     letter-spacing: 1px;
     margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.focus-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #00ff88;
+    box-shadow: 0 0 8px #00ff88;
+    animation: focusDotBlink 1.2s infinite alternate;
+}
+
+.typing-word-card.not-focused .focus-dot {
+    background: #ffaa00;
+    box-shadow: 0 0 8px #ffaa00;
+}
+
+.typing-word-card.not-focused {
+    border-color: rgba(255, 170, 0, 0.6) !important;
+    box-shadow: 0 0 20px rgba(255, 170, 0, 0.25) !important;
+}
+
+@keyframes focusDotBlink {
+    0% { opacity: 0.4; transform: scale(0.9); }
+    100% { opacity: 1; transform: scale(1.15); }
 }
 
 .word-display {
@@ -1275,8 +1303,10 @@ canvas {
 }
 
 .subtitle {
-    color: #a0aec0;
-    margin-bottom: 28px;
+    color: #cbd5e1;
+    margin-bottom: 24px;
+    font-size: 0.9rem;
+    line-height: 1.45;
 }
 
 .mode-grid {
@@ -1705,9 +1735,29 @@ canvas {
 
 /* STATS MODAL */
 .gameOver-card { text-align: center; }
-.trophy-icon { font-size: 3.5rem; margin-bottom: 8px; }
 .winner-title { font-family: var(--font-heading); font-size: 2rem; color: var(--neon-yellow); margin-bottom: 4px; }
-.winner-subtitle { color: #a0aec0; margin-bottom: 20px; }
+.winner-subtitle { color: #a0aec0; margin-bottom: 14px; }
+
+.winner-coins-banner {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 230, 0, 0.15);
+    border: 1.5px solid var(--neon-yellow);
+    border-radius: 20px;
+    padding: 6px 18px;
+    margin-bottom: 20px;
+    box-shadow: 0 0 20px rgba(255, 230, 0, 0.3);
+    animation: pulse 1s infinite alternate;
+}
+.winner-coins-icon { font-size: 1.3rem; }
+.winner-coins-val {
+    font-family: var(--font-heading);
+    font-size: 0.95rem;
+    font-weight: 900;
+    color: #ffe600;
+    letter-spacing: 1px;
+}
 
 .stats-grid {
     display: grid;
@@ -1728,7 +1778,16 @@ canvas {
 .unit { font-size: 0.75rem; color: #a0aec0; }
 .rank-badge { font-size: 0.95rem; color: var(--neon-yellow); }
 
-.modal-actions { display: flex; gap: 15px; justify-content: center; }
+.modal-actions { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
+
+#btnNextLevel {
+    background: linear-gradient(135deg, var(--neon-cyan), #00ff88) !important;
+    color: #000 !important;
+    font-weight: 900 !important;
+    box-shadow: 0 0 25px rgba(0, 255, 136, 0.6) !important;
+    transform: scale(1.05);
+    animation: pulse 1s infinite alternate;
+}
 
 .btn-close-modal {
     position: absolute;
@@ -2052,7 +2111,6 @@ canvas {
    v29 — COIN SYSTEM & CHARACTER SHOP
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ── Coin button in header ──────────────────────────────────────────────── */
 .coin-btn {
     background: linear-gradient(135deg, rgba(255, 230, 0, 0.15), rgba(255, 180, 0, 0.08));
     border: 1px solid rgba(255, 230, 0, 0.5) !important;
@@ -2062,11 +2120,24 @@ canvas {
     letter-spacing: 0.5px;
     box-shadow: 0 0 10px rgba(255, 230, 0, 0.2);
     transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
 }
 .coin-btn:hover {
     background: linear-gradient(135deg, rgba(255, 230, 0, 0.3), rgba(255, 180, 0, 0.2)) !important;
     box-shadow: 0 0 20px rgba(255, 230, 0, 0.5);
     transform: scale(1.05);
+}
+
+.coin-shop-tag {
+    font-size: 0.6rem;
+    font-weight: 900;
+    color: #000;
+    background: #ffe600;
+    padding: 1px 4px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
 }
 
 /* ── Gold button style ─────────────────────────────────────────────────── */
@@ -2170,8 +2241,49 @@ canvas {
 .upg-icon { font-size: 2rem; flex-shrink: 0; }
 
 .upg-info { flex: 1; min-width: 0; }
-.upg-name { font-family: var(--font-heading); font-weight: 800; font-size: 0.95rem; margin-bottom: 3px; }
-.upg-desc { font-size: 0.72rem; color: #718096; margin-bottom: 6px; line-height: 1.4; }
+.upg-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 3px;
+}
+.upg-name { font-family: var(--font-heading); font-weight: 800; font-size: 0.95rem; }
+.upg-level-badge {
+    font-family: var(--font-heading);
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: var(--neon-cyan);
+    background: rgba(0, 240, 255, 0.12);
+    border: 1px solid rgba(0, 240, 255, 0.3);
+    padding: 2px 6px;
+    border-radius: 6px;
+}
+.upg-level-badge.max {
+    color: #00ff88;
+    background: rgba(0, 255, 136, 0.15);
+    border-color: #00ff88;
+}
+.upg-desc { font-size: 0.72rem; color: #a0aec0; margin-bottom: 6px; line-height: 1.4; }
+
+.upg-progress-track {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 6px;
+}
+.upg-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--neon-cyan), var(--neon-magenta));
+    box-shadow: 0 0 8px var(--neon-cyan);
+    transition: width 0.3s ease;
+}
+.upg-progress-fill.max {
+    background: linear-gradient(90deg, #00ff88, #ffe600);
+    box-shadow: 0 0 8px #00ff88;
+}
 
 .upg-dots { display: flex; gap: 5px; margin-bottom: 4px; }
 .upg-dot  {
@@ -2693,6 +2805,47 @@ canvas {
     font-size: 0.8rem;
     font-weight: 900;
     color: #ffe600;
+}
+
+/* Interactive 2-Way Skin Switcher Pills */
+.dash-skin-switcher-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+.dash-skin-pill {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-family: var(--font-heading);
+    font-size: 0.75rem;
+    font-weight: 800;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #a0aec0;
+    transition: all 0.2s ease;
+}
+.dash-skin-pill:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    transform: translateY(-1px);
+}
+.dash-skin-pill.active {
+    background: rgba(0, 240, 255, 0.15);
+    border-color: var(--neon-cyan);
+    color: var(--neon-cyan);
+    box-shadow: 0 0 12px rgba(0, 240, 255, 0.3);
+}
+#btnSkinSelectStickman.active {
+    background: rgba(255, 230, 0, 0.15);
+    border-color: var(--neon-yellow);
+    color: var(--neon-yellow);
+    box-shadow: 0 0 12px rgba(255, 230, 0, 0.3);
 }
 
 /* ── DASHBOARD FOOTER FEATURE BAR ───────────────────────────────────────── */

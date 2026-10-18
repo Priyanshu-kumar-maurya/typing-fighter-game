@@ -146,6 +146,24 @@ class GameApp {
         }
         this._updateCoinDisplay();  // Show coin balance in header from first load
         this.showDashboard();       // Always show dashboard on startup!
+
+        // Auto-join 1-Click invite link from URL hash (e.g. #room=CLASH123)
+        setTimeout(() => this._checkUrlInviteHash(), 600);
+    }
+
+    _checkUrlInviteHash() {
+        const hash = window.location.hash;
+        if (hash && hash.includes('room=')) {
+            const match = hash.match(/room=([A-Za-z0-9_-]+)/);
+            if (match && match[1]) {
+                const roomCode = decodeURIComponent(match[1]).toUpperCase();
+                const inputEl = document.getElementById('inputUnifiedRoomCode');
+                if (inputEl) inputEl.value = roomCode;
+                this.openP2PModal();
+                this.ui.showToast(`🔗 Joined via invite link! Room: #${roomCode}`, 'success', 3500);
+                setTimeout(() => this.handleUnifiedP2PConnect(), 300);
+            }
+        }
     }
 
     _runLoadingScreen() {
@@ -259,19 +277,53 @@ class GameApp {
     }
 
     /**
-     * Tap on canvas or typing card focuses the hidden input (triggers virtual keyboard).
+     * Tap on canvas, arena, or typing card focuses the hidden input (triggers virtual keyboard).
+     * Also updates visual focus indicators so the player always knows keyboard is live.
      * @private
      */
     _setupCanvasFocusTrap() {
-        const focus = () => {
+        const reclaimFocus = () => {
             if (this.typeInput && this.isMatchActive && !this.isMatchPaused) {
                 this.typeInput.focus();
             }
         };
-        document.querySelector('.canvas-container')?.addEventListener('click', focus);
-        document.querySelector('.canvas-container')?.addEventListener('touchstart', focus, { passive: true });
-        document.querySelector('.typing-word-card')?.addEventListener('click', focus);
-        document.querySelector('.typing-word-card')?.addEventListener('touchstart', focus, { passive: true });
+
+        const arena = document.getElementById('arenaWrapper');
+        arena?.addEventListener('pointerdown', (e) => {
+            // Don't hijack clicks on buttons (skills, pause, sound)
+            if (e.target && (e.target.tagName === 'BUTTON' || e.target.closest('button') || e.target.tagName === 'INPUT')) {
+                return;
+            }
+            reclaimFocus();
+        });
+
+        document.querySelector('.canvas-container')?.addEventListener('click', reclaimFocus);
+        document.querySelector('.typing-word-card')?.addEventListener('click', reclaimFocus);
+
+        // Sync visual focus status
+        if (this.typeInput) {
+            this.typeInput.addEventListener('focus', () => {
+                const card = document.getElementById('typingWordCard');
+                const label = document.getElementById('promptLabelText');
+                if (card) {
+                    card.classList.remove('not-focused');
+                    card.classList.add('is-focused');
+                }
+                if (label && this.isMatchActive) label.innerText = 'TYPE TO ATTACK:';
+            });
+
+            this.typeInput.addEventListener('blur', () => {
+                if (this.isMatchActive && !this.isMatchPaused) {
+                    const card = document.getElementById('typingWordCard');
+                    const label = document.getElementById('promptLabelText');
+                    if (card) {
+                        card.classList.add('not-focused');
+                        card.classList.remove('is-focused');
+                    }
+                    if (label) label.innerText = 'TAP TO TYPE (FOCUS LOST):';
+                }
+            });
+        }
     }
 
     /**
@@ -506,6 +558,19 @@ class GameApp {
             this.typeInput.value = '';
             this.typeInput.focus();
         }
+
+        // Clean UI during active battle: hide floating lobby chat button
+        document.getElementById('floatingChatBtn')?.classList.add('chat-open');
+
+        // Only show quick emoji reaction dock during P2P multiplayer battles
+        const emojiDock = document.getElementById('emojiReactionDock');
+        if (emojiDock) {
+            if (combat.mode === 'p2p') {
+                emojiDock.classList.remove('hidden');
+            } else {
+                emojiDock.classList.add('hidden');
+            }
+        }
     }
 
     _setStageBadge(text) {
@@ -699,6 +764,9 @@ class GameApp {
                     'success', 3500
                 );
             }, 800);
+            this.ui.populateGameOver(winner, combat, stageRank, earned);
+        } else {
+            this.ui.populateGameOver(winner, combat, stageRank, 0);
         }
 
         // P2P mode: show lobby for rematch instead of standard game-over screen
@@ -707,7 +775,6 @@ class GameApp {
             return;
         }
 
-        this.ui.populateGameOver(winner, combat, stageRank);
         this.ui.showModal('modalGameOver');
     }
 
@@ -728,7 +795,7 @@ class GameApp {
     /** @private Refresh the coin balance shown in the header */
     _updateCoinDisplay() {
         const el = document.getElementById('headerCoinBalance');
-        if (el) el.innerText = `🪙 ${upgrades.coins.toLocaleString()}`;
+        if (el) el.innerHTML = `🪙 ${upgrades.coins.toLocaleString()} <span class="coin-shop-tag">SHOP</span>`;
     }
 
     // ── SHOP MODAL ─────────────────────────────────────────────────────────────
@@ -998,6 +1065,10 @@ class GameApp {
         const dashAvatarIcon = document.getElementById('dashAvatarIcon');
         if (dashSkinBadge) dashSkinBadge.innerText = next.toUpperCase();
         if (dashAvatarIcon) dashAvatarIcon.innerText = next === 'stickman' ? '🥋' : '⚡';
+
+        // Sync interactive skin switcher pills
+        document.getElementById('btnSkinSelectCyber')?.classList.toggle('active', next === 'cyber');
+        document.getElementById('btnSkinSelectStickman')?.classList.toggle('active', next === 'stickman');
 
         this.ui.showToast(
             next === 'stickman' ? '⚡ STICKMAN Fighter Activated!' : 'CYBER Fighter Activated!',
@@ -1492,6 +1563,45 @@ class GameApp {
     }
 
     /**
+     * Share 1-click room invite link via WhatsApp
+     */
+    shareP2PWhatsApp() {
+        const inputEl = document.getElementById('inputUnifiedRoomCode');
+        let code = inputEl?.value.trim().toUpperCase() || '';
+        if (!code || code.length < 2) {
+            code = 'CLASH' + Math.floor(Math.random() * 900 + 10);
+            if (inputEl) inputEl.value = code;
+        }
+
+        const baseUrl = window.location.origin + window.location.pathname;
+        const inviteUrl = `${baseUrl}#room=${encodeURIComponent(code)}`;
+        const text = encodeURIComponent(`⚔️ Let's fight in Typing Fighter! Click this link to join my 1v1 battle: ${inviteUrl} (Room Code: ${code})`);
+        window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+        this.handleUnifiedP2PConnect();
+        this.ui.showToast(`📲 WhatsApp opened! Joining room #${code}...`, 'success', 3500);
+    }
+
+    /**
+     * Copy 1-click room invite link to clipboard
+     */
+    copyP2PInviteLink() {
+        const inputEl = document.getElementById('inputUnifiedRoomCode');
+        let code = inputEl?.value.trim().toUpperCase() || '';
+        if (!code || code.length < 2) {
+            code = 'CLASH' + Math.floor(Math.random() * 900 + 10);
+            if (inputEl) inputEl.value = code;
+        }
+
+        const baseUrl = window.location.origin + window.location.pathname;
+        const inviteUrl = `${baseUrl}#room=${encodeURIComponent(code)}`;
+        navigator.clipboard?.writeText(inviteUrl).then(() => {
+            this.ui.showToast(`📋 Invite Link Copied: ${inviteUrl}`, 'success', 3500);
+        }).catch(() => {
+            this.ui.showToast(`Room Code: ${code}`, 'info', 3000);
+        });
+    }
+
+    /**
      * Host a P2P room initiated from the Community Chat.
      * @param {string} code
      */
@@ -1717,6 +1827,9 @@ class GameApp {
         if (this.matchTimerInterval) clearInterval(this.matchTimerInterval);
         this.ui.closeAllModals();
         document.getElementById('inGameChatDrawer')?.classList.add('hidden');
+        if (typeof chat !== 'undefined' && !chat.isOpen) {
+            document.getElementById('floatingChatBtn')?.classList.remove('chat-open');
+        }
         this._updateCoinDisplay();
         if (auth.currentUser) this._updateUserHeader();
         this.ui.showDashboard(combat, upgrades, auth, this.activeSkin);
@@ -1724,11 +1837,20 @@ class GameApp {
     }
 
     /**
-     * Open the Mode Selection modal when user clicks PLAY NOW on the dashboard.
+     * Smart 1-Tap Hero Play: Starts the player's highest unlocked campaign level immediately!
+     * Zero intermediate modals, zero confusion.
+     */
+    handleHeroPlayNow() {
+        const targetLvl = combat.unlockedLevel || 1;
+        this.startArcadeLevel(targetLvl);
+        this.ui.showToast(`⚔️ Entering Stage ${targetLvl} Battle Arena!`, 'success', 2500);
+    }
+
+    /**
+     * Open the Mode Selection modal (kept for backward compatibility or direct calls).
      */
     openModeSelect() {
-        this.ui.closeAllModals();
-        this.ui.showModal('modalStart');
+        this.openCampaignModal();
     }
 
     /**

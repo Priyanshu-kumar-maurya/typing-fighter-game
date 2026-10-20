@@ -386,6 +386,10 @@ class GameApp {
 
             this.words.typedCharIndex++;
 
+            // Clear typo guidance hint on correct keystroke
+            const hintEl = document.getElementById('typoGuidanceHint');
+            if (hintEl) hintEl.classList.add('hidden');
+
             // Broadcast keystroke progress to P2P opponent
             if (p2p.isConnected) {
                 p2p.send('KEYSTROKE', { charIndex: this.words.typedCharIndex });
@@ -399,7 +403,7 @@ class GameApp {
                 this.words.renderDisplay(this.wordDisplay);
             }
         } else {
-            // Wrong key — typo feedback
+            // Wrong key — typo feedback with instant micro-guidance (no backspace needed)
             combat.registerKey(1, false);
             audio.playError();
 
@@ -407,6 +411,18 @@ class GameApp {
             if (span) {
                 span.classList.add('char-error');
                 setTimeout(() => span.classList.remove('char-error'), 250);
+            }
+
+            // Show friendly instant micro-guidance so user doesn't press backspace
+            const hintEl = document.getElementById('typoGuidanceHint');
+            if (hintEl) {
+                const charToType = expected === ' ' ? 'SPACE' : expected.toUpperCase();
+                hintEl.innerText = `Type '${charToType}' (No backspace!)`;
+                hintEl.classList.remove('hidden');
+                clearTimeout(this._typoHintTimer);
+                this._typoHintTimer = setTimeout(() => {
+                    hintEl.classList.add('hidden');
+                }, 1600);
             }
         }
 
@@ -514,9 +530,13 @@ class GameApp {
         this.words.nextWord(difficulty, combat.p1.superActive);
         this.words.renderDisplay(this.wordDisplay);
 
-        // Super-move banner
+        // Super-move banner and glowing card state
+        const wordCard = document.getElementById('typingWordCard');
         if (this.superReadyBanner) {
             this.superReadyBanner.classList.toggle('hidden', !combat.p1.superActive);
+        }
+        if (wordCard) {
+            wordCard.classList.toggle('super-mode-active', !!combat.p1.superActive);
         }
     }
 

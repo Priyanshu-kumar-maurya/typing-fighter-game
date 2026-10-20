@@ -848,6 +848,31 @@ body {
         display: none !important;
     }
 
+    /* Fixed Combat Lock: Zero jumping, absolute bottom anchor on mobile keyboard */
+    body.keyboard-open .arena-wrapper {
+        overflow: hidden !important;
+        justify-content: flex-start !important;
+    }
+
+    body.keyboard-open .typing-box-container {
+        position: relative !important;
+        bottom: auto !important;
+        left: auto !important;
+        transform: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-top: 4px !important;
+    }
+
+    body.keyboard-open .typing-word-card {
+        padding: 5px 10px !important;
+    }
+
+    body.keyboard-open .word-display {
+        font-size: 1.25rem !important;
+        min-height: 28px !important;
+    }
+
     /* -- UNIVERSAL MODALS ON MOBILE (NEVER CUT OFF) --------- */
     .modal-overlay {
         padding: 8px;
@@ -1091,6 +1116,32 @@ canvas {
     background: #00ff88;
     box-shadow: 0 0 8px #00ff88;
     animation: focusDotBlink 1.2s infinite alternate;
+}
+
+/* Micro-guidance typo hint */
+.typo-guidance-hint {
+    background: rgba(255, 0, 85, 0.25);
+    border: 1px solid #ff0055;
+    color: #ff4d88;
+    font-size: 0.62rem;
+    font-weight: 800;
+    padding: 1px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+    animation: shake 0.25s ease;
+}
+
+/* Super attack mode card glow */
+.typing-word-card.super-mode-active {
+    border-color: #ffe600 !important;
+    background: rgba(20, 16, 5, 0.95) !important;
+    box-shadow: 0 0 35px rgba(255, 230, 0, 0.7), inset 0 0 20px rgba(255, 230, 0, 0.2) !important;
+    animation: superCardPulse 0.4s infinite alternate !important;
+}
+
+@keyframes superCardPulse {
+    0% { transform: scale(1.0); box-shadow: 0 0 25px rgba(255, 230, 0, 0.5); }
+    100% { transform: scale(1.02); box-shadow: 0 0 45px rgba(255, 230, 0, 0.9), 0 0 70px rgba(255, 0, 85, 0.4); }
 }
 
 .typing-word-card.not-focused .focus-dot {

@@ -1,6 +1,6 @@
-// Typing Fighter - PWA Service Worker v44 (Public Community Chat & 1v1 Challenge Engine)
+// Typing Fighter - PWA Service Worker v45 (Combat Lock, Super Power Glow & Micro Guidance)
 
-const CACHE_NAME = 'typing-fighter-v44';
+const CACHE_NAME = 'typing-fighter-v45';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',

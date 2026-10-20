@@ -47,7 +47,7 @@
     <!-- Razorpay Payment Gateway SDK (deferred for instant offline boot) -->
     <script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
 
-    <link rel="stylesheet" href="style.css?v=44">
+    <link rel="stylesheet" href="style.css?v=45">
 </head>
 <body>
     <!-- TOAST NOTIFICATION CONTAINER -->
@@ -377,6 +377,7 @@
                         <div class="prompt-label">
                             <span class="focus-dot"></span>
                             <span id="promptLabelText">TYPE TO ATTACK:</span>
+                            <span id="typoGuidanceHint" class="typo-guidance-hint hidden"></span>
                         </div>
                         <div id="wordDisplay" class="word-display">
                             <span class="placeholder-text">Click 'START FIGHT' to Begin!</span>
@@ -1152,20 +1153,20 @@
     </script>
 
     <!-- SCRIPTS (load order matters: dependencies before dependents) -->
-    <script src="js/icons.js?v=44"></script>
-    <script src="js/config.js?v=44"></script>
-    <script src="js/upgrades.js?v=44"></script>  <!-- Coin & upgrade system (needs CONFIG) -->
-    <script src="js/payment.js?v=44"></script>   <!-- Payment Gateway & Coin Recharge Engine -->
-    <script src="js/auth.js?v=44"></script>
-    <script src="js/audio.js?v=44"></script>
-    <script src="js/renderer.js?v=44"></script>
-    <script src="js/p2p.js?v=44"></script>
-    <script src="js/combat.js?v=44"></script>
+    <script src="js/icons.js?v=45"></script>
+    <script src="js/config.js?v=45"></script>
+    <script src="js/upgrades.js?v=45"></script>  <!-- Coin & upgrade system (needs CONFIG) -->
+    <script src="js/payment.js?v=45"></script>   <!-- Payment Gateway & Coin Recharge Engine -->
+    <script src="js/auth.js?v=45"></script>
+    <script src="js/audio.js?v=45"></script>
+    <script src="js/renderer.js?v=45"></script>
+    <script src="js/p2p.js?v=45"></script>
+    <script src="js/combat.js?v=45"></script>
     <!-- Modular sub-systems (loaded before main orchestrator) -->
-    <script src="js/word-engine.js?v=44"></script>
-    <script src="js/ui-manager.js?v=44"></script>
-    <script src="js/chat.js?v=44"></script>        <!-- Public Lobby Chat & 1v1 Challenge Engine -->
+    <script src="js/word-engine.js?v=45"></script>
+    <script src="js/ui-manager.js?v=45"></script>
+    <script src="js/chat.js?v=45"></script>        <!-- Public Lobby Chat & 1v1 Challenge Engine -->
     <!-- Main application controller -->
-    <script src="js/main.js?v=44"></script>
+    <script src="js/main.js?v=45"></script>
 </body>
 </html>

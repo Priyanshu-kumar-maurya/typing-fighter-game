@@ -24,17 +24,19 @@ class SoundEngine {
         }
     }
 
-    // Keypress Feedback (Subtle High Click)
-    playKeyPress() {
+    // Keypress Feedback (Subtle High Click with Dynamic Combo Pitch)
+    playKeyPress(combo = 0) {
         if (this.muted || !this.ctx) return;
         this.resume();
 
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
 
+        // Subtle pitch rise based on combo for rewarding audio feedback
+        const pitchBoost = Math.min((combo || 0) * 15, 300);
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(800, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(400, this.ctx.currentTime + 0.03);
+        osc.frequency.setValueAtTime(800 + pitchBoost, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(400 + pitchBoost, this.ctx.currentTime + 0.03);
 
         gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.03);
@@ -385,6 +387,31 @@ class SoundEngine {
             osc.start(startTime);
             osc.stop(startTime + 0.25);
         });
+    }
+
+    // 3-2-1 Countdown Beep
+    playCountdownBeep(isFinal = false) {
+        if (this.muted || !this.ctx) return;
+        this.resume();
+
+        const t = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = isFinal ? 'sawtooth' : 'sine';
+        osc.frequency.setValueAtTime(isFinal ? 880 : 440, t);
+        if (isFinal) {
+            osc.frequency.exponentialRampToValueAtTime(1760, t + 0.35);
+        }
+
+        gain.gain.setValueAtTime(isFinal ? 0.35 : 0.2, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + (isFinal ? 0.4 : 0.2));
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start(t);
+        osc.stop(t + (isFinal ? 0.4 : 0.2));
     }
 }
 

@@ -4529,6 +4529,103 @@ canvas {
     }
 }
 
+/* ══════════════════════════════════════════════════════════════════════════════
+   ARCADE 3-2-1 ROUND START COUNTDOWN FANFARE OVERLAY
+   ══════════════════════════════════════════════════════════════════════════════ */
+.countdown-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    pointer-events: none;
+    background: radial-gradient(circle, rgba(5, 7, 16, 0.65) 0%, rgba(5, 7, 16, 0.88) 100%);
+    backdrop-filter: blur(4px);
+    transition: opacity 0.25s ease;
+}
+
+.countdown-overlay.hidden {
+    display: none !important;
+}
+
+.countdown-text {
+    font-family: var(--font-heading);
+    font-size: clamp(4rem, 14vw, 7.5rem);
+    font-weight: 900;
+    letter-spacing: 4px;
+    color: #ffe600;
+    text-shadow: 0 0 25px rgba(255, 230, 0, 0.85), 0 0 50px rgba(255, 0, 85, 0.7);
+    animation: countPulse 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    user-select: none;
+}
+
+.countdown-text.fight-anim {
+    color: #ff0055;
+    font-size: clamp(4.5rem, 16vw, 8.5rem);
+    text-shadow: 0 0 35px #ff0055, 0 0 70px #ffe600;
+    animation: fightSlam 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes countPulse {
+    0% {
+        transform: scale(0.3);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.15);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes fightSlam {
+    0% {
+        transform: scale(2.2);
+        opacity: 0;
+    }
+    60% {
+        transform: scale(0.9);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   UPCOMING NEXT WORD PREVIEW BADGE
+   ══════════════════════════════════════════════════════════════════════════════ */
+.next-word-preview {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(0, 240, 255, 0.08);
+    border: 1px dashed rgba(0, 240, 255, 0.4);
+    color: #94a3b8;
+    font-size: 0.65rem;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    padding: 2px 7px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+    margin-left: auto;
+    transition: all 0.2s ease;
+}
+
+.next-word-preview strong {
+    color: #00f0ff;
+    font-weight: 700;
+}
+
+.next-word-preview.hidden {
+    display: none !important;
+}
+
+
 
 
 

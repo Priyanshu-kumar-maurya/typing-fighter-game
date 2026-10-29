@@ -33,6 +33,9 @@ class WordEngine {
         /** The word currently being typed by the active player */
         this.currentWord = '';
 
+        /** The upcoming word (previewed for uninterrupted typing flow) */
+        this.upcomingWord = '';
+
         /** How many characters of currentWord have been correctly typed */
         this.typedCharIndex = 0;
     }
@@ -48,6 +51,7 @@ class WordEngine {
         this.recentHistory     = [];
         this.typedCharIndex    = 0;
         this.currentWord       = '';
+        this.upcomingWord      = '';
     }
 
     /**
@@ -82,6 +86,20 @@ class WordEngine {
     nextWord(difficulty, isSuperReady) {
         this.typedCharIndex = 0;
 
+        // If an upcoming word was already prepared, make it current
+        if (this.upcomingWord) {
+            this.currentWord = this.upcomingWord;
+        } else {
+            this.currentWord = this._generateCandidate(difficulty, isSuperReady);
+        }
+
+        // Prepare the next upcoming word for preview
+        this.upcomingWord = this._generateCandidate(difficulty, false);
+
+        return this.currentWord;
+    }
+
+    _generateCandidate(difficulty, isSuperReady) {
         if (isSuperReady) {
             return this._pick(CONFIG.WORDS.POWER_WORDS);
         }
@@ -89,7 +107,7 @@ class WordEngine {
         if (this.contentMode === 'custom' && this.customScriptWords.length > 0) {
             const word = this.customScriptWords[this.customScriptIndex % this.customScriptWords.length];
             this.customScriptIndex++;
-            return (this.currentWord = word);
+            return word;
         }
 
         return this._pickFromDictionary(difficulty);

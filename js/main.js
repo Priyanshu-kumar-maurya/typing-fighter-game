@@ -71,6 +71,10 @@ class GameApp {
         this.p2pOpponentReady = false;
         this.p2pCountdownTimer = null;
 
+        // ── 3-2-1 Countdown state ─────────────────────────────────────────────
+        this.isCountingDown   = false;
+        this._countdownTimers = [];
+
         // ── Cached DOM references ─────────────────────────────────────────────
         this.typeInput       = document.getElementById('typeInput');
         this.wordDisplay     = document.getElementById('wordDisplay');
@@ -235,7 +239,7 @@ class GameApp {
             if (e.code === 'Space' && this.isMatchActive) e.preventDefault();
 
             // ── Battle Skills Keyboard Shortcuts (1: Freeze, 2: Shield, 3: 2x Boost, 4: Heal) ──
-            if (this.isMatchActive && !this.isMatchPaused && ['1', '2', '3', '4'].includes(e.key)) {
+            if (this.isMatchActive && !this.isMatchPaused && !this.isCountingDown && ['1', '2', '3', '4'].includes(e.key)) {
                 const expected = this.words?.currentWord ? this.words.currentWord[this.words.typedCharIndex] : null;
                 if (expected !== e.key) {
                     const skillMap = { '1': 'freeze', '2': 'shield', '3': 'double_dmg', '4': 'medkit' };
@@ -247,7 +251,7 @@ class GameApp {
             // When typeInput is focused, the 'input' event processes the character to prevent double-typing on mobile/IME
             if (e.target === this.typeInput) return;
 
-            if (!this.isMatchActive || this.isMatchPaused) return;
+            if (!this.isMatchActive || this.isMatchPaused || this.isCountingDown) return;
 
             // ── ANTI-CHEAT: rate-limit accepted keystrokes ────────────────────
             const now = Date.now();
@@ -263,7 +267,7 @@ class GameApp {
         // Mobile: hidden input receives virtual keyboard input
         if (this.typeInput) {
             this.typeInput.addEventListener('input', () => {
-                if (!this.isMatchActive || this.isMatchPaused) return;
+                if (!this.isMatchActive || this.isMatchPaused || this.isCountingDown) return;
                 const val = this.typeInput.value;
                 if (val && val.length > 0) {
                     for (let i = 0; i < val.length; i++) {
@@ -378,7 +382,12 @@ class GameApp {
 
         if (isCorrect) {
             combat.registerKey(1, true);
-            audio.playKeyPress();
+            audio.playKeyPress(combat.p1.combo);
+
+            // Light haptic feedback on mobile soft keyboards
+            if (navigator.vibrate) {
+                try { navigator.vibrate(8); } catch (e) {}
+            }
 
             // Per-keystroke light attack animation for responsive feel
             this.renderer.triggerAttack(1, 'light');
@@ -449,12 +458,21 @@ class GameApp {
 
         this.renderer.triggerAttack(playerNum, attackType);
 
-        // ── Audio feedback ────────────────────────────────────────────────────
-        if (attack.isSuper)           audio.playSuper();
-        else if (attack.isCritical)   audio.playKick();
-        else if (attack.isHeavy)      audio.playKick();
-        else                          audio.playPunch();
-        if (attack.combo > 1)         audio.playCombo(attack.combo);
+        // ── Audio & Haptic feedback ────────────────────────────────────────────
+        if (attack.isSuper) {
+            audio.playSuper();
+            if (navigator.vibrate) try { navigator.vibrate([40, 30, 80]); } catch (e) {}
+        } else if (attack.isCritical) {
+            audio.playKick();
+            if (navigator.vibrate) try { navigator.vibrate([25, 20, 40]); } catch (e) {}
+        } else if (attack.isHeavy) {
+            audio.playKick();
+            if (navigator.vibrate) try { navigator.vibrate(25); } catch (e) {}
+        } else {
+            audio.playPunch();
+            if (navigator.vibrate) try { navigator.vibrate(15); } catch (e) {}
+        }
+        if (attack.combo > 1) audio.playCombo(attack.combo);
 
         // ── Floating damage text ──────────────────────────────────────────────
         let dmgText, dmgColor, dmgSize;
@@ -538,6 +556,18 @@ class GameApp {
         if (wordCard) {
             wordCard.classList.toggle('super-mode-active', !!combat.p1.superActive);
         }
+
+        // Update Upcoming Word Preview badge
+        const previewBadge = document.getElementById('nextWordPreview');
+        const nextWordText = document.getElementById('nextWordText');
+        if (previewBadge && nextWordText) {
+            if (this.words.upcomingWord && this.isMatchActive) {
+                nextWordText.innerText = this.words.upcomingWord;
+                previewBadge.classList.remove('hidden');
+            } else {
+                previewBadge.classList.add('hidden');
+            }
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -545,10 +575,31 @@ class GameApp {
     // ═══════════════════════════════════════════════════════════════════════════
 
     /**
-     * Begin a match: activate timers, reset word engine, focus keyboard.
+     * Clear all active countdown timers and hide the countdown overlay.
+     * @private
+     */
+    _clearCountdown() {
+        if (this._countdownTimers && this._countdownTimers.length) {
+            this._countdownTimers.forEach(id => clearTimeout(id));
+            this._countdownTimers = [];
+        }
+        const overlay = document.getElementById('countdownOverlay');
+        const textEl  = document.getElementById('countdownText');
+        if (overlay) overlay.classList.add('hidden');
+        if (textEl) {
+            textEl.classList.remove('fight-anim');
+            textEl.innerText = '3';
+        }
+        this.isCountingDown = false;
+    }
+
+    /**
+     * Begin a match: run 3-2-1 Arcade Fight Countdown fanfare, activate timers,
+     * reset word engine, focus keyboard, and start AI when ready.
      * @private — called only after pendingGameStart() sets up the combat state.
      */
     _startMatch() {
+        this._clearCountdown();
         this.isMatchActive  = true;
         this.isMatchPaused  = false;
         this.matchSeconds   = 0;
@@ -560,24 +611,14 @@ class GameApp {
         const matchTimeEl = document.getElementById('matchTime');
         if (matchTimeEl) matchTimeEl.innerText = '00:00';
 
-        if (this.matchTimerInterval) clearInterval(this.matchTimerInterval);
-        this.matchTimerInterval = setInterval(() => {
-            if (!this.isMatchActive || this.isMatchPaused) return;
-            this.matchSeconds++;
-            const mm = String(Math.floor(this.matchSeconds / 60)).padStart(2, '0');
-            const ss = String(this.matchSeconds % 60).padStart(2, '0');
-            const el = document.getElementById('matchTime');
-            if (el) el.innerText = `${mm}:${ss}`;
-        }, 1000);
+        if (this.matchTimerInterval) {
+            clearInterval(this.matchTimerInterval);
+            this.matchTimerInterval = null;
+        }
 
         this.words.reset();
         this._generateNextWord();
         this.ui.updateHUD(combat.p1, combat.p2);
-
-        if (this.typeInput) {
-            this.typeInput.value = '';
-            this.typeInput.focus();
-        }
 
         // Clean UI during active battle: hide floating lobby chat button
         document.getElementById('floatingChatBtn')?.classList.add('chat-open');
@@ -591,6 +632,79 @@ class GameApp {
                 emojiDock.classList.add('hidden');
             }
         }
+
+        // ── 3-2-1 Arcade Fight Countdown Sequence ─────────────────────────────
+        const overlay = document.getElementById('countdownOverlay');
+        const textEl  = document.getElementById('countdownText');
+
+        combat.stopAI();
+        this.isCountingDown = true;
+        if (this.typeInput) {
+            this.typeInput.value = '';
+            this.typeInput.disabled = true;
+        }
+
+        const runStep = (label, isFinal, isFight) => {
+            if (!this.isMatchActive || this.isMatchPaused) return;
+            if (textEl) {
+                textEl.innerText = label;
+                textEl.classList.remove('fight-anim');
+                void textEl.offsetWidth; // Force CSS animation restart
+                if (isFight) textEl.classList.add('fight-anim');
+            }
+            audio.playCountdownBeep(isFinal);
+            if (isFight && navigator.vibrate) {
+                try { navigator.vibrate([40, 30, 80]); } catch (e) {}
+            }
+        };
+
+        if (overlay && textEl) {
+            overlay.classList.remove('hidden');
+            runStep('3', false, false);
+
+            this._countdownTimers = [
+                setTimeout(() => runStep('2', false, false), 700),
+                setTimeout(() => runStep('1', false, false), 1400),
+                setTimeout(() => runStep('FIGHT!', true, true), 2100),
+                setTimeout(() => {
+                    this._clearCountdown();
+                    if (!this.isMatchActive || this.isMatchPaused) return;
+
+                    // Enable typing input and autofocus
+                    if (this.typeInput) {
+                        this.typeInput.disabled = false;
+                        this.typeInput.value = '';
+                        this.typeInput.focus();
+                    }
+
+                    // Start Match Time clock
+                    if (this.matchTimerInterval) clearInterval(this.matchTimerInterval);
+                    this.matchTimerInterval = setInterval(() => {
+                        if (!this.isMatchActive || this.isMatchPaused) return;
+                        this.matchSeconds++;
+                        const mm = String(Math.floor(this.matchSeconds / 60)).padStart(2, '0');
+                        const ss = String(this.matchSeconds % 60).padStart(2, '0');
+                        const el = document.getElementById('matchTime');
+                        if (el) el.innerText = `${mm}:${ss}`;
+                    }, 1000);
+
+                    // Start AI attacks if in arcade mode
+                    if (combat.mode === 'arcade') {
+                        combat.startAI(aiHit => this._handleAIAttack(aiHit));
+                    }
+                }, 2750)
+            ];
+        } else {
+            // Fallback if overlay DOM element missing
+            this.isCountingDown = false;
+            if (this.typeInput) {
+                this.typeInput.disabled = false;
+                this.typeInput.focus();
+            }
+            if (combat.mode === 'arcade') {
+                combat.startAI(aiHit => this._handleAIAttack(aiHit));
+            }
+        }
     }
 
     _setStageBadge(text) {
@@ -601,6 +715,7 @@ class GameApp {
     pauseMatch() {
         if (!this.isMatchActive) { this.showMainMenu(); return; }
         this.isMatchPaused = true;
+        this._clearCountdown();
         combat.stopAI();
         this.ui.showModal('modalPause');
     }
@@ -645,7 +760,6 @@ class GameApp {
             this.words.customScriptIndex = 0;
 
             this._startMatch();
-            combat.startAI(aiHit => this._handleAIAttack(aiHit));
             this.ui.showToast(`Stage ${lvl} Restarted!`, 'info', 1500);
             return;
         }
@@ -734,6 +848,7 @@ class GameApp {
 
     /** Called by combat.onGameOverCallback */
     handleGameOver(winner) {
+        this._clearCountdown();
         this.isMatchActive  = false;
         this.isMatchPaused  = false;
         if (this.matchTimerInterval) clearInterval(this.matchTimerInterval);
@@ -978,7 +1093,6 @@ class GameApp {
         this.ui.setupPlayerPanel(2, combat.bot.name, combat.bot.avatar, combat.bot.color);
 
         this._startMatch();
-        combat.startAI(aiHit => this._handleAIAttack(aiHit));
     }
 
     /** Start a local 2-player match (same device, same keyboard) */
@@ -1841,6 +1955,7 @@ class GameApp {
      * Stops any match, stops AI timer, hides modals, updates dashboard stats.
      */
     showDashboard() {
+        this._clearCountdown();
         this.isMatchActive  = false;
         this.isMatchPaused  = false;
         combat.stopAI();

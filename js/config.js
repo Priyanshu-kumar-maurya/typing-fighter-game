@@ -187,7 +187,7 @@ const CONFIG = {
     // ── FIREBASE CLOUD DATABASE (PORT 443 HTTPS) ──────────────────────────────
     FIREBASE: {
         // Runs on standard HTTPS (Port 443) — 100% bypasses corporate / office firewalls
-        databaseURL: 'https://typing-fighter-global-default-rtdb.firebaseio.com',
+        databaseURL: 'https://typing-fighter-e353c-default-rtdb.firebaseio.com',
         chatPath: 'global_chat',
         maxRecentMessages: 60
     },

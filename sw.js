@@ -1,6 +1,6 @@
 // Typing Fighter - PWA Service Worker v45 (Combat Lock, Super Power Glow & Micro Guidance)
 
-const CACHE_NAME = 'typing-fighter-v47';
+const CACHE_NAME = 'typing-fighter-v48';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',

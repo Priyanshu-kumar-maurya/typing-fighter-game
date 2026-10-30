@@ -51,7 +51,7 @@ class CommunityChat {
         this.audioCtx = null;
 
         // ── HTTPS Firebase Realtime Cloud Backend (Port 443 - Firewall Bypass) ──
-        this.firebaseUrl = window.CONFIG?.FIREBASE?.databaseURL || 'https://typing-fighter-global-default-rtdb.firebaseio.com';
+        this.firebaseUrl = window.CONFIG?.FIREBASE?.databaseURL || 'https://typing-fighter-e353c-default-rtdb.firebaseio.com';
         this.chatPath    = window.CONFIG?.FIREBASE?.chatPath || 'global_chat';
         this.eventSource = null;
 

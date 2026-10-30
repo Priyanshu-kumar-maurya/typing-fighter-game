@@ -50,8 +50,15 @@ class CommunityChat {
         // Audio notification context (lazy initialized on user interaction)
         this.audioCtx = null;
 
-        // Load cached messages from session
+        // ── HTTPS Firebase Realtime Cloud Backend (Port 443 - Firewall Bypass) ──
+        this.firebaseUrl = window.CONFIG?.FIREBASE?.databaseURL || 'https://typing-fighter-global-default-rtdb.firebaseio.com';
+        this.chatPath    = window.CONFIG?.FIREBASE?.chatPath || 'global_chat';
+        this.eventSource = null;
+
+        // Load cached messages from session & fetch latest history from Firebase Cloud
         this._loadRecentMessages();
+        this._fetchFirebaseHistory();
+        this._connectFirebaseSSE();
 
         // Bind DOM elements on load
         if (document.readyState === 'loading') {
@@ -358,20 +365,22 @@ class CommunityChat {
     }
 
     _publishAndDisplay(msg) {
-        // Send over WebSocket MQTT
+        // 1. Send via Firebase Cloud Database over HTTPS (Port 443 - 100% Firewall Bypass)
+        if (this.firebaseUrl) {
+            this._sendViaFirebase(msg);
+        }
+
+        // 2. Secondary broadcast over WebSocket MQTT (if connected)
         if (this.isConnected && this.ws && this.ws.readyState === WebSocket.OPEN) {
             try {
                 const pub = this._makePublishPacket(this.topic, JSON.stringify(msg));
                 this.ws.send(pub);
             } catch (e) {
-                console.warn('[CommunityChat] Send failed:', e);
+                console.warn('[CommunityChat] MQTT send failed:', e);
             }
-        } else {
-            window.game?.ui?.showToast('Connecting to global lobby...', 'info', 2000);
-            this.connect();
         }
 
-        // Local echo
+        // 3. Local echo so sender sees their message instantly
         this._handleIncomingMessage(msg, true);
     }
 
@@ -493,6 +502,121 @@ class CommunityChat {
         }
     }
 
+    // ── FIREBASE HTTPS CLOUD METHODS (PORT 443 FIREWALL BYPASS) ────────────────
+
+    /**
+     * Post a message to Firebase Realtime Database over HTTPS REST (Port 443).
+     * Works seamlessly behind corporate/office proxies and firewalls.
+     */
+    async _sendViaFirebase(msg) {
+        if (!this.firebaseUrl) return false;
+        try {
+            const url = `${this.firebaseUrl}/${this.chatPath}.json`;
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(msg)
+            });
+            return res.ok;
+        } catch (err) {
+            console.warn('[FirebaseChat] HTTPS post failed (offline/fallback):', err);
+            return false;
+        }
+    }
+
+    /**
+     * Download the latest 50 global messages from Firebase Cloud over standard HTTPS.
+     * Ensures messages sent from office or other devices appear when you open the game.
+     */
+    async _fetchFirebaseHistory() {
+        if (!this.firebaseUrl) return;
+        try {
+            const url = `${this.firebaseUrl}/${this.chatPath}.json?orderBy="$key"&limitToLast=50`;
+            const res = await fetch(url);
+            if (!res.ok) return;
+            const data = await res.json();
+            if (!data || typeof data !== 'object') return;
+
+            const loaded = Object.values(data);
+            loaded.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+
+            let newAdded = false;
+            loaded.forEach(msg => {
+                if (msg && msg.id && !this.messages.some(m => m.id === msg.id)) {
+                    this.messages.push(msg);
+                    newAdded = true;
+                }
+            });
+
+            if (newAdded) {
+                if (this.messages.length > 60) {
+                    this.messages = this.messages.slice(-60);
+                }
+                this._saveRecentMessages();
+                this._renderAllMessages();
+            }
+        } catch (err) {
+            console.warn('[FirebaseChat] History fetch error (offline/fallback):', err);
+        }
+    }
+
+    /**
+     * Connect to Firebase Realtime Database Server-Sent Events (SSE) stream over HTTPS.
+     * Pushes new incoming messages in real-time (< 50ms) without MQTT ports.
+     */
+    _connectFirebaseSSE() {
+        if (!this.firebaseUrl || typeof EventSource === 'undefined') return;
+        try {
+            if (this.eventSource) {
+                this.eventSource.close();
+                this.eventSource = null;
+            }
+            const sseUrl = `${this.firebaseUrl}/${this.chatPath}.json`;
+            this.eventSource = new EventSource(sseUrl);
+
+            this.eventSource.addEventListener('put', (e) => {
+                try {
+                    const payload = JSON.parse(e.data);
+                    if (!payload || !payload.data) return;
+
+                    // Single new message pushed
+                    if (payload.path && payload.path !== '/') {
+                        const msg = payload.data;
+                        if (msg && msg.id) {
+                            this._handleIncomingMessage(msg, msg.senderId === this.clientId);
+                        }
+                    } else if (payload.path === '/' && typeof payload.data === 'object') {
+                        // Bulk payload on initial sync
+                        Object.values(payload.data).forEach(msg => {
+                            if (msg && msg.id) {
+                                this._handleIncomingMessage(msg, msg.senderId === this.clientId);
+                            }
+                        });
+                    }
+                } catch (err) {
+                    console.warn('[FirebaseChat] SSE stream parse error:', err);
+                }
+            });
+
+            this.eventSource.onerror = () => {
+                // Native EventSource auto-reconnects with exponential backoff
+            };
+        } catch (e) {
+            console.warn('[FirebaseChat] EventSource init failed:', e);
+        }
+    }
+
+    /** Re-render all cached and cloud messages into the chat list UI */
+    _renderAllMessages() {
+        const list = document.getElementById('chatMessageList');
+        if (!list) return;
+        list.innerHTML = '';
+        this.messages.forEach(msg => {
+            this._appendMessageToDOM(msg, msg.senderId === this.clientId);
+        });
+        this._scrollToBottom();
+    }
+
     // ── UI RENDERING & DOM INTERACTIONS ───────────────────────────────────────
 
     initUI() {
@@ -534,14 +658,7 @@ class CommunityChat {
         });
 
         // Initial render of cached messages
-        const list = document.getElementById('chatMessageList');
-        if (list) {
-            list.innerHTML = '';
-            this.messages.forEach(msg => {
-                this._appendMessageToDOM(msg, msg.senderId === this.clientId);
-            });
-            this._scrollToBottom();
-        }
+        this._renderAllMessages();
 
         this._updateOnlineCounterUI();
         this._updateUnreadBadgeUI();
@@ -562,12 +679,16 @@ class CommunityChat {
 
         this._scrollToBottom();
 
+        // Refresh cloud history & reconnect SSE if needed
+        this._fetchFirebaseHistory();
+        if (!this.eventSource) this._connectFirebaseSSE();
+
         // Focus input on desktop
         if (window.innerWidth > 768) {
             setTimeout(() => document.getElementById('inputChatMessage')?.focus(), 150);
         }
 
-        // Connect if not yet connected
+        // Connect fallback MQTT if not yet connected
         if (!this.isConnected) this.connect();
     }
 

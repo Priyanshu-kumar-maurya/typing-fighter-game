@@ -184,6 +184,14 @@ const CONFIG = {
         { level: 25, name: "Ultimate Typing God", baseWPM: 120, maxHp: 350, attackInterval: 1000, avatar: ICONS.trophy, color: '#ffe600', difficulty: 'GOD MODE' }
     ],
 
+    // ── FIREBASE CLOUD DATABASE (PORT 443 HTTPS) ──────────────────────────────
+    FIREBASE: {
+        // Runs on standard HTTPS (Port 443) — 100% bypasses corporate / office firewalls
+        databaseURL: 'https://typing-fighter-global-default-rtdb.firebaseio.com',
+        chatPath: 'global_chat',
+        maxRecentMessages: 60
+    },
+
     // TYPING PROMPT DICTIONARIES (Huge collection of real-life words & phrases)
     WORDS: {
         EASY: [

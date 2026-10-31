@@ -1133,14 +1133,12 @@ canvas {
     display: block;
 }
 
-/* TYPING PROMPT BOX — Desktop: absolute overlay inside canvas */
+/* TYPING PROMPT BOX & COMBAT DECK */
 .typing-box-container {
-    position: absolute;
-    bottom: 15px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 85%;
-    max-width: 650px;
+    position: relative;
+    width: 100%;
+    max-width: 680px;
+    margin: 8px auto 0;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -3989,6 +3987,14 @@ canvas {
     text-overflow: ellipsis;
 }
 
+.skill-name .short-name {
+    display: none;
+}
+
+.skill-name .full-name {
+    display: inline;
+}
+
 .skill-key {
     font-size: 0.58rem;
     font-weight: 700;
@@ -4016,18 +4022,34 @@ canvas {
 /* Mobile responsiveness for skills dock */
 @media (max-width: 600px) {
     .battle-skills-dock {
-        gap: 5px;
-        margin: 4px auto 6px;
+        gap: 4px;
+        margin: 2px auto 4px;
+        padding: 0;
+        width: 100%;
+        max-width: 100%;
     }
     .skill-btn {
-        padding: 5px 6px;
-        gap: 4px;
+        flex: 1;
+        min-width: 0;
+        padding: 5px 3px;
+        gap: 2px;
+        border-radius: 6px;
     }
     .skill-icon {
-        font-size: 1rem;
+        font-size: 0.95rem;
+    }
+    .skill-text-box {
+        align-items: center;
     }
     .skill-name {
-        font-size: 0.62rem;
+        font-size: 0.58rem;
+        letter-spacing: 0;
+    }
+    .skill-name .full-name {
+        display: none;
+    }
+    .skill-name .short-name {
+        display: inline;
     }
     .skill-key {
         display: none; /* Hide [key] indicator on phone touch screens */
@@ -4716,7 +4738,205 @@ canvas {
     display: none !important;
 }
 
+/* ══════════════════════════════════════════════════════════════════════════════
+   MASTER MOBILE PHONE OVERRIDE SYSTEM (<= 768px)
+   Guarantees 100% Responsive, Uncluttered Arena & Perfect Native-Like Controls
+   ══════════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+    /* 1. Header & Badges */
+    .logo .badge {
+        display: none !important;
+    }
+    .player-header-badge .user-meta {
+        display: none !important;
+    }
+    .header-controls .chat-header-text {
+        display: none !important;
+    }
+    .coin-btn {
+        padding: 4px 7px !important;
+        font-size: 0.72rem !important;
+        white-space: nowrap !important;
+        min-width: 0 !important;
+    }
+    .header {
+        padding: 6px 8px !important;
+        gap: 6px !important;
+    }
+    .logo-text {
+        font-size: 0.92rem !important;
+        letter-spacing: 0.5px !important;
+    }
 
+    /* 2. HUD (Health, Names & VS Badge) */
+    .hud {
+        display: grid !important;
+        grid-template-columns: 1fr 52px 1fr !important;
+        gap: 4px !important;
+        padding: 4px 6px !important;
+    }
+    .player-info {
+        gap: 4px !important;
+        min-width: 0 !important;
+    }
+    .avatar {
+        width: 22px !important;
+        height: 22px !important;
+        font-size: 0.75rem !important;
+        flex-shrink: 0 !important;
+    }
+    .details h3 {
+        font-size: 0.68rem !important;
+        max-width: 95px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+    .stats-mini {
+        font-size: 0.58rem !important;
+    }
+    .vs-center {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 1px !important;
+    }
+    .vs-circle {
+        width: 20px !important;
+        height: 20px !important;
+        font-size: 0.56rem !important;
+    }
+    .stage-badge {
+        font-size: 0.52rem !important;
+        padding: 1px 4px !important;
+        white-space: nowrap !important;
+        letter-spacing: 0 !important;
+    }
+    .match-time {
+        font-size: 0.62rem !important;
+    }
+    .hp-bar-outer {
+        height: 18px !important;
+    }
+    .hp-text {
+        font-size: 0.62rem !important;
+    }
+    .super-bar-outer {
+        height: 6px !important;
+    }
+    .super-text {
+        display: none !important;
+    }
 
+    /* 3. Pure Cinema Canvas Arena (Fighters 100% Unobstructed) */
+    .canvas-container {
+        position: relative !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        aspect-ratio: 16 / 8 !important;
+        max-height: clamp(160px, 32vh, 230px) !important;
+        min-height: 150px !important;
+        border-radius: 12px !important;
+        overflow: hidden !important;
+        margin: 0 auto !important;
+        border: 1.5px solid rgba(0, 240, 255, 0.35) !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8), inset 0 0 15px rgba(0, 240, 255, 0.1) !important;
+        flex-shrink: 0 !important;
+    }
+    .canvas-container canvas {
+        width: 100% !important;
+        height: 100% !important;
+        display: block !important;
+    }
 
+    /* 4. Target Combat Deck (Flows cleanly below canvas, never overlaps fighters) */
+    .typing-box-container {
+        position: relative !important;
+        bottom: auto !important;
+        left: auto !important;
+        transform: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 6px auto 0 !important;
+        gap: 4px !important;
+        padding: 0 !important;
+        z-index: 20 !important;
+    }
+    .typing-word-card {
+        width: 100% !important;
+        padding: 6px 10px !important;
+        border-radius: 10px !important;
+        background: rgba(8, 12, 28, 0.88) !important;
+        border: 1.5px solid rgba(0, 240, 255, 0.5) !important;
+        backdrop-filter: blur(8px) !important;
+    }
+    .prompt-label {
+        font-size: 0.6rem !important;
+        margin-bottom: 2px !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+    }
+    .next-word-preview {
+        font-size: 0.58rem !important;
+        padding: 1px 5px !important;
+        max-width: 110px !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+    .word-display {
+        font-size: clamp(1.15rem, 5vw, 1.45rem) !important;
+        min-height: 28px !important;
+        letter-spacing: 1px !important;
+    }
+    .mobile-keyboard-btn {
+        display: flex !important;
+        width: 100% !important;
+        margin-top: 4px !important;
+        padding: 10px 14px !important;
+        font-size: 0.82rem !important;
+        border-radius: 8px !important;
+    }
+
+    /* 5. Virtual Soft Keyboard Open State */
+    body.keyboard-open .canvas-container {
+        max-height: clamp(100px, 20vh, 135px) !important;
+        min-height: 100px !important;
+    }
+    body.keyboard-open .mobile-keyboard-btn {
+        display: none !important;
+    }
+    body.keyboard-open .battle-skills-dock {
+        display: none !important;
+    }
+    body.keyboard-open .super-ready-banner {
+        display: none !important;
+    }
+    body.keyboard-open .typing-box-container {
+        margin-top: 3px !important;
+        gap: 2px !important;
+    }
+    body.keyboard-open .typing-word-card {
+        padding: 4px 8px !important;
+    }
+    body.keyboard-open .word-display {
+        font-size: 1.18rem !important;
+        min-height: 24px !important;
+    }
+}
+
+/* Extra small mobile phones (<= 380px) */
+@media (max-width: 380px) {
+    .details h3 {
+        max-width: 75px !important;
+        font-size: 0.62rem !important;
+    }
+    .skill-name {
+        font-size: 0.52rem !important;
+    }
+    .logo-text {
+        font-size: 0.85rem !important;
+    }
+}
 

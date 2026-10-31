@@ -47,7 +47,7 @@
     <!-- Razorpay Payment Gateway SDK (deferred for instant offline boot) -->
     <script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
 
-    <link rel="stylesheet" href="style.css?v=49">
+    <link rel="stylesheet" href="style.css?v=50">
 </head>
 <body>
     <!-- TOAST NOTIFICATION CONTAINER -->
@@ -338,69 +338,6 @@
                     <span id="countdownText" class="countdown-text">3</span>
                 </div>
 
-                <!-- TARGET TYPING PROMPT OVERLAY -->
-                <div class="typing-box-container">
-                    <div id="superReadyBanner" class="super-ready-banner hidden">SUPER READY! TYPE POWER WORD FOR HYPER DAMAGE!</div>
-
-                    <!-- BATTLE POWER-UPS & SUPER SKILLS ACTION DOCK -->
-                    <div id="battleSkillsDock" class="battle-skills-dock">
-                        <button id="skillFreeze" class="skill-btn ready" onclick="game.useSkill('freeze')" title="Time Freeze (Press 1)">
-                            <span class="skill-icon">⏱️</span>
-                            <div class="skill-text-box">
-                                <span class="skill-name">FREEZE</span>
-                                <span class="skill-key">[1]</span>
-                            </div>
-                            <div class="skill-cd-overlay" id="cdFreeze"></div>
-                        </button>
-                        <button id="skillShield" class="skill-btn ready" onclick="game.useSkill('shield')" title="Cyber Shield (Press 2)">
-                            <span class="skill-icon">🛡️</span>
-                            <div class="skill-text-box">
-                                <span class="skill-name">SHIELD</span>
-                                <span class="skill-key">[2]</span>
-                            </div>
-                            <div class="skill-cd-overlay" id="cdShield"></div>
-                        </button>
-                        <button id="skillDoubleDmg" class="skill-btn ready" onclick="game.useSkill('double_dmg')" title="2X Boost (Press 3)">
-                            <span class="skill-icon">💥</span>
-                            <div class="skill-text-box">
-                                <span class="skill-name">2X BOOST</span>
-                                <span class="skill-key">[3]</span>
-                            </div>
-                            <div class="skill-cd-overlay" id="cdDoubleDmg"></div>
-                        </button>
-                        <button id="skillMedkit" class="skill-btn ready" onclick="game.useSkill('medkit')" title="Instant Heal (Press 4)">
-                            <span class="skill-icon">💚</span>
-                            <div class="skill-text-box">
-                                <span class="skill-name">HEAL</span>
-                                <span class="skill-key">[4]</span>
-                            </div>
-                            <div class="skill-cd-overlay" id="cdMedkit"></div>
-                        </button>
-                    </div>
-
-                    <div id="typingWordCard" class="typing-word-card is-focused" onclick="game.focusMobileKeyboard()">
-                        <div class="prompt-label">
-                            <span class="focus-dot"></span>
-                            <span id="promptLabelText">TYPE TO ATTACK:</span>
-                            <span id="nextWordPreview" class="next-word-preview hidden">NEXT: <strong id="nextWordText">...</strong></span>
-                            <span id="typoGuidanceHint" class="typo-guidance-hint hidden"></span>
-                        </div>
-                        <div id="wordDisplay" class="word-display">
-                            <span class="placeholder-text">Click 'START FIGHT' to Begin!</span>
-                        </div>
-                    </div>
-
-                    <!-- MOBILE VIRTUAL KEYBOARD TOGGLE BUTTON (Visible on Mobile Screens) -->
-                    <button id="btnMobileKeyboard" class="btn btn-neon mobile-keyboard-btn" onclick="game.focusMobileKeyboard()">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M8 16h8"/></svg> TAP TO TYPE / OPEN KEYBOARD
-                    </button>
-
-                    <!-- Hidden input for typing focus (configured for mobile soft keyboards) -->
-                    <input type="text" id="typeInput" class="hidden-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="text" autofocus>
-                    <!-- Audio element for P2P WebRTC live voice chat -->
-                    <audio id="remoteVoiceAudio" autoplay playsinline style="display:none;"></audio>
-                </div>
-
                 <!-- IN-GAME QUICK EMOJI REACTION DOCK -->
                 <div id="emojiReactionDock" class="emoji-reaction-dock">
                     <button class="emoji-btn" onclick="game.sendEmoji('🔥')" title="Fire (1)">🔥</button>
@@ -442,6 +379,69 @@
                         <button type="submit" class="btn btn-neon btn-send-chat">➤</button>
                     </form>
                 </div>
+            </div>
+
+            <!-- TARGET TYPING PROMPT & COMBAT DECK -->
+            <div class="typing-box-container">
+                <div id="superReadyBanner" class="super-ready-banner hidden">SUPER READY! TYPE POWER WORD FOR HYPER DAMAGE!</div>
+
+                <!-- BATTLE POWER-UPS & SUPER SKILLS ACTION DOCK -->
+                <div id="battleSkillsDock" class="battle-skills-dock">
+                    <button id="skillFreeze" class="skill-btn ready" onclick="game.useSkill('freeze')" title="Time Freeze (Press 1)">
+                        <span class="skill-icon">⏱️</span>
+                        <div class="skill-text-box">
+                            <span class="skill-name">FREEZE</span>
+                            <span class="skill-key">[1]</span>
+                        </div>
+                        <div class="skill-cd-overlay" id="cdFreeze"></div>
+                    </button>
+                    <button id="skillShield" class="skill-btn ready" onclick="game.useSkill('shield')" title="Cyber Shield (Press 2)">
+                        <span class="skill-icon">🛡️</span>
+                        <div class="skill-text-box">
+                            <span class="skill-name">SHIELD</span>
+                            <span class="skill-key">[2]</span>
+                        </div>
+                        <div class="skill-cd-overlay" id="cdShield"></div>
+                    </button>
+                    <button id="skillDoubleDmg" class="skill-btn ready" onclick="game.useSkill('double_dmg')" title="2X Boost (Press 3)">
+                        <span class="skill-icon">💥</span>
+                        <div class="skill-text-box">
+                            <span class="skill-name"><span class="full-name">2X BOOST</span><span class="short-name">2X</span></span>
+                            <span class="skill-key">[3]</span>
+                        </div>
+                        <div class="skill-cd-overlay" id="cdDoubleDmg"></div>
+                    </button>
+                    <button id="skillMedkit" class="skill-btn ready" onclick="game.useSkill('medkit')" title="Instant Heal (Press 4)">
+                        <span class="skill-icon">💚</span>
+                        <div class="skill-text-box">
+                            <span class="skill-name">HEAL</span>
+                            <span class="skill-key">[4]</span>
+                        </div>
+                        <div class="skill-cd-overlay" id="cdMedkit"></div>
+                    </button>
+                </div>
+
+                <div id="typingWordCard" class="typing-word-card is-focused" onclick="game.focusMobileKeyboard()">
+                    <div class="prompt-label">
+                        <span class="focus-dot"></span>
+                        <span id="promptLabelText">TYPE TO ATTACK:</span>
+                        <span id="nextWordPreview" class="next-word-preview hidden">NEXT: <strong id="nextWordText">...</strong></span>
+                        <span id="typoGuidanceHint" class="typo-guidance-hint hidden"></span>
+                    </div>
+                    <div id="wordDisplay" class="word-display">
+                        <span class="placeholder-text">Click 'START FIGHT' to Begin!</span>
+                    </div>
+                </div>
+
+                <!-- MOBILE VIRTUAL KEYBOARD TOGGLE BUTTON (Visible on Mobile Screens) -->
+                <button id="btnMobileKeyboard" class="btn btn-neon mobile-keyboard-btn" onclick="game.focusMobileKeyboard()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M8 16h8"/></svg> TAP TO TYPE / OPEN KEYBOARD
+                </button>
+
+                <!-- Hidden input for typing focus (configured for mobile soft keyboards) -->
+                <input type="text" id="typeInput" class="hidden-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="text" autofocus>
+                <!-- Audio element for P2P WebRTC live voice chat -->
+                <audio id="remoteVoiceAudio" autoplay playsinline style="display:none;"></audio>
             </div>
         </main>
 
@@ -1159,20 +1159,20 @@
     </script>
 
     <!-- SCRIPTS (load order matters: dependencies before dependents) -->
-    <script src="js/icons.js?v=49"></script>
-    <script src="js/config.js?v=49"></script>
-    <script src="js/upgrades.js?v=49"></script>  <!-- Coin & upgrade system (needs CONFIG) -->
-    <script src="js/payment.js?v=49"></script>   <!-- Payment Gateway & Coin Recharge Engine -->
-    <script src="js/auth.js?v=49"></script>
-    <script src="js/audio.js?v=49"></script>
-    <script src="js/renderer.js?v=49"></script>
-    <script src="js/p2p.js?v=49"></script>
-    <script src="js/combat.js?v=49"></script>
+    <script src="js/icons.js?v=50"></script>
+    <script src="js/config.js?v=50"></script>
+    <script src="js/upgrades.js?v=50"></script>  <!-- Coin & upgrade system (needs CONFIG) -->
+    <script src="js/payment.js?v=50"></script>   <!-- Payment Gateway & Coin Recharge Engine -->
+    <script src="js/auth.js?v=50"></script>
+    <script src="js/audio.js?v=50"></script>
+    <script src="js/renderer.js?v=50"></script>
+    <script src="js/p2p.js?v=50"></script>
+    <script src="js/combat.js?v=50"></script>
     <!-- Modular sub-systems (loaded before main orchestrator) -->
-    <script src="js/word-engine.js?v=49"></script>
-    <script src="js/ui-manager.js?v=49"></script>
-    <script src="js/chat.js?v=49"></script>        <!-- Public Lobby Chat & 1v1 Challenge Engine -->
+    <script src="js/word-engine.js?v=50"></script>
+    <script src="js/ui-manager.js?v=50"></script>
+    <script src="js/chat.js?v=50"></script>        <!-- Public Lobby Chat & 1v1 Challenge Engine -->
     <!-- Main application controller -->
-    <script src="js/main.js?v=49"></script>
+    <script src="js/main.js?v=50"></script>
 </body>
 </html>

@@ -2509,6 +2509,87 @@ canvas {
     transform: scale(1.05);
 }
 
+/* ── PAUSE & EXIT BUTTONS ────────────────────────────────────────────────── */
+.pause-header-btn {
+    background: rgba(255, 0, 85, 0.18) !important;
+    border: 1.5px solid var(--neon-magenta) !important;
+    color: #fff !important;
+    font-weight: 800;
+    gap: 5px;
+    display: inline-flex;
+    align-items: center;
+    box-shadow: 0 0 10px rgba(255, 0, 85, 0.25);
+    transition: all 0.2s ease;
+}
+.pause-header-btn:hover {
+    background: rgba(255, 0, 85, 0.35) !important;
+    box-shadow: 0 0 16px rgba(255, 0, 85, 0.55);
+    transform: scale(1.05);
+}
+
+.hud-pause-btn {
+    background: rgba(255, 0, 85, 0.22);
+    border: 1px solid #ff0055;
+    color: #fff;
+    font-family: var(--font-heading);
+    font-size: 0.58rem;
+    font-weight: 900;
+    padding: 2px 7px;
+    border-radius: 5px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+    transition: all 0.2s ease;
+    box-shadow: 0 0 8px rgba(255, 0, 85, 0.3);
+    touch-action: manipulation;
+    white-space: nowrap;
+}
+.hud-pause-btn:hover,
+.hud-pause-btn:active {
+    background: rgba(255, 0, 85, 0.45);
+    box-shadow: 0 0 14px rgba(255, 0, 85, 0.6);
+    transform: scale(1.05);
+}
+
+/* DURING ACTIVE BATTLE */
+body.in-battle .header-controls .pause-header-btn {
+    display: inline-flex !important;
+    background: rgba(255, 0, 85, 0.25) !important;
+    border-color: #ff0055 !important;
+    box-shadow: 0 0 14px rgba(255, 0, 85, 0.5) !important;
+}
+
+body.in-battle .header-controls .nav-dashboard-btn {
+    display: inline-flex !important;
+    background: rgba(0, 240, 255, 0.18) !important;
+    border-color: var(--neon-cyan) !important;
+}
+
+@media (max-width: 768px) {
+    /* On mobile during battle, hide non-battle items so PAUSE & QUIT are 100% visible */
+    body.in-battle .logo .badge,
+    body.in-battle .header-controls .coin-btn,
+    body.in-battle .header-controls .chat-header-btn,
+    body.in-battle .header-controls #btnSoundToggle,
+    body.in-battle .header-controls #btnPWAInstall,
+    body.in-battle .player-header-badge {
+        display: none !important;
+    }
+
+    body.in-battle .header-controls {
+        gap: 6px !important;
+        margin-left: auto !important;
+    }
+
+    body.in-battle .header-controls .pause-header-btn,
+    body.in-battle .header-controls .nav-dashboard-btn {
+        display: inline-flex !important;
+        padding: 6px 10px !important;
+        font-size: 0.75rem !important;
+        border-radius: 8px !important;
+    }
+}
+
 /* ── DASHBOARD HERO BANNER ──────────────────────────────────────────────── */
 .dashboard-hero {
     background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(7, 9, 19, 0.98));
@@ -4814,6 +4895,11 @@ canvas {
     }
     .match-time {
         font-size: 0.62rem !important;
+    }
+    .hud-pause-btn {
+        font-size: 0.52rem !important;
+        padding: 1px 5px !important;
+        margin-top: 1px !important;
     }
     .hp-bar-outer {
         height: 18px !important;

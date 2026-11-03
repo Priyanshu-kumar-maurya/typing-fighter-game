@@ -47,7 +47,7 @@
     <!-- Razorpay Payment Gateway SDK (deferred for instant offline boot) -->
     <script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
 
-    <link rel="stylesheet" href="style.css?v=50">
+    <link rel="stylesheet" href="style.css?v=51">
 </head>
 <body>
     <!-- TOAST NOTIFICATION CONTAINER -->
@@ -81,6 +81,9 @@
             </div>
 
             <div class="header-controls">
+                <!-- Header Controls: Quit & Pause buttons prominent during matches -->
+                <button id="btnHeaderPause" class="icon-btn pause-header-btn" title="Pause Match / Options" onclick="game.pauseMatch()">⏸️ <span class="pause-header-text">PAUSE</span></button>
+                <button id="btnNavDashboard" class="icon-btn nav-dashboard-btn" title="Back to Dashboard / Exit Match" onclick="game.showDashboard()">🚪 <span class="nav-dash-text">EXIT</span></button>
                 <!-- Coin balance — opens Character Shop -->
                 <button id="headerCoinBalance" class="icon-btn coin-btn" title="Character Shop & Upgrades" onclick="game.openShopModal()">🪙 0</button>
                 <!-- Global Community Chat Toggle with unread badge -->
@@ -91,12 +94,8 @@
                 </button>
                 <!-- Audio Mute/Unmute -->
                 <button id="btnSoundToggle" class="icon-btn" title="Toggle Audio (Shortcut: M)">Sound: ON</button>
-                <!-- Dashboard Home Button -->
-                <button id="btnNavDashboard" class="icon-btn nav-dashboard-btn" title="Back to Dashboard" onclick="game.showDashboard()">🏠 DASHBOARD</button>
                 <!-- PWA Install Button (Shown on mobile when installable) -->
                 <button id="btnPWAInstall" class="icon-btn install-pwa-btn hidden" title="Install App on Phone" onclick="game.promptPWAInstall()">📲 APP</button>
-                <!-- Header Pause Icon -->
-                <button id="btnHeaderPause" class="icon-btn pause-header-btn" title="Pause / Menu" onclick="game.pauseMatch()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg></button>
             </div>
         </header>
 
@@ -304,8 +303,9 @@
                 <!-- VS CENTER BADGE -->
                 <div class="vs-center">
                     <div id="stageBadge" class="stage-badge">STAGE 1/25</div>
-                    <div class="vs-circle">VS</div>
+                    <div class="vs-circle" onclick="game.pauseMatch()" title="Tap to Pause / Exit Match" style="cursor: pointer;">VS</div>
                     <div id="matchTime" class="match-time">00:00</div>
+                    <button id="btnHudPause" class="hud-pause-btn" onclick="game.pauseMatch()" title="Pause Match / Stop Game">⏸️ STOP</button>
                     <div id="p1ComboBadge" class="combo-badge hidden">COMBO x0</div>
                 </div>
 
@@ -1159,20 +1159,20 @@
     </script>
 
     <!-- SCRIPTS (load order matters: dependencies before dependents) -->
-    <script src="js/icons.js?v=50"></script>
-    <script src="js/config.js?v=50"></script>
-    <script src="js/upgrades.js?v=50"></script>  <!-- Coin & upgrade system (needs CONFIG) -->
-    <script src="js/payment.js?v=50"></script>   <!-- Payment Gateway & Coin Recharge Engine -->
-    <script src="js/auth.js?v=50"></script>
-    <script src="js/audio.js?v=50"></script>
-    <script src="js/renderer.js?v=50"></script>
-    <script src="js/p2p.js?v=50"></script>
-    <script src="js/combat.js?v=50"></script>
+    <script src="js/icons.js?v=51"></script>
+    <script src="js/config.js?v=51"></script>
+    <script src="js/upgrades.js?v=51"></script>  <!-- Coin & upgrade system (needs CONFIG) -->
+    <script src="js/payment.js?v=51"></script>   <!-- Payment Gateway & Coin Recharge Engine -->
+    <script src="js/auth.js?v=51"></script>
+    <script src="js/audio.js?v=51"></script>
+    <script src="js/renderer.js?v=51"></script>
+    <script src="js/p2p.js?v=51"></script>
+    <script src="js/combat.js?v=51"></script>
     <!-- Modular sub-systems (loaded before main orchestrator) -->
-    <script src="js/word-engine.js?v=50"></script>
-    <script src="js/ui-manager.js?v=50"></script>
-    <script src="js/chat.js?v=50"></script>        <!-- Public Lobby Chat & 1v1 Challenge Engine -->
+    <script src="js/word-engine.js?v=51"></script>
+    <script src="js/ui-manager.js?v=51"></script>
+    <script src="js/chat.js?v=51"></script>        <!-- Public Lobby Chat & 1v1 Challenge Engine -->
     <!-- Main application controller -->
-    <script src="js/main.js?v=50"></script>
+    <script src="js/main.js?v=51"></script>
 </body>
 </html>

@@ -599,6 +599,7 @@ class GameApp {
      * @private — called only after pendingGameStart() sets up the combat state.
      */
     _startMatch() {
+        document.body.classList.add('in-battle');
         this._clearCountdown();
         this.isMatchActive  = true;
         this.isMatchPaused  = false;
@@ -848,6 +849,7 @@ class GameApp {
 
     /** Called by combat.onGameOverCallback */
     handleGameOver(winner) {
+        document.body.classList.remove('in-battle');
         this._clearCountdown();
         this.isMatchActive  = false;
         this.isMatchPaused  = false;
@@ -1955,6 +1957,7 @@ class GameApp {
      * Stops any match, stops AI timer, hides modals, updates dashboard stats.
      */
     showDashboard() {
+        document.body.classList.remove('in-battle');
         this._clearCountdown();
         this.isMatchActive  = false;
         this.isMatchPaused  = false;

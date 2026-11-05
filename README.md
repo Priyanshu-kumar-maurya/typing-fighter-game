@@ -2,7 +2,7 @@
 
 [![Live Demo](https://img.shields.io/badge/🚀%20Live%20Demo-typing--fighter--game.vercel.app-00f0ff?style=for-the-badge)](https://typing-fighter-game.vercel.app)
 
-![Version](https://img.shields.io/badge/Version-v42-brightgreen.svg)
+![Version](https://img.shields.io/badge/Version-v52-brightgreen.svg)
 ![License](https://img.shields.io/badge/License-MIT-blue.svg)
 ![PWA](https://img.shields.io/badge/PWA-%3C%200.5%20MB%20%E2%80%A2%20100%25%20Offline-purple.svg)
 ![WebRTC](https://img.shields.io/badge/WebRTC-P2P%20Voice%20%26%20Data-orange.svg)

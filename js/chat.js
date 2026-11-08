@@ -298,12 +298,15 @@ class CommunityChat {
         // Check if message is a manual room code share (e.g. #ROOM123 or CODE: 1234)
         const roomMatch = clean.match(/(?:room|code|#)\s*[:#]?\s*([a-zA-Z0-9]{3,12})/i);
         const detectedRoom = roomMatch ? roomMatch[1].toUpperCase() : null;
+        const activeTitleMeta = (typeof upgrades !== 'undefined' && upgrades.getActiveTitleMeta) ? upgrades.getActiveTitleMeta() : null;
 
         const msg = {
             id: 'msg_' + Math.random().toString(36).substring(2, 9),
             type: detectedRoom ? 'challenge' : 'chat',
             user: this.userName,
             avatar: this.userAvatar,
+            title: activeTitleMeta?.name || '',
+            titleColor: activeTitleMeta?.color || '',
             text: clean,
             roomCode: detectedRoom,
             timestamp: now,
@@ -775,6 +778,18 @@ class CommunityChat {
 
             const metaLine = document.createElement('div');
             metaLine.className = 'chat-meta';
+
+            if (msg.title && msg.title !== 'NOVICE') {
+                const titleBadge = document.createElement('span');
+                titleBadge.className = 'chat-vip-badge';
+                titleBadge.textContent = `[${msg.title}]`;
+                if (msg.titleColor) {
+                    titleBadge.style.color = msg.titleColor;
+                    titleBadge.style.borderColor = msg.titleColor;
+                    titleBadge.style.boxShadow = `0 0 6px ${msg.titleColor}66`;
+                }
+                metaLine.appendChild(titleBadge);
+            }
 
             const nameSpan = document.createElement('span');
             nameSpan.className = 'chat-user-name';

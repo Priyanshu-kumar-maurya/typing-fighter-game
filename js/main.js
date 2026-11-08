@@ -949,21 +949,84 @@ class GameApp {
     }
 
     switchShopTab(tab) {
-        const upgEl  = document.getElementById('shopTabUpgrades');
-        const coinEl = document.getElementById('shopTabCoins');
-        const btnUpg = document.getElementById('shopBtnUpgrades');
-        const btnCoin= document.getElementById('shopBtnCoins');
-        if (tab === 'upgrades') {
-            upgEl?.classList.remove('hidden');
-            coinEl?.classList.add('hidden');
-            btnUpg?.classList.add('active');
-            btnCoin?.classList.remove('active');
-        } else {
-            coinEl?.classList.remove('hidden');
-            upgEl?.classList.add('hidden');
-            btnCoin?.classList.add('active');
-            btnUpg?.classList.remove('active');
+        const tabs = ['upgrades', 'spin', 'titles', 'arenas', 'coins'];
+        tabs.forEach(t => {
+            const content = document.getElementById('shopTab' + t.charAt(0).toUpperCase() + t.slice(1));
+            const btn = document.getElementById('shopBtn' + t.charAt(0).toUpperCase() + t.slice(1));
+            if (content) content.classList.toggle('hidden', t !== tab);
+            if (btn) btn.classList.toggle('active', t === tab);
+        });
+        this.ui.renderShop(upgrades);
+    }
+
+    spinLuckyWheel(isSuper = false) {
+        const res = upgrades.spinLuckyWheel(isSuper);
+        if (!res.ok) {
+            this.ui.showToast(res.reason, 'error', 3000);
+            return;
         }
+
+        const iconEl = document.getElementById('spinIcon');
+        const nameEl = document.getElementById('spinName');
+        const subEl  = document.getElementById('spinSub');
+
+        if (iconEl) iconEl.innerText = '🌀';
+        if (nameEl) {
+            nameEl.innerText = 'SPINNING...';
+            nameEl.style.color = '#00f0ff';
+        }
+        if (subEl)  subEl.innerText  = 'Testing cyber luck...';
+
+        try { audio.playHit(); } catch(e){}
+
+        setTimeout(() => {
+            if (iconEl) iconEl.innerText = res.prize.icon || '🏆';
+            if (nameEl) {
+                nameEl.innerText = res.prize.name;
+                nameEl.style.color = res.prize.color || '#00f0ff';
+            }
+            if (subEl)  subEl.innerText = res.rewardMsg;
+            this._updateCoinDisplay();
+            this.ui.renderShop(upgrades);
+            this.ui.showToast(`🎉 ${res.rewardMsg}`, 'success', 4000);
+            try { audio.playSuper(); } catch(e){}
+        }, 400);
+    }
+
+    buyTitle(titleId) {
+        const res = upgrades.unlockTitle(titleId);
+        if (!res.ok) {
+            this.ui.showToast(res.reason, 'error', 3000);
+            return;
+        }
+        this._updateCoinDisplay();
+        this._updateUserHeader();
+        this.ui.renderShop(upgrades);
+        this.ui.showToast(`👑 Unlocked VIP Title: [${res.title.name}]!`, 'success', 3500);
+        try { audio.playSuper(); } catch(e){}
+    }
+
+    equipTitle(titleId) {
+        const res = upgrades.equipTitle(titleId);
+        if (res.ok) {
+            this._updateUserHeader();
+            this.ui.renderShop(upgrades);
+            const meta = upgrades.getActiveTitleMeta();
+            this.ui.showToast(`Equipped VIP Title: [${meta.name}]!`, 'success', 2500);
+        }
+    }
+
+    unlockArena(arenaId) {
+        const res = upgrades.unlockArena(arenaId);
+        if (!res.ok) {
+            this.ui.showToast(res.reason, 'error', 3000);
+            return;
+        }
+        this._updateCoinDisplay();
+        this.selectArenaTheme(arenaId, false);
+        this.ui.renderShop(upgrades);
+        this.ui.showToast(`🏟️ ${res.arena.name} Unlocked & Activated!`, 'success', 3500);
+        try { audio.playSuper(); } catch(e){}
     }
 
     /**
@@ -1219,6 +1282,24 @@ class GameApp {
      */
     selectArenaTheme(theme, showToast = true) {
         if (!CONFIG.ARENA_THEMES || !CONFIG.ARENA_THEMES[theme]) return;
+
+        if (typeof upgrades !== 'undefined' && !upgrades.isArenaUnlocked(theme)) {
+            const meta = CONFIG.ARENA_THEMES[theme];
+            const cost = meta.cost || 0;
+            const confirmUnlock = confirm(`Unlock ${meta.name} arena for ${cost.toLocaleString()} 🪙 coins?`);
+            if (confirmUnlock) {
+                const res = upgrades.unlockArena(theme);
+                if (!res.ok) {
+                    this.ui.showToast(res.reason, 'error', 3500);
+                    return;
+                }
+                this._updateCoinDisplay();
+                this.ui.showToast(`🎉 ${meta.name} Arena Unlocked!`, 'success', 3000);
+            } else {
+                return;
+            }
+        }
+
         if (this.renderer) {
             this.renderer.setArenaTheme(theme);
         }
@@ -1502,7 +1583,14 @@ class GameApp {
 
         const nameEl = document.getElementById('headerUserName');
         const metaEl = document.getElementById('headerUserMeta');
-        if (nameEl) nameEl.innerText = auth.currentUser.name;
+        const titleMeta = (typeof upgrades !== 'undefined' && upgrades.getActiveTitleMeta) ? upgrades.getActiveTitleMeta() : null;
+        if (nameEl) {
+            if (titleMeta && titleMeta.id !== 'novice') {
+                nameEl.innerHTML = `<span style="color:${titleMeta.color}; font-size:0.75rem; margin-right:4px;">[${titleMeta.name}]</span> ${auth.currentUser.name}`;
+            } else {
+                nameEl.innerText = auth.currentUser.name;
+            }
+        }
         if (metaEl) metaEl.innerText = `${typeTag} | Age: ${auth.currentUser.age || 18} | Stage ${lvl}`;
     }
 

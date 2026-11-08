@@ -69,7 +69,8 @@ const CONFIG = {
             icon: '🏙️',
             color: '#00f0ff',
             tag: 'NEON METROPOLIS',
-            floorColor: 'rgba(0, 240, 255, 0.15)'
+            floorColor: 'rgba(0, 240, 255, 0.15)',
+            cost: 0
         },
         shaolin_temple: {
             id: 'shaolin_temple',
@@ -77,7 +78,8 @@ const CONFIG = {
             icon: '⛩️',
             color: '#ff9900',
             tag: 'MOONLIT DOJO',
-            floorColor: 'rgba(255, 153, 0, 0.2)'
+            floorColor: 'rgba(255, 153, 0, 0.2)',
+            cost: 800
         },
         lava_inferno: {
             id: 'lava_inferno',
@@ -85,7 +87,8 @@ const CONFIG = {
             icon: '🌋',
             color: '#ff3300',
             tag: 'VOLCANIC CRAGS',
-            floorColor: 'rgba(255, 51, 0, 0.25)'
+            floorColor: 'rgba(255, 51, 0, 0.25)',
+            cost: 1500
         },
         synthwave_retro: {
             id: 'synthwave_retro',
@@ -93,49 +96,77 @@ const CONFIG = {
             icon: '🌅',
             color: '#ff00aa',
             tag: '80s OUTRUN SUNSET',
-            floorColor: 'rgba(255, 0, 170, 0.2)'
+            floorColor: 'rgba(255, 0, 170, 0.2)',
+            cost: 2500
         }
     },
 
-    // ── CHARACTER UPGRADE TREES ───────────────────────────────────────────────
+    // ── CHARACTER UPGRADE TREES (Expanded to Lv 8-10 for Ultimate Coin Sinks) ───
     // Each upgrade has: name, icon, desc, maxLevel, costs[] (one per level)
     UPGRADES: {
         attack:   {
             name: 'Power Fist',    icon: '⚔️',
             desc: '+2 Attack Damage per level. Destroy enemies faster!',
-            maxLevel: 5,
-            costs: [100, 200, 400, 800, 1600]
+            maxLevel: 10,
+            costs: [100, 250, 500, 1000, 2000, 4000, 8000, 15000, 30000, 60000]
         },
         defense:  {
             name: 'Iron Shield',   icon: '🛡️',
-            desc: '-8% AI Damage taken per level. Survive longer!',
-            maxLevel: 5,
-            costs: [150, 300, 600, 1200, 2400]
+            desc: '-7% AI Damage taken per level. Survive longer in combat!',
+            maxLevel: 10,
+            costs: [150, 300, 600, 1200, 2500, 5000, 10000, 20000, 40000, 80000]
         },
         fury:     {
             name: 'Fury Engine',   icon: '🔥',
             desc: 'Rage Mode triggers at +5% HP threshold per level!',
-            maxLevel: 3,
-            costs: [200, 400, 800]
+            maxLevel: 6,
+            costs: [200, 400, 800, 2000, 5000, 12000]
         },
         critical: {
             name: 'Critical Eye',  icon: '💥',
-            desc: '+200ms Critical Hit window. Land Crits more easily!',
-            maxLevel: 2,
-            costs: [250, 500]
+            desc: '+150ms Critical Hit window per level. Land Crits easily!',
+            maxLevel: 6,
+            costs: [250, 500, 1200, 3000, 7500, 18000]
         },
         vitality: {
             name: 'Vital Core',    icon: '❤️',
-            desc: '+10 Max HP per level. More room to make mistakes!',
-            maxLevel: 4,
-            costs: [200, 400, 800, 1600]
+            desc: '+10 Max HP per level. Extra health pool for tougher stages!',
+            maxLevel: 10,
+            costs: [200, 400, 800, 1600, 3500, 7500, 15000, 30000, 60000, 120000]
         },
         combo:    {
             name: 'Combo Rush',    icon: '💚',
-            desc: '+2 HP healed per Combo Heal event. Stay in the fight!',
-            maxLevel: 3,
-            costs: [150, 300, 600]
+            desc: '+2 HP healed per Combo Heal event. Keep the momentum!',
+            maxLevel: 6,
+            costs: [150, 300, 600, 1500, 4000, 10000]
         }
+    },
+
+    // ── VIP CHAT & PROFILE TITLES (EXCLUSIVES TO FLEX COINS) ───────────────────
+    VIP_TITLES: [
+        { id: 'novice',         name: 'NOVICE',         icon: '🔰', cost: 0,     color: '#94a3b8', desc: 'Default starter fighter rank.' },
+        { id: 'cyber_typist',   name: 'CYBER TYPIST',   icon: '⚡', cost: 800,   color: '#00f0ff', desc: 'Glowing electric cyan badge in global lobby chat.' },
+        { id: 'vip_master',     name: 'VIP MASTER',     icon: '👑', cost: 1500,  color: '#ffd700', desc: 'Prestige golden crown VIP title.' },
+        { id: 'speed_demon',    name: 'SPEED DEMON',    icon: '🔥', cost: 2500,  color: '#ff6600', desc: 'Fiery blazing title for high-speed typists.' },
+        { id: 'dragon_warrior', name: 'DRAGON WARRIOR', icon: '🐉', cost: 5000,  color: '#ff0055', desc: 'Crimson dragon flame tag with fierce aura.' },
+        { id: 'shadow_phantom', name: 'SHADOW PHANTOM', icon: '💀', cost: 10000, color: '#b026ff', desc: 'Mystic void purple assassin prestige.' },
+        { id: 'cyber_tycoon',   name: 'CYBER TYCOON',   icon: '💎', cost: 25000, color: '#00ffcc', desc: 'Ultimate high-roller billionaire diamond badge!' }
+    ],
+
+    // ── LUCKY SPIN WHEEL CONFIGURATION ────────────────────────────────────────
+    LUCKY_SPIN: {
+        SPIN_COST: 250,
+        SUPER_SPIN_COST: 1000,
+        PRIZES: [
+            { id: 'coins_50',   name: '50 Coins',          icon: '🪙', type: 'coins',    value: 50,   weight: 22, color: '#94a3b8' },
+            { id: 'coins_150',  name: '150 Coins',         icon: '🪙', type: 'coins',    value: 150,  weight: 20, color: '#ffd700' },
+            { id: 'coins_400',  name: '400 Coins',         icon: '💰', type: 'coins',    value: 400,  weight: 15, color: '#00f0ff' },
+            { id: 'coins_1000', name: '1,000 COINS!',      icon: '💎', type: 'coins',    value: 1000, weight: 8,  color: '#ff00aa' },
+            { id: 'coins_5000', name: 'JACKPOT 5,000!',    icon: '🏆', type: 'coins',    value: 5000, weight: 3,  color: '#ff0055' },
+            { id: 'title_volt', name: 'VOLT TITAN Title',  icon: '⚡', type: 'title',    value: 'VOLT TITAN', weight: 8, color: '#00f0ff' },
+            { id: 'title_lucky',name: 'LUCKY STRIKER',     icon: '🎰', type: 'title',    value: 'LUCKY STRIKER', weight: 8, color: '#ffd700' },
+            { id: 'boost_hp',   name: '+25 Max HP Booster',icon: '❤️', type: 'boost_hp', value: 25,   weight: 16, color: '#ff3366' }
+        ]
     },
 
     // ── COIN SHOP PACKAGES ────────────────────────────────────────────────────

@@ -47,7 +47,7 @@
     <!-- Razorpay Payment Gateway SDK (deferred for instant offline boot) -->
     <script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
 
-    <link rel="stylesheet" href="style.css?v=52">
+    <link rel="stylesheet" href="style.css?v=53">
 </head>
 <body>
     <!-- TOAST NOTIFICATION CONTAINER -->
@@ -548,12 +548,60 @@
                 <!-- Tab buttons -->
                 <div class="shop-tabs">
                     <button id="shopBtnUpgrades" class="shop-tab active" onclick="game.switchShopTab('upgrades')">🔧 UPGRADES</button>
+                    <button id="shopBtnSpin"     class="shop-tab"        onclick="game.switchShopTab('spin')">🎰 LUCKY SPIN</button>
+                    <button id="shopBtnTitles"   class="shop-tab"        onclick="game.switchShopTab('titles')">👑 VIP TITLES</button>
+                    <button id="shopBtnArenas"   class="shop-tab"        onclick="game.switchShopTab('arenas')">🏟️ ARENAS</button>
                     <button id="shopBtnCoins"    class="shop-tab"        onclick="game.switchShopTab('coins')">💰 BUY COINS</button>
                 </div>
 
                 <!-- Upgrades Tab -->
                 <div id="shopTabUpgrades" class="shop-tab-content">
                     <div id="upgradeGrid" class="upgrade-grid"></div>
+                </div>
+
+                <!-- Lucky Spin Tab (Coin Sink) -->
+                <div id="shopTabSpin" class="shop-tab-content hidden">
+                    <div class="lucky-spin-wrapper">
+                        <div class="spin-header">
+                            <h3>🎰 CYBER LUCKY ROULETTE</h3>
+                            <p>Spend coins to test your luck! Win up to <strong>5,000 COINS</strong>, permanent Max HP, and rare VIP titles!</p>
+                        </div>
+                        <div class="spin-roulette-box">
+                            <div id="spinPrizeDisplay" class="spin-prize-display">
+                                <div class="spin-prize-icon" id="spinIcon">🎰</div>
+                                <div class="spin-prize-name" id="spinName">READY TO SPIN</div>
+                                <div class="spin-prize-sub" id="spinSub">Spin now & win big rewards!</div>
+                            </div>
+                            <div class="spin-actions-row">
+                                <button id="btnSpinSingle" class="spin-btn spin-single" onclick="game.spinLuckyWheel(false)">
+                                    <span class="spin-btn-icon">🎲</span>
+                                    <span class="spin-btn-text">LUCKY SPIN</span>
+                                    <span class="spin-cost-tag">🪙 250</span>
+                                </button>
+                                <button id="btnSpinSuper" class="spin-btn spin-super" onclick="game.spinLuckyWheel(true)">
+                                    <span class="spin-btn-icon">⚡</span>
+                                    <span class="spin-btn-text">5X MEGA SPIN</span>
+                                    <span class="spin-cost-tag">🪙 1,000</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="spin-prizes-preview">
+                            <h4 class="preview-title">🏆 POSSIBLE REWARDS POOL</h4>
+                            <div class="prizes-badge-list" id="spinPrizesList"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIP Titles Tab (Social Prestige Coin Sink) -->
+                <div id="shopTabTitles" class="shop-tab-content hidden">
+                    <p class="shop-info-text">👑 Stand out with glowing VIP badges in the Global Lobby Chat and match header!</p>
+                    <div id="titlesGrid" class="titles-grid"></div>
+                </div>
+
+                <!-- Arenas Shop Tab (Custom Arenas Coin Sink) -->
+                <div id="shopTabArenas" class="shop-tab-content hidden">
+                    <p class="shop-info-text">🏟️ Unlock legendary Battle Arenas with custom neon lighting and floor effects!</p>
+                    <div id="arenasShopGrid" class="arenas-shop-grid"></div>
                 </div>
 
                 <!-- Buy Coins Tab -->
@@ -1137,7 +1185,7 @@
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=52').then(reg => {
+                navigator.serviceWorker.register('sw.js?v=53').then(reg => {
                     console.log('[PWA] Service Worker registered:', reg.scope);
 
                     // Auto-update SW when new version is deployed
@@ -1159,20 +1207,20 @@
     </script>
 
     <!-- SCRIPTS (load order matters: dependencies before dependents) -->
-    <script src="js/icons.js?v=52"></script>
-    <script src="js/config.js?v=52"></script>
-    <script src="js/upgrades.js?v=52"></script>  <!-- Coin & upgrade system (needs CONFIG) -->
-    <script src="js/payment.js?v=52"></script>   <!-- Payment Gateway & Coin Recharge Engine -->
-    <script src="js/auth.js?v=52"></script>
-    <script src="js/audio.js?v=52"></script>
-    <script src="js/renderer.js?v=52"></script>
-    <script src="js/p2p.js?v=52"></script>
-    <script src="js/combat.js?v=52"></script>
+    <script src="js/icons.js?v=53"></script>
+    <script src="js/config.js?v=53"></script>
+    <script src="js/upgrades.js?v=53"></script>  <!-- Coin & upgrade system (needs CONFIG) -->
+    <script src="js/payment.js?v=53"></script>   <!-- Payment Gateway & Coin Recharge Engine -->
+    <script src="js/auth.js?v=53"></script>
+    <script src="js/audio.js?v=53"></script>
+    <script src="js/renderer.js?v=53"></script>
+    <script src="js/p2p.js?v=53"></script>
+    <script src="js/combat.js?v=53"></script>
     <!-- Modular sub-systems (loaded before main orchestrator) -->
-    <script src="js/word-engine.js?v=52"></script>
-    <script src="js/ui-manager.js?v=52"></script>
-    <script src="js/chat.js?v=52"></script>        <!-- Public Lobby Chat & 1v1 Challenge Engine -->
+    <script src="js/word-engine.js?v=53"></script>
+    <script src="js/ui-manager.js?v=53"></script>
+    <script src="js/chat.js?v=53"></script>        <!-- Public Lobby Chat & 1v1 Challenge Engine -->
     <!-- Main application controller -->
-    <script src="js/main.js?v=52"></script>
+    <script src="js/main.js?v=53"></script>
 </body>
 </html>

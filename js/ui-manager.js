@@ -479,6 +479,15 @@ class UIManager {
             });
         }
 
+        // ── Lucky Spin Prizes Preview ─────────────────────────────────────────
+        this.renderLuckySpin(ups);
+
+        // ── VIP Titles Grid ───────────────────────────────────────────────────
+        this.renderTitles(ups);
+
+        // ── Arenas Shop Grid ──────────────────────────────────────────────────
+        this.renderArenas(ups);
+
         // ── Coin packages grid ────────────────────────────────────────────────
         const pkgGrid = this._el('coinPackagesGrid');
         if (pkgGrid) {
@@ -505,6 +514,88 @@ class UIManager {
      * @param {Object} pkg - The package being purchased
      * @param {PaymentManager} pm - PaymentManager instance
      */
+    renderLuckySpin(ups) {
+        const prizeList = this._el('spinPrizesList');
+        if (prizeList && CONFIG.LUCKY_SPIN && CONFIG.LUCKY_SPIN.PRIZES) {
+            prizeList.innerHTML = CONFIG.LUCKY_SPIN.PRIZES.map(p =>
+                `<span class="prize-preview-badge" style="border-color:${p.color}; color:${p.color}; box-shadow: 0 0 6px ${p.color}44;">
+                    ${this._esc(p.icon)} ${this._esc(p.name)}
+                </span>`
+            ).join('');
+        }
+    }
+
+    renderTitles(ups) {
+        const grid = this._el('titlesGrid');
+        if (!grid || !CONFIG.VIP_TITLES) return;
+        grid.innerHTML = '';
+
+        CONFIG.VIP_TITLES.forEach(t => {
+            const isUnlocked = ups.unlockedTitles && ups.unlockedTitles.includes(t.id);
+            const isEquipped = ups.activeTitle === t.id;
+            const canAfford  = ups.coins >= t.cost;
+
+            const card = document.createElement('div');
+            card.className = `title-card ${isEquipped ? 'equipped' : ''} ${isUnlocked ? 'unlocked' : ''}`;
+            card.innerHTML = `
+                <div class="title-header">
+                    <span class="title-icon">${this._esc(t.icon)}</span>
+                    <span class="title-name" style="color:${t.color}; text-shadow: 0 0 8px ${t.color}88;">[${this._esc(t.name)}]</span>
+                </div>
+                <div class="title-desc">${this._esc(t.desc)}</div>
+                <div class="title-action">
+                    ${isEquipped
+                        ? '<span class="badge-status-equipped">ACTIVE VIP ✓</span>'
+                        : isUnlocked
+                            ? `<button class="btn btn-neon btn-small" onclick="game.equipTitle('${t.id}')">EQUIP</button>`
+                            : `<button class="btn btn-magenta btn-small" onclick="game.buyTitle('${t.id}')" ${canAfford ? '' : 'disabled'}>
+                                 ${canAfford ? 'UNLOCK 🪙 ' + t.cost.toLocaleString() : 'NEED 🪙 ' + t.cost.toLocaleString()}
+                               </button>`
+                    }
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    renderArenas(ups) {
+        const grid = this._el('arenasShopGrid');
+        if (!grid || !CONFIG.ARENA_THEMES) return;
+        grid.innerHTML = '';
+
+        const currentTheme = localStorage.getItem('tf_arena_theme') || 'cyber_city';
+
+        Object.values(CONFIG.ARENA_THEMES).forEach(a => {
+            const isUnlocked = ups.isArenaUnlocked(a.id);
+            const isActive   = currentTheme === a.id;
+            const cost       = a.cost || 0;
+            const canAfford  = ups.coins >= cost;
+
+            const card = document.createElement('div');
+            card.className = `arena-shop-card ${isActive ? 'active-arena' : ''} ${isUnlocked ? 'unlocked' : ''}`;
+            card.innerHTML = `
+                <div class="arena-shop-header" style="border-left: 3px solid ${a.color};">
+                    <span class="arena-icon">${this._esc(a.icon)}</span>
+                    <div class="arena-meta">
+                        <span class="arena-name" style="color: ${a.color};">${this._esc(a.name)}</span>
+                        <span class="arena-tag">${this._esc(a.tag)}</span>
+                    </div>
+                </div>
+                <div class="arena-action">
+                    ${isActive
+                        ? '<span class="badge-status-equipped">ACTIVE ARENA ✓</span>'
+                        : isUnlocked
+                            ? `<button class="btn btn-neon btn-small" onclick="game.selectArenaTheme('${a.id}')">SELECT</button>`
+                            : `<button class="btn btn-magenta btn-small" onclick="game.unlockArena('${a.id}')" ${canAfford ? '' : 'disabled'}>
+                                 ${canAfford ? 'UNLOCK 🪙 ' + cost.toLocaleString() : 'NEED 🪙 ' + cost.toLocaleString()}
+                               </button>`
+                    }
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
     renderPaymentModal(pkg, pm) {
         this._setText('paySummaryIcon', 'innerText', pkg.icon || '💰');
         this._setText('paySummaryName', 'innerText', pkg.label || 'Coin Recharge');

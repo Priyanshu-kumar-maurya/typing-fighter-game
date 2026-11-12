@@ -1086,9 +1086,9 @@ class GameApp {
         }
     }
 
-    payWithUPIApp() {
+    payWithUPIApp(appName = 'bhim') {
         if (typeof payment !== 'undefined') {
-            payment.openUPIAppIntent();
+            payment.openUPIAppIntent(appName);
         }
     }
 

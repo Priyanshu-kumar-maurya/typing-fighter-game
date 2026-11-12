@@ -5271,3 +5271,75 @@ body.in-battle .header-controls .nav-dashboard-btn {
     letter-spacing: 0.5px;
     font-family: var(--font-heading);
 }
+
+/* ── UPIGATEWAY INTEGRATION STYLES ───────────────────────────────────────── */
+.upi-apps-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    width: 100%;
+    margin-bottom: 8px;
+}
+.btn-upi-app {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 8px 4px;
+    border-radius: 8px;
+    font-family: var(--font-heading);
+    font-size: 0.72rem;
+    font-weight: 800;
+    cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.04);
+    color: #fff;
+    transition: all 0.2s ease;
+    touch-action: manipulation;
+}
+.btn-upi-app:hover,
+.btn-upi-app:active {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 240, 255, 0.3);
+}
+.btn-upi-app.app-gpay:hover { border-color: #4285F4; background: rgba(66, 133, 244, 0.2); }
+.btn-upi-app.app-phonepe:hover { border-color: #5f259f; background: rgba(95, 37, 159, 0.25); }
+.btn-upi-app.app-paytm:hover { border-color: #00b9f5; background: rgba(0, 185, 245, 0.2); }
+.btn-upi-app.app-bhim:hover { border-color: var(--neon-cyan); background: rgba(0, 240, 255, 0.2); }
+.upi-app-icon { font-size: 1.1rem; }
+
+.utr-confirmation-box label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-bottom: 4px;
+}
+.utr-badge-zero-fee {
+    font-size: 0.62rem;
+    font-weight: 900;
+    color: #00ff88;
+    background: rgba(0, 255, 136, 0.12);
+    border: 1px solid rgba(0, 255, 136, 0.4);
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+}
+.utr-hint {
+    display: block;
+    font-size: 0.65rem;
+    color: #64748b;
+    margin-top: 4px;
+}
+.btn-utr-confirm {
+    white-space: nowrap;
+    font-size: 0.75rem !important;
+}
+
+@media (max-width: 480px) {
+    .upi-apps-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

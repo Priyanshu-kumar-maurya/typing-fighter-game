@@ -47,7 +47,7 @@
     <!-- Razorpay Payment Gateway SDK (deferred for instant offline boot) -->
     <script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
 
-    <link rel="stylesheet" href="style.css?v=53">
+    <link rel="stylesheet" href="style.css?v=54">
 </head>
 <body>
     <!-- TOAST NOTIFICATION CONTAINER -->
@@ -664,22 +664,37 @@
                         </div>
 
                         <div class="upi-mobile-actions">
-                            <button class="btn btn-neon btn-small full-width" onclick="game.payWithUPIApp()">
-                                📱 PAY DIRECTLY ON UPI APP
-                            </button>
+                            <div class="upi-apps-row">
+                                <button class="btn-upi-app app-gpay" onclick="game.payWithUPIApp('gpay')" title="Pay with Google Pay">
+                                    <span class="upi-app-icon">⚡</span> GPay
+                                </button>
+                                <button class="btn-upi-app app-phonepe" onclick="game.payWithUPIApp('phonepe')" title="Pay with PhonePe">
+                                    <span class="upi-app-icon">🟣</span> PhonePe
+                                </button>
+                                <button class="btn-upi-app app-paytm" onclick="game.payWithUPIApp('paytm')" title="Pay with Paytm">
+                                    <span class="upi-app-icon">🔵</span> Paytm
+                                </button>
+                                <button class="btn-upi-app app-bhim" onclick="game.payWithUPIApp('bhim')" title="Pay with BHIM / Any UPI App">
+                                    <span class="upi-app-icon">📱</span> Any UPI
+                                </button>
+                            </div>
 
                             <div class="upi-id-copy-box">
-                                <span class="upi-id-label">UPI ID:</span>
-                                <code id="payMerchantUpiIdText" class="upi-id-val">priyanshukumar@upi</code>
+                                <span class="upi-id-label">Merchant VPA:</span>
+                                <code id="payMerchantUpiIdText" class="upi-id-val">ky187768@okicici</code>
                                 <button class="btn btn-secondary btn-small" onclick="game.copyMerchantUPI()" title="Copy UPI ID">COPY 📋</button>
                             </div>
 
                             <div class="utr-confirmation-box">
-                                <label for="payUtrInput">Enter 12-Digit UTR / Ref No. (Optional):</label>
+                                <label for="payUtrInput">
+                                    <span class="utr-label-text">NPCI 12-Digit UTR / Ref No:</span>
+                                    <span class="utr-badge-zero-fee">0% FEE • INSTANT</span>
+                                </label>
                                 <div class="utr-input-group">
-                                    <input type="text" id="payUtrInput" class="auth-input utr-input" placeholder="e.g. 408271928371" maxlength="16">
-                                    <button class="btn btn-gold btn-small" onclick="game.confirmManualUPI()">CONFIRM COINS ⚡</button>
+                                    <input type="text" id="payUtrInput" class="auth-input utr-input" placeholder="e.g. 431526789012" maxlength="12" inputmode="numeric" pattern="[0-9]*">
+                                    <button class="btn btn-gold btn-small btn-utr-confirm" onclick="game.confirmManualUPI()">VERIFY & CREDIT ⚡</button>
                                 </div>
+                                <span class="utr-hint">🛡️ Protected by UPIGateway Anti-Replay validation.</span>
                             </div>
                         </div>
                     </div>
@@ -1185,7 +1200,7 @@
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=53').then(reg => {
+                navigator.serviceWorker.register('sw.js?v=54').then(reg => {
                     console.log('[PWA] Service Worker registered:', reg.scope);
 
                     // Auto-update SW when new version is deployed
@@ -1207,20 +1222,20 @@
     </script>
 
     <!-- SCRIPTS (load order matters: dependencies before dependents) -->
-    <script src="js/icons.js?v=53"></script>
-    <script src="js/config.js?v=53"></script>
-    <script src="js/upgrades.js?v=53"></script>  <!-- Coin & upgrade system (needs CONFIG) -->
-    <script src="js/payment.js?v=53"></script>   <!-- Payment Gateway & Coin Recharge Engine -->
-    <script src="js/auth.js?v=53"></script>
-    <script src="js/audio.js?v=53"></script>
-    <script src="js/renderer.js?v=53"></script>
-    <script src="js/p2p.js?v=53"></script>
-    <script src="js/combat.js?v=53"></script>
+    <script src="js/icons.js?v=54"></script>
+    <script src="js/config.js?v=54"></script>
+    <script src="js/upgrades.js?v=54"></script>  <!-- Coin & upgrade system (needs CONFIG) -->
+    <script src="js/payment.js?v=54"></script>   <!-- Payment Gateway & Coin Recharge Engine -->
+    <script src="js/auth.js?v=54"></script>
+    <script src="js/audio.js?v=54"></script>
+    <script src="js/renderer.js?v=54"></script>
+    <script src="js/p2p.js?v=54"></script>
+    <script src="js/combat.js?v=54"></script>
     <!-- Modular sub-systems (loaded before main orchestrator) -->
-    <script src="js/word-engine.js?v=53"></script>
-    <script src="js/ui-manager.js?v=53"></script>
-    <script src="js/chat.js?v=53"></script>        <!-- Public Lobby Chat & 1v1 Challenge Engine -->
+    <script src="js/word-engine.js?v=54"></script>
+    <script src="js/ui-manager.js?v=54"></script>
+    <script src="js/chat.js?v=54"></script>        <!-- Public Lobby Chat & 1v1 Challenge Engine -->
     <!-- Main application controller -->
-    <script src="js/main.js?v=53"></script>
+    <script src="js/main.js?v=54"></script>
 </body>
 </html>

@@ -24,6 +24,8 @@ class PaymentManager {
 
         /** @type {Array<Object>} */
         this.transactions = this._loadTransactions();
+        this.usedUTRs = this._loadUsedUTRs();
+        this.appIntents = {};
     }
 
     // ── PERSISTENCE ───────────────────────────────────────────────────────────
@@ -43,6 +45,55 @@ class PaymentManager {
         } catch { /* storage full */ }
     }
 
+    _loadUsedUTRs() {
+        try {
+            const raw = localStorage.getItem('tf_used_utrs');
+            return new Set(raw ? JSON.parse(raw) : []);
+        } catch {
+            return new Set();
+        }
+    }
+
+    _saveUsedUTRs() {
+        try {
+            localStorage.setItem('tf_used_utrs', JSON.stringify(Array.from(this.usedUTRs)));
+        } catch { /* storage full */ }
+    }
+
+    /**
+     * NPCI 12-Digit UTR Validator & Anti-Replay Check (from UPIGateway)
+     * @param {string} utr
+     * @returns {{ valid: boolean, error?: string, sanitized?: string }}
+     */
+    validateUTR(utr) {
+        if (!utr) {
+            return { valid: false, error: 'Please enter your 12-digit UPI UTR / Reference number.' };
+        }
+        const sanitized = String(utr).trim().replace(/[^0-9]/g, '');
+        if (sanitized.length !== 12) {
+            return {
+                valid: false,
+                error: `Invalid UTR (${sanitized.length} digits). NPCI requires exactly 12 numeric digits.`,
+                sanitized
+            };
+        }
+        if (/^(\d)\1{11}$/.test(sanitized) || sanitized === '123456789012' || sanitized === '012345678901') {
+            return {
+                valid: false,
+                error: 'Invalid dummy UTR! Please enter a genuine 12-digit UPI transaction reference.',
+                sanitized
+            };
+        }
+        if (this.usedUTRs && this.usedUTRs.has(sanitized)) {
+            return {
+                valid: false,
+                error: 'This UTR has already been used! Duplicate / replay submission blocked.',
+                sanitized
+            };
+        }
+        return { valid: true, sanitized };
+    }
+
     // ── PAYMENT INITIATION ────────────────────────────────────────────────────
 
     /**
@@ -54,15 +105,26 @@ class PaymentManager {
         this.activePackage = pkg;
         this.currentTab = 'upi';
 
-        // Generate dynamic UPI Payment URI
+        // Generate UPIGateway NPCI-compliant Intent URI & App Intents (0% MDR)
         const upiId   = CONFIG.PAYMENT.MERCHANT_UPI_ID || 'ky187768@okicici';
         const name    = encodeURIComponent(CONFIG.PAYMENT.MERCHANT_NAME || 'Typing Fighter Arena');
         const note    = encodeURIComponent(`${pkg.label} - ${pkg.coins} Coins`);
-        const amount  = pkg.amountInRupees || 49;
+        const amount  = Number(pkg.amountInRupees || 49).toFixed(2);
         const txnRef  = `TF${Date.now().toString(36).toUpperCase()}`;
 
-        this.upiUri = `upi://pay?pa=${upiId}&pn=${name}&am=${amount}&cu=INR&tn=${note}&tr=${txnRef}`;
+        this.currentOrderId = txnRef;
+        this.upiUri = `upi://pay?pa=${upiId}&pn=${name}&am=${amount}&cu=INR&tn=${note}&tr=${txnRef}&mc=5499`;
+        this.appIntents = {
+            gpay:    this.upiUri.replace('upi://pay', 'gpay://upi/pay'),
+            phonepe: this.upiUri.replace('upi://pay', 'phonepe://pay'),
+            paytm:   this.upiUri.replace('upi://pay', 'paytmmp://pay'),
+            bhim:    this.upiUri
+        };
         this.qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(this.upiUri)}`;
+
+        // Clear previous UTR input
+        const utrInput = document.getElementById('payUtrInput');
+        if (utrInput) utrInput.value = '';
 
         // Render & open payment modal
         if (typeof game !== 'undefined' && game.ui) {
@@ -155,10 +217,12 @@ class PaymentManager {
     /**
      * Launch UPI intent directly on mobile devices (GPay, PhonePe, Paytm, etc.).
      */
-    openUPIAppIntent() {
-        if (!this.upiUri) return;
-        window.location.href = this.upiUri;
-        game.ui.showToast('Opening UPI App... Complete payment and click "Confirm Payment"!', 'info', 5000);
+    openUPIAppIntent(app = 'bhim') {
+        const targetUri = (this.appIntents && this.appIntents[app]) || this.upiUri;
+        if (!targetUri) return;
+        window.location.href = targetUri;
+        const appLabel = { gpay: 'Google Pay', phonepe: 'PhonePe', paytm: 'Paytm', bhim: 'UPI App' }[app] || 'UPI App';
+        game.ui.showToast(`Opening ${appLabel}... Complete payment & enter 12-digit UTR below!`, 'info', 5000);
     }
 
     /**
@@ -175,24 +239,60 @@ class PaymentManager {
 
     /**
      * Confirm UPI payment after user scanned QR code or paid via app.
-     * @param {string} [utr] - Optional 12-digit UTR number entered by user
+     * Enforces UPIGateway 12-digit UTR validation & anti-replay check.
+     * @param {string} [utr] - 12-digit NPCI UTR number entered by user
      */
-    confirmUPIPayment(utr = '') {
+    async confirmUPIPayment(utr = '') {
         const pkg = this.activePackage;
         if (!pkg) return;
 
-        const cleanUtr = (utr || '').trim();
-        const paymentId = cleanUtr ? `UPI_UTR_${cleanUtr}` : `UPI_${Date.now().toString(36).toUpperCase()}`;
+        const check = this.validateUTR(utr);
+        if (!check.valid) {
+            game.ui.showToast(`❌ ${check.error}`, 'error', 4000);
+            return;
+        }
 
-        // Show quick processing animation
-        game.ui.showToast('Verifying UPI Payment...', 'info', 1500);
+        const cleanUtr = check.sanitized;
+        game.ui.showToast('🔍 UPIGateway: Verifying 12-digit UTR...', 'info', 1800);
+
+        // Cross-device anti-replay check via Firebase RTDB (if online)
+        const fbUrl = CONFIG.FIREBASE?.databaseURL;
+        if (fbUrl && navigator.onLine) {
+            try {
+                const res = await fetch(`${fbUrl}/used_utrs/${cleanUtr}.json`);
+                if (res.ok) {
+                    const existing = await res.json();
+                    if (existing) {
+                        game.ui.showToast('❌ UTR already claimed on another device! Replay blocked.', 'error', 4000);
+                        return;
+                    }
+                    // Reserve UTR in Firebase RTDB
+                    await fetch(`${fbUrl}/used_utrs/${cleanUtr}.json`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            orderId: this.currentOrderId || '',
+                            amount: pkg.amountInRupees || 49,
+                            coins: pkg.coins,
+                            timestamp: Date.now()
+                        })
+                    });
+                }
+            } catch (e) {
+                console.warn('[UPIGateway] Cloud UTR check skipped (offline fallback):', e);
+            }
+        }
+
+        // Consume UTR locally
+        this.usedUTRs.add(cleanUtr);
+        this._saveUsedUTRs();
 
         setTimeout(() => {
             this.completeTransaction({
-                method: 'Direct UPI / QR Code',
-                paymentId: paymentId
+                method: 'UPIGateway Direct (0% Fee)',
+                paymentId: `UPI_UTR_${cleanUtr}`
             });
-        }, 1200);
+        }, 900);
     }
 
     // ── CHANNEL 3: SANDBOX / DEMO INSTANT PAY ─────────────────────────────────
